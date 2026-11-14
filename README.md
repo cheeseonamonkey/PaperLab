@@ -87,7 +87,9 @@ Training was on historical US **display** prices, not actual historical executab
 - [data/state.json](data/state.json): independent cash, open orders, filled trades, official settled outcomes, and audit timestamps.
 - [data/observations](data/observations/): **compressed daily JSONL**, one shared US book/feature snapshot per successful polling decision. Git commit history remains auditable.
 - [models/checkpoints](models/checkpoints/): five fitted PyTorch checkpoints (approximately 2.5 MB combined), frozen metadata and scalers. Never rewritten by the paper runner.
-- [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The target is three prior market hours per hourly workflow run; historical display prices are not historical order books.\n- [data/training](data/training/): candidate research model and run status, trained on usable settled repository data with chronological validation. The candidate is not automatically promoted to a paper strategy.\n- [REPORT.md](REPORT.md): auto-generated account comparison; the **Current research status** block above updates from the same saved state after paper runs.
+- [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The target is three prior market hours per hourly workflow run; historical display prices are not historical order books.
+- [data/training](data/training/): candidate research model and run status, trained on usable settled repository data with chronological validation. The candidate is not automatically promoted to a paper strategy.
+- [REPORT.md](REPORT.md): auto-generated account comparison; the **Current research status** block above updates from the same saved state after paper runs.
 - [research/proposals](research/proposals/): **review-only** Pi experiment suggestions, never deployed.
 
 The hourly process persists files locally on every successful tick; Actions commits state and new observations at job completion. A cancelled runner can lose its **uncommitted** session. Keeping all 15-second snapshots in Git indefinitely will enlarge repo history; storage can be moved to archive releases if growth becomes an issue.
@@ -96,7 +98,9 @@ The hourly process persists files locally on every successful tick; Actions comm
 
 The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python yeno.py run --duration 3000` (50 minutes, roughly four updates per minute). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3300 seconds** for verification.
 
-Each cycle also backfills up to three hours of market history and exogenous candles and retrains a market-relative research candidate once enough settled data supports a chronological split. Live and historical records are deduplicated by market and timestamp. The research model uses the market midpoint or display price, horizon, and completed prior-minute crypto returns.\n\nA separate **optional daily** Pi/OpenRouter research workflow needs only the Actions secret `OPENROUTER_API_KEY`:
+Each cycle also backfills up to three hours of market history and exogenous candles and retrains a market-relative research candidate once enough settled data supports a chronological split. Live and historical records are deduplicated by market and timestamp. The research model uses the market midpoint or display price, horizon, and completed prior-minute crypto returns.
+
+A separate **optional daily** Pi/OpenRouter research workflow needs only the Actions secret `OPENROUTER_API_KEY`:
 
 1. Get an OpenRouter key with zero/low allowed spend.
 2. Add [OPENROUTER_API_KEY](https://github.com/cheeseonamonkey/YeNoPaperLab/settings/secrets/actions) under repository Actions secrets.
