@@ -36,6 +36,26 @@ def candle_returns(candles, timestamp):
     return result
 
 
+def market_window(name):
+    start = int(datetime.strptime(name[-16:], "%Y-%m-%d-%H%Mz").replace(tzinfo=timezone.utc).timestamp())
+    return start, start + (3600 if "-1h-" in name else 900)
+
+
+def chronological_split(rows):
+    latest = max(r[0] for r in rows)
+    days = {datetime.fromtimestamp(r[0], timezone.utc).strftime("%Y-%m-%d") for r in rows}
+    if len(days) >= 2:
+        at = datetime.fromtimestamp(latest, timezone.utc)
+        cutoff = int(at.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+        label = "latest UTC day"
+    else:
+        cutoff = latest // 3600 * 3600
+        label = "latest UTC hour (early sample)"
+    train = [r for r in rows if market_window(r[1])[1] <= cutoff]
+    validation = [r for r in rows if market_window(r[1])[0] >= cutoff]
+    return train, validation, cutoff, label
+
+
 def examples():
     # Deduplicate identical market/timestamp rows; live observations take precedence.
     rows = {}
@@ -56,6 +76,9 @@ def examples():
                     if p is None or not 0 < p < 1:
                         continue
                     name = market["slug"]
+                    start, end = market_window(name)
+                    if not start <= at < end:
+                        continue
                     rows[(name, at)] = (at, name, features(p, market["horizon"], candle_returns(candles, at)), int(result), "history")
                 except (TypeError, ValueError, KeyError):
                     continue
@@ -130,15 +153,13 @@ def main():
                 "sources":dict(Counter(r[4] for r in rows)),
                 "features":["market_logit","one_hour","btc_r1","eth_r1","sol_r1","xrp_r1",
                             "btc_missing","eth_missing","sol_missing","xrp_missing"]}
-    if len(rows) >= 50 and len(days) >= 2:
-        holdout = days[-1]
-        train = [r for r in rows if datetime.fromtimestamp(r[0],timezone.utc).strftime("%Y-%m-%d") < holdout]
-        validation = [r for r in rows if datetime.fromtimestamp(r[0],timezone.utc).strftime("%Y-%m-%d") == holdout]
+    if len(rows) >= 50:
+        train, validation, cutoff, label = chronological_split(rows)
         if train and validation:
             trial = fit(train)
-            manifest.update(status="trained", validation_day=holdout,
-                            validation=score(validation,trial),
-                            final_fit="all available settled rows; validation day included after scoring")
+            manifest.update(status="trained", validation_window=label, validation_cutoff_utc=cutoff,
+                            training_markets=len({r[1] for r in train}), validation=score(validation,trial),
+                            final_fit="all available settled rows; validation included after scoring")
             write_json(OUTPUT / "model.json", fit(rows))
     write_json(OUTPUT / "status.json", manifest)
     print(json.dumps(manifest, sort_keys=True), flush=True)
