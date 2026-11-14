@@ -101,12 +101,22 @@ class PaperTests(unittest.TestCase):
         state=yeno.initial()
         yeno.process_snapshot(state,self.obs,{"lstm":.9,"conv_gru":.9})
         self.assertEqual(len(state["accounts"]["lstm"]["orders"]),1)
-        self.assertEqual(len(state["accounts"]["conv_gru"]["trades"]),1)
+        self.assertEqual(len(state["accounts"]["conv_gru"]["orders"]),1)
         original=state["accounts"]["lstm"]["orders"][0]["reserved"]
         yeno.process_snapshot(state,self.obs,{"lstm":.9,"conv_gru":.9})
         self.assertEqual(len(state["accounts"]["lstm"]["orders"]),1)
         self.assertEqual(original,state["accounts"]["lstm"]["orders"][0]["reserved"])
         self.assertEqual(len(state["accounts"]["conv_gru"]["trades"]),1)
+
+    def test_five_minute_limit_opportunities_and_size(self):
+        acct=yeno.initial()["accounts"]["brti_distance"]
+        self.assertEqual(yeno.maybe_order(acct,self.obs,.9,"limit",self.now),"LIMIT Up")
+        self.assertGreater(acct["orders"][0]["cost"],5)
+        self.assertLessEqual(acct["orders"][0]["cost"],15)
+        self.assertIsNone(yeno.maybe_order(acct,self.obs,.9,"limit",self.now+1))
+        self.assertEqual(yeno.maybe_order(acct,self.obs,.9,"limit",self.now+300),"LIMIT Up")
+        self.assertEqual(len(acct["orders"]),2)
+        self.assertTrue(all(mode in ("limit","hold") for mode in yeno.POLICIES.values()))
 
     def test_resolution_only_official_us_api_and_cash(self):
         state=yeno.initial()
