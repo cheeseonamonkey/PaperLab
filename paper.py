@@ -1,4 +1,4 @@
-"""Twelve isolated $100 Polymarket US paper accounts; simulated market/limit orders.
+"""Thirteen isolated $100 Polymarket US paper accounts; simulated market/limit orders.
 
 All actions are LOCAL JSON state transitions. No authenticated API, wallets,
 signed requests, order submission, or exchange-key support exists.
@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from feeds import USFeed, settlement
 from predictors import MODELS, Predictions
+from train_research import load_model as load_research_model, predict as predict_research
 
 ROOT = Path(__file__).resolve().parent
 STATE = ROOT/"data/state.json"
@@ -22,7 +23,11 @@ OBS_DIR = ROOT/"data/observations"
 START = 100.0
 TAKER_COEFFICIENT = .0695  # US straight-contract fee; maker fee is zero
 SLIPPAGE = .005       # Marketable-entry execution penalty per share
-MAX_STAKE = 15.0
+STATE_VERSION = 3
+KELLY_SCALE = .25
+MAX_ORDER_EQUITY_FRACTION = .05
+MAX_EXPOSURE_EQUITY_FRACTION = .20
+MIN_ORDER_COST = .01
 DECISION_INTERVAL = 60
 POLICIES = {
     "stacked_rnn": "limit",
@@ -37,6 +42,7 @@ POLICIES = {
     "btc_reversion": "limit",
     "cross_asset_momentum": "limit",
     "book_imbalance": "limit",
+    "research_linear": "limit",
 }
 
 def stamp(ts=None):
@@ -47,7 +53,7 @@ def empty_forecast_metric():
             "logloss_sum":0.0,"market_logloss_sum":0.0}
 
 def initial():
-    return {"version":2, "venue":"polymarket_us", "mode":"paper",
+    return {"version":STATE_VERSION, "venue":"polymarket_us", "mode":"paper",
             "cash_per_strategy":START, "last_run":None, "markets":{},
             "forecast_metrics":{name:empty_forecast_metric() for name in POLICIES},
             "polling":{"attempts":0,"observed":0,"skipped":0,"last_attempt":None,"last_error":None},
@@ -57,9 +63,13 @@ def load():
     if not STATE.exists():
         return initial()
     data=json.loads(STATE.read_text())
-    if (data.get("mode"),data.get("venue"),data.get("cash_per_strategy"),data.get("version")) != ("paper","polymarket_us",START,2):
+    if (data.get("mode"),data.get("venue"),data.get("cash_per_strategy")) != ("paper","polymarket_us",START):
         raise ValueError("Non-US or non-paper account state rejected")
-    if set(data.get("accounts",{})) != set(POLICIES):
+    legacy_names = set(POLICIES) - {"research_linear"}
+    if data.get("version") == 2 and set(data.get("accounts",{})) == legacy_names:
+        data["accounts"]["research_linear"] = {"cash":START,"orders":[],"trades":[],"signals":0}
+        data["version"] = STATE_VERSION
+    elif data.get("version") != STATE_VERSION or set(data.get("accounts",{})) != set(POLICIES):
         raise ValueError("Strategy account set mismatch")
     data.setdefault("forecast_metrics",{})
     for name in POLICIES:
@@ -77,7 +87,7 @@ def save(state):
 def append_observation(obs):
     OBS_DIR.mkdir(parents=True,exist_ok=True)
     path=OBS_DIR/(datetime.fromtimestamp(obs["observed_at"],timezone.utc).strftime("%Y-%m-%d")+".jsonl.gz")
-    # Shared quote/data record, NOT 12 duplicated per-strategy observations.
+    # Shared quote/data record, not one duplicate per strategy.
     record={k:obs[k] for k in ("venue","slug","start","ends","observed_at","quotes","features")}
     if "feature_available_at" in obs:
         record["feature_available_at"] = obs["feature_available_at"]
@@ -91,7 +101,7 @@ def cap(x,lo=.01,hi=.99):
     return max(lo,min(hi,x))
 
 def fair_probability(strategy,obs,models):
-    if strategy in MODELS:
+    if strategy in MODELS or strategy=="research_linear":
         return models.get(strategy)
     f=obs["features"]
     quote=obs["quotes"]["Up"]
@@ -129,6 +139,15 @@ def fair_probability(strategy,obs,models):
 def available(account):
     return account["cash"]-sum(o["reserved"] for o in account["orders"] if o["status"]=="open")
 
+def equity(account):
+    """Cash plus cost basis of open positions; reservations remain in cash."""
+    return max(0.0,account["cash"]+sum(t.get("cost",0) for t in account["trades"] if t["status"]=="open"))
+
+def committed_exposure(account):
+    positions=sum(t.get("cost",0) for t in account["trades"] if t["status"]=="open")
+    reservations=sum(o.get("reserved",0) for o in account["orders"] if o["status"]=="open")
+    return positions+reservations
+
 def maybe_order(account,obs,probability,mode,now):
     if probability is None or mode=="hold" or not .01 < probability < .99:
         return None
@@ -148,20 +167,27 @@ def maybe_order(account,obs,probability,mode,now):
             if price<.05 or price>.95:
                 continue
             # Even maker-style paper orders require positive modeled edge.
-            modeled_edge=prob-price-(0 if mode=="limit" else TAKER_COEFFICIENT*price*(1-price))
+            unit_fee=0 if mode=="limit" else TAKER_COEFFICIENT*price*(1-price)
+            modeled_edge=prob-price-unit_fee
         else:
             price=book["ask"]+SLIPPAGE
             if price<.05 or price>.95:
                 continue
-            modeled_edge=prob-price-(0 if mode=="limit" else TAKER_COEFFICIENT*price*(1-price))
+            unit_fee=TAKER_COEFFICIENT*price*(1-price)
+            modeled_edge=prob-price-unit_fee
         if modeled_edge>=.05:
-            candidates.append((modeled_edge,side,price,book))
+            candidates.append((modeled_edge,side,price,book,unit_fee))
     if not candidates:
         return None
-    edge,side,price,book=max(candidates,key=lambda x:x[0])
-    # Size by estimated edge and available cash, capped at $15 per order.
-    allocation=min(MAX_STAKE,available(account)*min(.15,max(.01,edge)))
-    unit_fee=0 if mode=="limit" else TAKER_COEFFICIENT*price*(1-price)
+    edge,side,price,book,unit_fee=max(candidates,key=lambda x:x[0])
+    unit_cost=price+unit_fee
+    account_equity=equity(account)
+    kelly_fraction=KELLY_SCALE*edge/(1-unit_cost) if unit_cost<1 else 0
+    exposure_room=max(0,account_equity*MAX_EXPOSURE_EQUITY_FRACTION-committed_exposure(account))
+    allocation=min(available(account),account_equity*MAX_ORDER_EQUITY_FRACTION,
+                   account_equity*kelly_fraction,exposure_room)
+    if allocation < max(MIN_ORDER_COST,unit_cost/10000):
+        return None
     shares=math.floor(allocation/(price+unit_fee)*10000)/10000
     if shares<=0:
         return None
@@ -332,8 +358,8 @@ def render(state):
     settled_markets=sum(m.get("outcome") is not None for m in state.get("markets",{}).values())
     settled_positions=sum(t["status"]=="settled" for a in state["accounts"].values() for t in a["trades"])
     header=["# Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.",
-            "Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **%s**." %
-            (stamp(state["last_run"]) if state["last_run"] else "Not yet run"), "",
+            "Accounts: **%d independent $%.0f bankrolls**, not a shared pool. Latest successful observation: **%s**." %
+            (len(state["accounts"]),START,stamp(state["last_run"]) if state["last_run"] else "Not yet run"), "",
             "Research sample: **%d markets tracked / %d officially settled / %d settled strategy positions**." %
             (len(state.get("markets",{})),settled_markets,settled_positions), "",
             "Polls: **%s attempts / %s recorded / %s skipped**. Last error: %s." %
@@ -401,8 +427,9 @@ def cycle(state,feed,models,now=None):
     now=int(time.time() if now is None else now)
     reconcile(state,now)
     observation=feed.observe(now)
-    # Fresh-start research: legacy checkpoints abstain on both horizons.
-    probabilities={}
+    # Legacy checkpoints abstain; the causal research candidate runs separately.
+    candidate=load_research_model()
+    probabilities={"research_linear":predict_research(observation,candidate)} if candidate else {}
     # The source quote must still be recent when the decision is made.
     if time.time()-observation["observed_at"] > 12:
         raise ValueError("Stale quote after model inference; no paper orders")

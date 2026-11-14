@@ -42,11 +42,11 @@ class ParallelTests(unittest.TestCase):
             paper.process_snapshot(state,obs,{})
             with patch.object(paper,"settlement",return_value="Up"):
                 paper.reconcile(state,obs["ends"]+31)
-            for index in range(5):
+            for index in range(len(parallel.SHARDS)-1):
                 parallel.shard(index)
             with self.assertRaises(FileNotFoundError):
                 parallel.merge()
-            parallel.shard(5)
+            parallel.shard(len(parallel.SHARDS)-1)
             parallel.merge()
             self.assertEqual(json.loads(paper.STATE.read_text()),state)
 

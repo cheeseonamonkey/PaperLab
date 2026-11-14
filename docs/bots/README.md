@@ -12,6 +12,7 @@ These pages are generated views of the paper state. For account balances, fills,
 | [btc_momentum](btc_momentum.md) | Short BTC momentum against implied odds | Sign-reversed counterpart to `btc_reversion` |
 | [btc_reversion](btc_reversion.md) | Counter-trend BTC signal against implied odds | Sign-reversed counterpart to `btc_momentum` |
 | [cross_asset_momentum](cross_asset_momentum.md) | BTC, ETH, SOL, and XRP momentum | Independent signal family |
+| [research_linear](research_linear.md) | Causal logistic adjustment to market odds using completed returns | Shared research candidate; dedicated paper account |
 
 ## Benchmarks and inactive legacy models
 

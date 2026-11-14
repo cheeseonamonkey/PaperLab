@@ -40,13 +40,29 @@ class PaperTests(unittest.TestCase):
         over.start()
         self.addCleanup(over.stop)
 
-    def test_12_independent_paper_accounts(self):
+    def test_13_independent_paper_accounts(self):
         s=paper.initial()
-        self.assertEqual(len(s["accounts"]),12)
+        self.assertEqual(len(s["accounts"]),13)
         self.assertTrue(all(a["cash"]==100 for a in s["accounts"].values()))
+        self.assertIn("research_linear",s["accounts"])
         self.assertNotIn("polymarket.com",feeds.API)
         self.assertEqual(s["venue"],"polymarket_us")
         self.assertEqual(s["mode"],"paper")
+
+    def test_v2_state_migrates_without_losing_history(self):
+        state=paper.initial()
+        state["version"]=2
+        state["accounts"].pop("research_linear")
+        state["forecast_metrics"].pop("research_linear")
+        state["accounts"]["lstm"].update(cash=73.5,orders=[{"slug":"old","status":"filled"}],signals=4)
+        paper.STATE.write_text(json.dumps(state))
+        migrated=paper.load()
+        self.assertEqual(migrated["version"],paper.STATE_VERSION)
+        self.assertEqual(migrated["accounts"]["lstm"]["cash"],73.5)
+        self.assertEqual(migrated["accounts"]["lstm"]["orders"],[{"slug":"old","status":"filled"}])
+        self.assertEqual(migrated["accounts"]["lstm"]["signals"],4)
+        self.assertEqual(migrated["accounts"]["research_linear"]["cash"],paper.START)
+        self.assertIn("research_linear",migrated["forecast_metrics"])
 
     def test_yes_and_no_us_book_complements(self):
         out=feeds.quotes({"bids":[{"px":{"value":".47"},"qty":"90"}],
@@ -111,8 +127,8 @@ class PaperTests(unittest.TestCase):
     def test_one_minute_limit_opportunities_and_size(self):
         acct=paper.initial()["accounts"]["brti_distance"]
         self.assertEqual(paper.maybe_order(acct,self.obs,.9,"limit",self.now),"LIMIT Up")
-        self.assertGreater(acct["orders"][0]["cost"],5)
-        self.assertLessEqual(acct["orders"][0]["cost"],15)
+        self.assertGreater(acct["orders"][0]["cost"],0)
+        self.assertLessEqual(acct["orders"][0]["cost"],paper.MAX_ORDER_EQUITY_FRACTION*paper.START)
         self.assertIsNone(paper.maybe_order(acct,self.obs,.9,"limit",self.now+1))
         self.assertEqual(paper.maybe_order(acct,self.obs,.9,"limit",self.now+60),"LIMIT Up")
         self.assertEqual(len(acct["orders"]),2)
@@ -121,11 +137,34 @@ class PaperTests(unittest.TestCase):
     def test_size_varies_with_estimated_edge(self):
         small=paper.initial()["accounts"]["brti_distance"]
         large=paper.initial()["accounts"]["brti_distance"]
-        paper.maybe_order(small,self.obs,.60,"limit",self.now)
+        paper.maybe_order(small,self.obs,.54,"limit",self.now)
         paper.maybe_order(large,self.obs,.90,"limit",self.now)
         self.assertGreater(small["orders"][0]["cost"],0)
         self.assertLess(small["orders"][0]["cost"],large["orders"][0]["cost"])
-        self.assertLessEqual(large["orders"][0]["cost"],15)
+        self.assertLessEqual(large["orders"][0]["cost"],paper.MAX_ORDER_EQUITY_FRACTION*paper.START)
+
+    def test_order_cap_scales_with_account_equity(self):
+        acct=paper.initial()["accounts"]["brti_distance"]
+        acct["cash"]=40
+        paper.maybe_order(acct,self.obs,.9,"limit",self.now)
+        self.assertLessEqual(acct["orders"][0]["cost"],2)
+
+    def test_committed_exposure_caps_open_positions_and_orders(self):
+        acct=paper.initial()["accounts"]["brti_distance"]
+        acct["cash"]=84
+        acct["trades"].append({"slug":"prior","status":"open","cost":16})
+        self.assertEqual(paper.equity(acct),100)
+        self.assertEqual(paper.committed_exposure(acct),16)
+        paper.maybe_order(acct,self.obs,.9,"limit",self.now)
+        self.assertLessEqual(acct["orders"][0]["reserved"],4)
+        self.assertLessEqual(paper.committed_exposure(acct),20)
+
+    def test_total_exposure_never_exceeds_equity_cap(self):
+        acct=paper.initial()["accounts"]["brti_distance"]
+        for bucket in range(4):
+            paper.maybe_order(acct,self.obs,.9,"limit",self.now+bucket*60)
+        self.assertLessEqual(paper.committed_exposure(acct),paper.MAX_EXPOSURE_EQUITY_FRACTION*paper.equity(acct))
+        self.assertIsNone(paper.maybe_order(acct,self.obs,.9,"limit",self.now+4*60))
 
     def test_existing_passive_sell_requires_later_cross(self):
         acct=paper.initial()["accounts"]["brti_distance"]

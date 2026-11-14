@@ -51,7 +51,7 @@ class ResearchChecks(unittest.TestCase):
         model = train_research.fit(rows, epochs=0, kind="market_only")
         groups = train_research.grouped_scores(rows, model)
         self.assertEqual(set(groups), {"15m:bootstrap", "1h:live"})
-        self.assertEqual(train_research.transform(f, "market_only")[2:], [0.0]*8)
+        self.assertEqual(train_research.transform(f, "market_only")[2:], [0.0]*(len(f)-2))
         self.assertAlmostEqual(groups["15m:bootstrap"]["brier"], .16)
         self.assertAlmostEqual(groups["15m:bootstrap"]["log_loss"], -math.log(.6))
         self.assertAlmostEqual(groups["1h:live"]["market_brier"], .36)
@@ -74,6 +74,48 @@ class ResearchChecks(unittest.TestCase):
         self.assertEqual([x[1] for x in valid], [m1])
         self.assertLessEqual(market_window(train[0][1])[1], cutoff)
         self.assertGreaterEqual(market_window(valid[0][1])[0], cutoff)
+
+    def test_examples_drop_post_market_rows_and_unavailable_sp500(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            observations = root / "data" / "observations"
+            observations.mkdir(parents=True)
+            slug = "cpc-btc-updown-15m-2026-11-14-1000z"
+            start = ts("2026-11-14 10:00")
+            rows = [
+                {"source":"live","slug":slug,"observed_at":start+60,
+                 "quotes":{"Up":{"bid":.49,"ask":.51}},
+                 "features":{"sp500_r1":.02},
+                 "feature_available_at":{"sp500_r1":start+120}},
+                {"source":"live","slug":slug,"observed_at":start+901,
+                 "quotes":{"Up":{"bid":.49,"ask":.51}},"features":{"btc_r1":.001}},
+            ]
+            with gzip.open(observations / "observed.jsonl.gz", "wt") as stream:
+                stream.write("".join(json.dumps(row)+"\n" for row in rows))
+            state = root / "data" / "state.json"
+            state.parent.mkdir(parents=True, exist_ok=True)
+            state.write_text(json.dumps({"markets":{slug:{"outcome":"Up"}}}))
+            with patch.object(train_research, "ROOT", root):
+                examples = train_research.examples()
+            self.assertEqual(len(examples), 1)
+            self.assertEqual(examples[0][2][-2:], [0.0, 1.0])
+
+    def test_forward_predict_requires_prior_settlement_and_causal_features(self):
+        slug = "cpc-btc-updown-15m-2026-11-14-1000z"
+        start = ts("2026-11-14 10:00")
+        raw = train_research.features(.5, "15m", {})
+        model = train_research.fit([(start+60, slug, raw, 1, "live")], epochs=0)
+        model["trained_through"] = start
+        obs = {"venue":"polymarket_us","slug":slug,"start":start,"ends":start+900,
+               "observed_at":start+300,"quotes":{"Up":{"bid":.49,"ask":.51}},
+               "features":{"sp500_r1":.02},
+               "feature_available_at":{"sp500_r1":start+301}}
+        probability = train_research.predict(obs, model)
+        self.assertIsNotNone(probability)
+        self.assertGreater(probability, 0)
+        self.assertLess(probability, 1)
+        model["trained_through"] = start+1
+        self.assertIsNone(train_research.predict(obs, model))
 
 
 if __name__ == "__main__":

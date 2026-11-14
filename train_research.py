@@ -21,7 +21,23 @@ def features(probability, horizon, returns):
     vals = [returns.get(asset) for asset in ASSETS]
     return [math.log(p / (1-p)), float(horizon == "1h")] + [
         0.0 if v is None else max(-.1, min(.1, v)) for v in vals
-    ] + [float(v is None) for v in vals]
+    ] + [float(v is None) for v in vals] + [
+        0.0 if returns.get("SP500") is None else max(-.1, min(.1, returns["SP500"])),
+        float(returns.get("SP500") is None),
+    ]
+
+
+def known_value(context, available_at, name, observed_at, require_timestamp=False):
+    result = value(context.get(name))
+    if result is None:
+        return None
+    timestamp = available_at.get(name)
+    if timestamp is None:
+        return None if require_timestamp else result
+    try:
+        return result if int(timestamp) <= observed_at else None
+    except (TypeError, ValueError):
+        return None
 
 
 def candle_returns(candles, timestamp):
@@ -73,14 +89,21 @@ def examples():
                 outcome = labels.get(name) if source == "bootstrap" else state.get("markets", {}).get(name, {}).get("outcome")
                 if outcome not in ("Up", "Down"):
                     continue
+                at = int(obs["observed_at"])
+                # A market outcome may label only observations made before that
+                # market ended. Post-settlement snapshots are never examples.
+                if at >= market_window(name)[1]:
+                    continue
                 if source == "bootstrap":
                     p = float(obs["display_up"])
                 else:
                     quote = obs["quotes"]["Up"]
                     p = (float(quote["bid"])+float(quote["ask"]))/2
-                at = int(obs["observed_at"])
                 context = obs.get("features", {})
-                returns = {asset: value(context.get(asset.lower()+"_r1")) for asset in ASSETS}
+                available_at = obs.get("feature_available_at", {})
+                returns = {asset: known_value(context, available_at, asset.lower()+"_r1", at)
+                           for asset in ASSETS}
+                returns["SP500"] = known_value(context, available_at, "sp500_r1", at, True)
                 horizon = "1h" if "-1h-" in name else "15m"
                 if source != "bootstrap" or (name, at) not in rows:
                     rows[(name, at)] = (at, name, features(p, horizon, returns), int(outcome == "Up"), source)
@@ -94,9 +117,9 @@ def sigmoid(x):
 def transform(raw, kind):
     result=list(raw)
     if kind=="market_only":
-        result[2:10] = [0.0] * 8
+        result[2:] = [0.0] * (len(result)-2)
     if kind=="tanh_returns":
-        for j in range(2,6):
+        for j in (*range(2,6), 10):
             result[j]=math.tanh(result[j]*1000)
     return result
 
@@ -147,6 +170,45 @@ def score(rows, model):
             "markets":len(counts),"rows":len(rows)}
 
 
+def predict(observation, model):
+    """Causal probability for a live US observation; reject stale/future models."""
+    if observation.get("venue") != "polymarket_us":
+        return None
+    try:
+        start = int(observation["start"])
+        at = int(observation["observed_at"])
+        trained_through = int(model["trained_through"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if at < start or at >= int(observation.get("ends", 0)) or trained_through > start:
+        return None
+    quotes = observation.get("quotes", {}).get("Up", {})
+    try:
+        probability = (float(quotes["bid"]) + float(quotes["ask"])) / 2
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not 0 < probability < 1:
+        return None
+    context = observation.get("features", {})
+    available_at = observation.get("feature_available_at", {})
+    returns = {asset: known_value(context, available_at, asset.lower()+"_r1", at)
+               for asset in ASSETS}
+    returns["SP500"] = known_value(context, available_at, "sp500_r1", at, True)
+    raw = features(probability, "1h" if "-1h-" in observation.get("slug", "") else "15m", returns)
+    transformed = transform(raw, model.get("transform", "linear"))
+    if len(transformed) != len(model.get("mean", [])) or len(transformed) != len(model.get("scale", [])):
+        return None
+    z = [(v-m)/s for v,m,s in zip(transformed, model["mean"], model["scale"])]
+    if len(z) != len(model["weights"]) - 1:
+        return None
+    return sigmoid(raw[0] + model["weights"][0] + sum(b*v for b,v in zip(model["weights"][1:], z)))
+
+
+def load_model(path=None):
+    path = Path(path) if path is not None else OUTPUT / "model.json"
+    return json.loads(path.read_text()) if path.exists() else None
+
+
 def grouped_scores(rows, model):
     groups = {}
     for horizon in ("15m", "1h"):
@@ -164,7 +226,7 @@ def main():
                 "days":days, "updated_at":datetime.now(timezone.utc).isoformat(),
                 "sources":dict(Counter(r[4] for r in rows)),
                 "features":["market_logit","one_hour","btc_r1","eth_r1","sol_r1","xrp_r1",
-                            "btc_missing","eth_missing","sol_missing","xrp_missing"]}
+                            "btc_missing","eth_missing","sol_missing","xrp_missing","sp500_r1","sp500_missing"]}
     if len(rows) >= 50:
         train, validation, cutoff, label = chronological_split(rows)
         if train and validation:
@@ -179,7 +241,11 @@ def main():
                             training_markets=len({r[1] for r in train}), validation=experiments[0]["validation"],
                             experiments=experiments,
                             final_fit="baseline refit on all available settled rows after validation; no automatic promotion")
-            write_json(OUTPUT / "model.json", fit(rows))
+            final_model = fit(rows)
+            final_model.update(trained_through=max(market_window(r[1])[1] for r in rows),
+                               training_markets=len({r[1] for r in rows}),
+                               trained_at=datetime.now(timezone.utc).isoformat())
+            write_json(OUTPUT / "model.json", final_model)
     if manifest["status"] != "trained":
         (OUTPUT / "model.json").unlink(missing_ok=True)
     write_json(OUTPUT / "status.json", manifest)

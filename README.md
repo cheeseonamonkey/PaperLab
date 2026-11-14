@@ -1,6 +1,6 @@
 # Paper Lab — Polymarket US
 
-**12 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute and 1-hour Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
+**13 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute and 1-hour Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
 
 - [Current results](REPORT.md) · [Persistent state](data/state.json) · [Raw, compressed observations](data/observations/) · [Workflows](../../actions) · [Documentation index](docs/README.md) · [Strategy pages](docs/bots/README.md)
 - **Hourly Actions** runs approximately one hour, polling US public order books at a **15-second target cadence** (when network calls fit). Runs can start late or be dropped by GitHub; **not an always-on service**.
@@ -55,8 +55,9 @@ Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 | btc_reversion | Counter-trend vs implied odds | Limit |
 | cross_asset_momentum | BTC/ETH/SOL/XRP momentum | Limit |
 | book_imbalance | US YES depth imbalance vs implied odds | Limit |
+| research_linear | Causal market-relative logistic candidate | Limit |
 
-Five legacy neural accounts currently abstain; `market_implied` is a hold-only benchmark. The distance pair shares one signal; momentum and reversion are sign-reversed variants. Twelve accounts are not twelve independent active hypotheses. See [execution limits](docs/EXECUTION.md) and [research plan](docs/RESEARCH.md).\n\nEach account starts at **$100**. Order size varies with estimated edge and available paper cash, capped at **$15** per order with fractional simulated shares; maker fills currently use zero exchange fee and no rebate. Each strategy gets an opportunity to place an order for each market every **one minute**. Pending orders reserve cash, and existing orders are monitored at every observation.
+Five legacy neural accounts currently abstain; `market_implied` is a hold-only benchmark. The distance pair shares one signal; momentum and reversion are sign-reversed variants. Thirteen accounts are not thirteen independent active hypotheses. See [execution limits](docs/EXECUTION.md) and [research plan](docs/RESEARCH.md).\n\nEach account starts at **$100**. Order size uses one-quarter Kelly, capped at **5% of current account equity per order** and **20% committed exposure** across open positions and pending entries. Fractional simulated shares are allowed; maker fills assume zero exchange fee and no rebate. Each strategy gets an opportunity to place an order for each market every **one minute**. Pending orders reserve cash, and existing orders are monitored at every observation.
 
 **Resting buy assumption:** post at the displayed bid, reserve its cost, and credit a hypothetical fill *only* if a **later US snapshot** has best ask at or below the posted limit and offers adequate displayed size. Fills use the original limit price, zero maker exchange fee, and **no maker rebate**. Sell limits require a later observed bid crossing the offer with sufficient displayed size. This crossing is a proxy, **not evidence of queue priority or a real fill**. Otherwise orders remain pending and expire, returning reserved cash.
 
@@ -64,7 +65,7 @@ The maker fee is zero with no rebate assumed; the separately implemented taker f
 
 ## Training and evaluation
 
-The research candidate trains on a fixed two-day historical bootstrap plus settled **live observations** collected by this repo. BTC, ETH, SOL, and XRP context is included where available. Validation uses a chronological split and compares forecast error against the market-implied price. The candidate is research only and is not automatically placed into the paper accounts.
+The research candidate trains on a fixed two-day historical bootstrap plus settled **live observations** collected by this repo. BTC, ETH, SOL, XRP, and timestamped SP500 context are included where available. Validation uses a chronological split and compares forecast error against the market-implied price. It runs only in its isolated `research_linear` paper account and does not change legacy strategies.
 
 The bootstrap is fetched once and placed in the normal observation directory, with separate settlement labels. The backward historical archive is stored separately and is **not** read by the trainer. Historical display prices do not represent executable order books.
 

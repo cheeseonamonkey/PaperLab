@@ -9,12 +9,13 @@ from pathlib import Path
 
 import paper
 from feeds import USFeed
+from train_research import load_model, predict
 
 BATCH = Path("batch")
 SHARDS = (
     ("stacked_rnn", "skip_gru_2"), ("depthwise_tcn", "lstm"),
     ("conv_gru", "market_implied"), ("brti_distance", "brti_distance_limit"),
-    ("btc_momentum", "btc_reversion"), ("cross_asset_momentum", "book_imbalance"),
+    ("btc_momentum", "btc_reversion"), ("cross_asset_momentum", "book_imbalance", "research_linear"),
 )
 
 
@@ -90,6 +91,7 @@ def shard(index):
     if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(SHARDS):
         raise ValueError("Invalid shard")
     state = read(BATCH / "base.json")
+    candidate = load_model()
     manifest = read(BATCH / "collection.json")
     if manifest["base_hash"] != digest(BATCH / "base.json") or manifest["events_hash"] != digest(BATCH / "events.jsonl.gz"):
         raise ValueError("Batch checksum mismatch")
@@ -104,7 +106,9 @@ def shard(index):
                 finally:
                     paper.settlement = original
             elif event["kind"] == "observation":
-                paper.process_snapshot(state,event["observation"],{},names=SHARDS[index])
+                obs = event["observation"]
+                probabilities = {"research_linear":predict(obs,candidate)} if candidate else {}
+                paper.process_snapshot(state,obs,probabilities,names=SHARDS[index])
             else:
                 raise ValueError("Unknown event")
     write(Path("shard-results") / (str(index) + ".json"),
