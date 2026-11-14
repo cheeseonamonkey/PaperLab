@@ -1,99 +1,69 @@
-"""Bounded parameter research. Proposals never replace the production paper strategy."""
+"""Read-only research summaries. Pi proposes experiments, never executable orders."""
 from __future__ import annotations
-import json, re, sys, time
+import argparse
+import json
+import re
+import time
 from pathlib import Path
-from yeno import START, FEE, choose, load, validate, STRATEGY as CHAMPION
+from yeno import ROOT, load
 
-ROOT = Path(__file__).resolve().parent
-PROPOSALS = ROOT / "research/proposals"
-MIN_RESOLVED = 40
+PROPOSALS = ROOT/"research/proposals"
 
-def history():
-    return sorted((x for x in load()["observations"] if x["outcome"] in ("Up", "Down")), key=lambda x: x["ends"])
+def sample_count(state):
+    return sum(m["outcome"] is not None for m in state["markets"].values())
 
-def split():
-    data = history()
-    cut = int(len(data) * .7)
-    return data[:cut], data[cut:]
-
-def simulate(items, strategy):
-    capital, peak, worst = START, START, 0.0
-    bets, wins = 0, 0
-    for obs in items:
-        pick = choose(obs, strategy)
-        if pick is None:
-            continue
-        stake = min(capital, pick["stake"])
-        quote = obs["quotes"][pick["side"]]
-        if stake < .99 or stake/(pick["price"]*(1+FEE)) > quote["size"]:
-            continue
-        payout = stake/(pick["price"]*(1+FEE)) if pick["side"] == obs["outcome"] else 0.0
-        capital += payout - stake
-        peak = max(peak, capital)
-        worst = max(worst, peak-capital)
-        bets += 1
-        wins += pick["side"] == obs["outcome"]
-    return {"profit": round(capital-START, 4), "max_drawdown": round(worst, 4), "trades": bets, "wins": wins}
-
-def ready():
-    train, test = split()
-    return len(history()) >= MIN_RESOLVED and len(train) >= 24 and len(test) >= 12
-
-def input_data():
-    train, test = split()
-    if not ready():
-        raise RuntimeError("Need at least 40 officially resolved snapshots for walk-forward evaluation")
-    champion = validate(json.loads(CHAMPION.read_text()))
+def prompt():
+    state=load()
+    count=sample_count(state)
+    if count < 40:
+        raise RuntimeError(f"Need >=40 officially settled US markets (got {count})")
+    accounts=[]
+    for name,account in state["accounts"].items():
+        settled=[t for t in account["trades"] if t["status"]=="settled"]
+        accounts.append({"name":name,"realized_pnl":round(sum(t["pnl"] for t in settled),4),
+            "settled_trades":len(settled),"open_trades":sum(t["status"]=="open" for t in account["trades"]),
+            "limit_orders_filled":sum(o["status"]=="filled" for o in account["orders"]),
+            "limit_orders_expired":sum(o["status"]=="expired" for o in account["orders"])})
     return {
-        "task": "Propose one parameter mutation to maximize net paper PnL without excessive drawdown. Output ONE JSON object containing only w5, w15, min_edge, max_price. No markdown.",
-        "constraints": "w5/w15 each -80..80; min_edge 0..0.25; max_price 0.55..0.95; all numeric. Data is only historical, don't claim predictive edge.",
-        "champion": champion,
-        "training_score": simulate(train, champion),
-        "observations": [{"ret5": x["features"]["ret5"], "ret15": x["features"]["ret15"], "up_ask": x["quotes"]["Up"]["price"] if x["quotes"]["Up"] else None, "down_ask": x["quotes"]["Down"]["price"] if x["quotes"]["Down"] else None, "winner": x["outcome"]} for x in train],
-        "held_out_count": len(test),
+        "goal":"Research PAPER trading improvements only. No real-money trading.",
+        "venue":"polymarket_us",
+        "sample_scope":"Prospective but early and correlated 15-minute BTC markets; not a sealed holdout.",
+        "important_caveats":[
+            "All execution hypothetical; limit cross may not mean actual queue fill.",
+            "Five neural models use mean-imputed 52 auxiliary inputs, an unverified distribution shift.",
+            "No evidence any strategy is profitable or statistically significant.",
+            "No strategy can be automatically deployed by this review.",
+        ],
+        "settled_market_count":count, "strategies":accounts,
+        "required_output":"Output ONE JSON object: title (<=100 chars), hypothesis (<=500 chars), evaluation (<=700 chars), risks (<=500 chars). No markdown. Recommend one safe experiment with chronological evaluation and realistic fees.",
     }
 
-def propose(raw):
-    match = re.search(r"\{[^{}]+\}", raw, flags=re.S)
+def propose(text):
+    match=re.search(r"\{[^{}]*\}",text,re.S)
     if not match:
-        raise ValueError("Agent did not output a JSON object")
-    config = validate(json.loads(match.group(0)))
-    train, test = split()
-    if not ready():
-        raise ValueError("Not enough resolved observations")
-    old = validate(json.loads(CHAMPION.read_text()))
-    baseline = simulate(test, old)
-    proposed = simulate(test, config)
-    print(json.dumps({"champion": baseline, "candidate": proposed}, indent=2))
-    # No candidates without a meaningful held-out improvement and enough actual paper trades.
-    if proposed["trades"] < 6 or proposed["profit"] < max(0.5, baseline["profit"] + 0.5):
-        print("Rejected: insufficient held-out profit/trade coverage")
-        return False
-    if proposed["max_drawdown"] > max(2.0, baseline["max_drawdown"] + 1.0):
-        print("Rejected: excess held-out drawdown")
-        return False
-    if config == old:
-        print("Rejected: identical to current champion")
-        return False
-    PROPOSALS.mkdir(parents=True, exist_ok=True)
-    name = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + ".json"
-    record = {"status": "review_only", "candidate": config, "baseline_heldout": baseline, "candidate_heldout": proposed, "train_n": len(train), "test_n": len(test)}
-    (PROPOSALS / name).write_text(json.dumps(record, indent=2) + "\n")
-    print("Saved review-only proposal: " + name)
-    return True
+        raise ValueError("Agent response did not contain a single JSON object")
+    item=json.loads(match.group(0))
+    limits={"title":100,"hypothesis":500,"evaluation":700,"risks":500}
+    if set(item)!=set(limits) or not all(isinstance(item[k],str) and 5<=len(item[k])<=maxlen for k,maxlen in limits.items()):
+        raise ValueError("Proposal does not match bounded review schema")
+    PROPOSALS.mkdir(exist_ok=True,parents=True)
+    path=PROPOSALS/(time.strftime("%Y%m%dT%H%M%SZ",time.gmtime())+".json")
+    path.write_text(json.dumps({"status":"review_only","venue":"polymarket_us","proposal":item},indent=2)+"\n")
+    print("Stored review-only proposal",path)
 
 def main():
-    cmd = sys.argv[1] if len(sys.argv) > 1 else "ready"
-    if cmd == "ready":
-        print("ready" if ready() else "collecting")
-    elif cmd == "input":
-        print(json.dumps(input_data(), indent=2))
-    elif cmd == "evaluate":
-        if len(sys.argv) != 3:
-            sys.exit("Usage: python research.py evaluate path/to/agent_output.txt")
-        propose(Path(sys.argv[2]).read_text())
-    else:
-        sys.exit("Usage: python research.py [ready|input|evaluate]")
+    ap=argparse.ArgumentParser()
+    ap.add_argument("command",choices=("ready","prompt","evaluate"))
+    ap.add_argument("file",nargs="?")
+    args=ap.parse_args()
+    if args.command=="ready":
+        print("ready" if sample_count(load())>=40 else "collecting")
+    elif args.command=="prompt":
+        print(json.dumps(prompt(),indent=2))
+    elif args.command=="evaluate":
+        if not args.file:
+            ap.error("evaluate requires the Pi output file")
+        propose(Path(args.file).read_text())
 
-if __name__ == "__main__":
+if __name__=="__main__":
     main()

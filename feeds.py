@@ -1,0 +1,208 @@
+"""Read-only Polymarket US market, BRTI reference, and optional cross-asset feeds."""
+from __future__ import annotations
+
+import datetime as dt
+import json
+import math
+import time
+from urllib.error import HTTPError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+
+API = "https://gateway.polymarket.us"
+ASSETS = ("BTC", "ETH", "SOL", "XRP")
+PERIOD = 900
+
+def get(path, params=None, missing_ok=False):
+    # Explicit host allowlist: no order, signing, account or auth endpoints.
+    if not path.startswith(("/v1/market/slug/", "/v1/markets/", "/v1/asset-prices/history", "/v1/price-history")):
+        raise ValueError("Unexpected US public read endpoint: " + path)
+    url = API + path + ("?" + urlencode(params) if params else "")
+    try:
+        with urlopen(Request(url, headers={"User-Agent": "YeNoPaperLab/2.0", "Accept": "application/json"}), timeout=12) as response:
+            value = json.load(response)
+    except HTTPError as error:
+        if missing_ok and error.code == 404:
+            return None
+        raise
+    if not isinstance(value, dict):
+        raise ValueError("Unexpected US public API JSON")
+    return value
+
+def value(x):
+    if isinstance(x, dict):
+        x = x.get("value")
+    try:
+        f = float(x)
+    except (TypeError, ValueError):
+        return None
+    return f if math.isfinite(f) else None
+
+def window_slug(start):
+    at = dt.datetime.fromtimestamp(start, dt.timezone.utc)
+    return "cpc-btc-updown-15m-" + at.strftime("%Y-%m-%d-%H%M") + "z"
+
+def levels(book, key):
+    entries = []
+    for row in (book.get(key) or []):
+        price, quantity = value(row.get("px")), value(row.get("qty"))
+        if price is not None and quantity is not None and 0 < price < 1 and quantity > 0:
+            entries.append((price, quantity))
+    return sorted(entries, reverse=key == "bids")[:5]
+
+def quotes(book):
+    bids, asks = levels(book, "bids"), levels(book, "offers")
+    if not bids or not asks or bids[0][0] >= asks[0][0]:
+        raise ValueError("Missing or crossed US best bid/ask")
+    # Polymarket US book is YES-centric; NO is the binary complement.
+    up = {"bid": bids[0][0], "ask": asks[0][0], "bid_size": bids[0][1], "ask_size": asks[0][1],
+          "bid_depth": sum(x[1] for x in bids), "ask_depth": sum(x[1] for x in asks)}
+    down = {"bid": round(1-asks[0][0], 6), "ask": round(1-bids[0][0], 6),
+            "bid_size": asks[0][1], "ask_size": bids[0][1],
+            "bid_depth": up["ask_depth"], "ask_depth": up["bid_depth"]}
+    return {"Up": up, "Down": down}
+
+def _momentum(rows, now):
+    recent = {int(x[0]): x for x in rows if int(x[0]) + 60 <= now}
+    candles = [recent[k] for k in sorted(recent)]
+    if len(candles) < 16:
+        return None
+    close = [float(x[4]) for x in candles]
+    if not all(x > 0 and math.isfinite(x) for x in close):
+        return None
+    returns = [math.log(close[i]/close[i-1]) for i in range(1, len(close))]
+    mean = sum(returns[-15:])/15
+    return {"r1": returns[-1], "r5": math.log(close[-1]/close[-6]),
+            "r15": math.log(close[-1]/close[-16]),
+            "vol15": math.sqrt(sum((r-mean)**2 for r in returns[-15:])/15),
+            "volume15": sum(float(x[5]) for x in candles[-15:])}
+
+def settlement(slug):
+    data = get("/v1/markets/"+slug+"/settlement", missing_ok=True)
+    if data is None or data.get("slug") != slug:
+        return None
+    # Confirmed US endpoint outcome: 1 = Up (YES), 0 = Down (NO).
+    result = data.get("settlement")
+    if type(result) not in (int, float) or result not in (0, 1):
+        return None
+    return "Up" if result == 1 else "Down"
+
+class USFeed:
+    def __init__(self):
+        self.slug = None
+        self.metadata = None
+        self.cached_reference = []
+        self.cached_display = []
+        self.cached_exogenous = {}
+        self.reference_at = self.display_at = self.exogenous_at = 0
+
+    def _reference(self, now):
+        if self.cached_reference and now-self.reference_at < 58:
+            return self.cached_reference
+        data = get("/v1/asset-prices/history", {
+            "assets": "crypto:btc", "from": now - 140*60, "to": now - 60,
+            "bucket": "ASSET_PRICE_BUCKET_1M",
+        })
+        series = data.get("series", [])
+        if len(series) != 1:
+            raise ValueError("Unexpected BRTI reference series")
+        candles = {int(c["timestamp"]): c for c in series[0].get("candles", []) if int(c["timestamp"]) + 60 <= now}
+        self.cached_reference = [candles[k] for k in sorted(candles)]
+        self.reference_at = now
+        return self.cached_reference
+
+    def _display(self, now, start):
+        if now-self.display_at < 58:
+            return self.cached_display
+        data = get("/v1/price-history", {
+            "symbol": self.slug, "fidelity": 1,
+            "timestamp.startTimestamp": start, "timestamp.endTimestamp": now,
+        })
+        self.cached_display = [
+            {"timestamp": int(row["timestamp"]), "up": value(row.get("longPrice")), "down": value(row.get("shortPrice"))}
+            for row in data.get("history", []) if start <= int(row["timestamp"]) <= now
+        ]
+        self.display_at = now
+        return self.cached_display
+
+    def _exogenous(self, now):
+        if now-self.exogenous_at < 116:
+            return self.cached_exogenous
+        # Cross-asset context is observational only. Each missing feed stays missing.
+        # Coinbase prices do NOT replace the official BRTI event reference.
+        from urllib.parse import urlencode
+        context = {}
+        for asset in ASSETS:
+            try:
+                url = "https://api.exchange.coinbase.com/products/"+asset+"-USD/candles?" + urlencode(
+                    {"granularity": 60, "start": now-22*60, "end": now-60})
+                with urlopen(Request(url, headers={"User-Agent": "YeNoPaperLab/2.0"}), timeout=8) as response:
+                    series = json.load(response)
+                context[asset.lower()] = _momentum(series, now)
+            except (OSError, ValueError, KeyError) as error:
+                print("Optional %s context unavailable: %s" % (asset, error), flush=True)
+                context[asset.lower()] = None
+        self.cached_exogenous = context
+        self.exogenous_at = now
+        return context
+
+    def observe(self, now=None):
+        now = int(time.time() if now is None else now)
+        start = (now//PERIOD)*PERIOD
+        slug = window_slug(start)
+        if slug != self.slug:
+            self.slug, self.metadata = slug, None
+            self.cached_display, self.display_at = [], 0
+        if self.metadata is None:
+            item = get("/v1/market/slug/"+slug)
+            self.metadata = item.get("market")
+        m = self.metadata or {}
+        terms = m.get("assetPriceTerms") or {}
+        if m.get("status") != "MARKET_STATUS_OPEN" or terms.get("indexSymbol") != "BRTI" or terms.get("horizon") != "15m":
+            raise ValueError("Expected open Polymarket US 15m BRTI market")
+        strike = value(terms.get("priceToBeat"))
+        if strike is None or strike <= 0:
+            raise ValueError("US price-to-beat unavailable")
+        # Fetch slow inputs BEFORE the order book: decisions use a fresh book
+        # and only already-known reference/spot observations.
+        reference = self._reference(now)
+        display = self._display(now, start)
+        exogenous = self._exogenous(now)
+        result = get("/v1/markets/"+slug+"/book")["marketData"]
+        if result.get("state") != "MARKET_STATE_OPEN" or result.get("marketSlug") != slug:
+            raise ValueError("US order book not OPEN or wrong slug")
+        quote = quotes(result)
+        # Capture timestamp AFTER fetching book; never backdate stale data.
+        received = int(time.time())
+        if received >= start+PERIOD:
+            raise ValueError("Expired during book acquisition")
+        recent_book = result.get("transactTime")
+        if recent_book:
+            try:
+                updated = dt.datetime.fromisoformat(recent_book.replace("Z", "+00:00")).timestamp()
+                if received - updated > 90 or updated - received > 10:
+                    raise ValueError("US book timestamp stale/in future")
+            except (TypeError, AttributeError) as error:
+                raise ValueError("Invalid US book timestamp") from error
+        # Extra inputs are logged for future retraining even if older checkpoints
+        # cannot use them without invalidating their feature contracts.
+        last = reference[-1] if reference else {}
+        current_brti = value(last.get("close"))
+        numeric = {
+            "time_left": (start+PERIOD-received)/PERIOD, "price_to_beat": strike,
+            "brti_close": current_brti,
+            "strike_distance": (current_brti/strike-1) if current_brti else None,
+            "yes_spread": quote["Up"]["ask"]-quote["Up"]["bid"],
+            "yes_bid_depth": quote["Up"]["bid_depth"],
+            "yes_ask_depth": quote["Up"]["ask_depth"],
+            "yes_book_imbalance": ((quote["Up"]["bid_depth"]-quote["Up"]["ask_depth"]) /
+                (quote["Up"]["bid_depth"]+quote["Up"]["ask_depth"])),
+        }
+        for asset, fields in exogenous.items():
+            for key in ("r1", "r5", "r15", "vol15", "volume15"):
+                numeric[asset+"_"+key] = fields.get(key) if fields else None
+        return {"venue":"polymarket_us", "slug": slug, "start": start, "ends": start+PERIOD,
+                "observed_at": received, "quotes":quote, "features": numeric,
+                "book_top5": {"bids":levels(result,"bids"), "asks":levels(result,"offers")},
+                "display_history":display, "brti_history":reference,
+                "is_live_book":True}

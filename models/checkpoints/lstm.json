@@ -1,0 +1,23 @@
+{
+  "kind": "lstm",
+  "fold": 3,
+  "train_rows": 117713,
+  "dev_rows": 0,
+  "parameters": 251106,
+  "epochs": 2,
+  "chosen_epoch": 2,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.45916017624266364,
+      "dev_market_equal_loss": null
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.45495639095475476,
+      "dev_market_equal_loss": null
+    }
+  ],
+  "baseline": null,
+  "dev": null
+}

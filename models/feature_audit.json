@@ -1,0 +1,570 @@
+{
+  "accepted": [
+    "yield_2y__value",
+    "yield_2y__change_1",
+    "yield_2y__change_5",
+    "yield_2y__change_20",
+    "yield_2y__age_seconds",
+    "yield_10y__value",
+    "yield_10y__change_1",
+    "yield_10y__change_5",
+    "yield_10y__change_20",
+    "yield_10y__age_seconds",
+    "fed_effective__change_5",
+    "fed_effective__change_20",
+    "fed_effective__age_seconds",
+    "fed_target_upper__change_5",
+    "fed_target_upper__change_20",
+    "fed_target_upper__age_seconds",
+    "usd_trade_weighted__value",
+    "usd_trade_weighted__change_1",
+    "usd_trade_weighted__change_5",
+    "usd_trade_weighted__change_20",
+    "usd_trade_weighted__age_seconds",
+    "wti_oil__value",
+    "wti_oil__change_1",
+    "wti_oil__change_5",
+    "wti_oil__change_20",
+    "wti_oil__age_seconds",
+    "sp500_spy__change_1",
+    "sp500_spy__change_5",
+    "sp500_spy__change_20",
+    "sp500_spy__age_seconds",
+    "nasdaq_qqq__change_1",
+    "nasdaq_qqq__change_5",
+    "nasdaq_qqq__change_20",
+    "nasdaq_qqq__age_seconds",
+    "gold_gld__change_1",
+    "gold_gld__change_5",
+    "gold_gld__change_20",
+    "gold_gld__age_seconds",
+    "oil_uso__change_1",
+    "oil_uso__change_5",
+    "oil_uso__change_20",
+    "oil_uso__age_seconds",
+    "usd_uup__change_1",
+    "usd_uup__change_5",
+    "usd_uup__change_20",
+    "usd_uup__age_seconds",
+    "vix__value",
+    "vix__change_1",
+    "vix__change_5",
+    "vix__change_20",
+    "vix__age_seconds",
+    "yield_curve_10y_minus_2y"
+  ],
+  "base_context": 12,
+  "context_dim": 64,
+  "coverage": {
+    "yield_2y__value": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_2y__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_2y__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_2y__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_2y__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_2y__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "yield_10y__value": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_10y__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_10y__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_10y__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_10y__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "yield_10y__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "fed_effective__value": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "fed_effective__change_1": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "fed_effective__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "fed_effective__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "fed_effective__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "fed_effective__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "fed_target_upper__value": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "fed_target_upper__change_1": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "fed_target_upper__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "fed_target_upper__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "fed_target_upper__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "fed_target_upper__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "usd_trade_weighted__value": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_trade_weighted__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_trade_weighted__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_trade_weighted__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_trade_weighted__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_trade_weighted__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "wti_oil__value": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "wti_oil__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "wti_oil__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "wti_oil__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "wti_oil__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "wti_oil__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "sp500_spy__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "sp500_spy__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "sp500_spy__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "sp500_spy__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "sp500_spy__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "nasdaq_qqq__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "nasdaq_qqq__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "nasdaq_qqq__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "nasdaq_qqq__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "nasdaq_qqq__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "gold_gld__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "gold_gld__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "gold_gld__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "gold_gld__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "gold_gld__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "oil_uso__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "oil_uso__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "oil_uso__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "oil_uso__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "oil_uso__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "usd_uup__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_uup__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_uup__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_uup__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "usd_uup__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "vix__value": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "vix__change_1": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "vix__change_5": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "vix__change_20": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "vix__age_seconds": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "vix__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "btc_spot__value": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__ret_1m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__ret_5m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__ret_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__ret_60m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__ret_240m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__ret_1440m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__vol_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__vol_60m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__vol_240m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__volume_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__volume_1h": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__age_seconds": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "btc_spot__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "eth_spot__value": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__ret_1m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__ret_5m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__ret_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__ret_60m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__ret_240m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__ret_1440m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__vol_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__vol_60m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__vol_240m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__volume_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__volume_1h": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__age_seconds": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "eth_spot__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "sol_spot__value": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__ret_1m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__ret_5m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__ret_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__ret_60m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__ret_240m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__ret_1440m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__vol_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__vol_60m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__vol_240m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__volume_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__volume_1h": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__age_seconds": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_spot__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "xrp_spot__value": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__ret_1m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__ret_5m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__ret_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__ret_60m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__ret_240m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__ret_1440m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__vol_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__vol_60m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__vol_240m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__volume_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__volume_1h": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__age_seconds": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_spot__missing": {
+      "accepted": false,
+      "train_coverage": 1.0
+    },
+    "yield_curve_10y_minus_2y": {
+      "accepted": true,
+      "train_coverage": 1.0
+    },
+    "eth_vs_btc__ret_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "sol_vs_btc__ret_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    },
+    "xrp_vs_btc__ret_15m": {
+      "accepted": false,
+      "train_coverage": 0.0
+    }
+  },
+  "no_revision_sensitive_macro": true,
+  "coinbase_recent_only_excluded_when_insufficient_coverage": true
+}

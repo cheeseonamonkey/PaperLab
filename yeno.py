@@ -1,189 +1,302 @@
-"""Public-data-only BTC 15-minute binary-market paper trader; no order API."""
+"""Twelve isolated $100 Polymarket US paper accounts; simulated market/limit orders.
+
+All actions are LOCAL JSON state transitions. No authenticated API, wallets,
+signed requests, order submission, or exchange-key support exists.
+"""
 from __future__ import annotations
-import json, math, os, sys, time
+import argparse
+import gzip
+import json
+import math
+import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.request import Request, urlopen
+from feeds import USFeed, settlement
+from predictors import MODELS, Predictions
 
 ROOT = Path(__file__).resolve().parent
-LEDGER = ROOT / "data/ledger.json"
-STRATEGY = ROOT / "strategies/champion.json"
-REPORT = ROOT / "REPORT.md"
-FEE = 0.02                  # Modeled buffer, not a quote of actual fees
-SLIPPAGE = 0.005           # USD per outcome share
+STATE = ROOT/"data/state.json"
+REPORT = ROOT/"REPORT.md"
+OBS_DIR = ROOT/"data/observations"
 START = 100.0
-WINDOW = 900
+FEE = .02             # Conservative simulation buffer, not US actual venue fee
+SLIPPAGE = .005       # Marketable-entry execution penalty per share
+MAX_STAKE = 5.0
+MIN_SHARES = 5.0
+MAX_OPEN_COST = 15.0
+POLICIES = {
+    "stacked_rnn": "limit",
+    "skip_gru_2": "limit",
+    "depthwise_tcn": "market",
+    "lstm": "limit",
+    "conv_gru": "market",
+    "market_implied": "hold",
+    "brti_distance": "market",
+    "brti_distance_limit": "limit",
+    "btc_momentum": "market",
+    "btc_reversion": "limit",
+    "cross_asset_momentum": "limit",
+    "book_imbalance": "limit",
+}
 
-def utc(ts=None):
-    return datetime.fromtimestamp(time.time() if ts is None else ts, timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+def stamp(ts=None):
+    return datetime.fromtimestamp(time.time() if ts is None else ts, timezone.utc).isoformat(timespec="seconds")
 
-def request(url):
-    req = Request(url, headers={"User-Agent": "YeNoPaperLab/0.1", "Accept": "application/json"})
-    with urlopen(req, timeout=20) as response:
-        return json.load(response)
-
-def arr(value):
-    result = json.loads(value) if isinstance(value, str) else value
-    if not isinstance(result, list):
-        raise ValueError("Expected list in market metadata")
-    return result
-
-def market(slug):
-    item = request("https://gamma-api.polymarket.com/events/slug/" + slug)
-    if not isinstance(item, dict) or item.get("slug") != slug or len(item.get("markets", [])) != 1:
-        raise ValueError("Missing/invalid market " + slug)
-    result = item["markets"][0]
-    if arr(result["outcomes"]) != ["Up", "Down"]:
-        raise ValueError("Unexpected market outcomes")
-    return result
-
-def winner(item):
-    if not item.get("closed") or item.get("umaResolutionStatus") != "resolved":
-        return None
-    prices = [float(x) for x in arr(item["outcomePrices"])]
-    return "Up" if prices == [1.0, 0.0] else "Down" if prices == [0.0, 1.0] else None
-
-def best_ask(token):
-    data = request("https://clob.polymarket.com/book?token_id=" + token)
-    asks = sorted(({"price": float(x["price"]), "size": float(x["size"])} for x in data.get("asks", [])), key=lambda x: x["price"])
-    return next((x for x in asks if .01 <= x["price"] < 1 and x["size"] > 0), None)
-
-def features():
-    now = int(time.time())
-    rows = request("https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=60&start=" + str(now-1500) + "&end=" + str(now))
-    prices = {int(r[0]): float(r[4]) for r in rows if int(r[0]) < now // 60 * 60}
-    values = [prices[t] for t in sorted(prices)]
-    if len(values) < 16 or not all(math.isfinite(v) and v > 0 for v in values):
-        raise ValueError("Insufficient valid spot candles")
-    return {"ret5": values[-1]/values[-6]-1, "ret15": values[-1]/values[-16]-1}
-
-def validate(params):
-    limits = {"w5": (-80, 80), "w15": (-80, 80), "min_edge": (0, .25), "max_price": (.55, .95)}
-    if set(params) != set(limits):
-        raise ValueError("Unexpected strategy parameters")
-    for key, (low, high) in limits.items():
-        value = params[key]
-        if isinstance(value, bool) or not isinstance(value, (float, int)) or not math.isfinite(value) or not low <= value <= high:
-            raise ValueError("Invalid parameter " + key)
-    return params
-
-def choose(obs, params):
-    """Pure strategy; backtests and paper execution use this same function."""
-    p = min(.95, max(.05, .5 + params["w5"]*obs["features"]["ret5"] + params["w15"]*obs["features"]["ret15"]))
-    candidates = []
-    for side, probability in (("Up", p), ("Down", 1-p)):
-        quote = obs["quotes"].get(side)
-        if not quote:
-            continue
-        price = quote["price"] + SLIPPAGE
-        if .05 <= price <= params["max_price"]:
-            edge = probability - price*(1+FEE)
-            candidates.append({"side": side, "price": price, "edge": edge, "probability": probability})
-    if not candidates:
-        return None
-    pick = max(candidates, key=lambda x: x["edge"])
-    if pick["edge"] >= params["min_edge"]:
-        return {**pick, "stake": 5.0, "reason": "modeled_edge"}
-    if pick["price"] <= .75 and pick["probability"] >= .32:
-        return {**pick, "stake": 1.0, "reason": "exploration"}
-    return None
+def initial():
+    return {"version":2, "venue":"polymarket_us", "mode":"paper",
+            "cash_per_strategy":START, "last_run":None, "markets":{},
+            "accounts":{name:{"cash":START,"orders":[],"trades":[],"signals":0} for name in POLICIES}}
 
 def load():
-    if LEDGER.exists():
-        state = json.loads(LEDGER.read_text())
-        if state.get("mode") != "paper" or state.get("starting_cash") != START:
-            raise ValueError("Ledger not paper-only or incorrect initial bankroll")
-        return state
-    return {"mode": "paper", "starting_cash": START, "cash": START, "observations": [], "trades": [], "last_run": None}
+    if not STATE.exists():
+        return initial()
+    data=json.loads(STATE.read_text())
+    if (data.get("mode"),data.get("venue"),data.get("cash_per_strategy"),data.get("version")) != ("paper","polymarket_us",START,2):
+        raise ValueError("Non-US or non-paper account state rejected")
+    if set(data.get("accounts",{})) != set(POLICIES):
+        raise ValueError("Strategy account set mismatch")
+    return data
 
 def save(state):
-    LEDGER.parent.mkdir(parents=True, exist_ok=True)
-    temp = LEDGER.with_suffix(".tmp")
-    temp.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n")
-    os.replace(temp, LEDGER)
+    STATE.parent.mkdir(parents=True,exist_ok=True)
+    tmp=STATE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state,indent=2,sort_keys=True)+"\n")
+    os.replace(tmp,STATE)
 
-def settle(state, now):
-    count = 0
-    trades = {t["slug"]: t for t in state["trades"]}
-    for obs in state["observations"]:
-        if obs["outcome"] is not None or now < obs["ends"] + 120:
+def append_observation(obs):
+    OBS_DIR.mkdir(parents=True,exist_ok=True)
+    path=OBS_DIR/(datetime.fromtimestamp(obs["observed_at"],timezone.utc).strftime("%Y-%m-%d")+".jsonl.gz")
+    # Shared quote/data record, NOT 12 duplicated per-strategy observations.
+    record={k:obs[k] for k in ("venue","slug","start","ends","observed_at","quotes","features")}
+    record["book_top5"] = obs.get("book_top5", {})
+    record["latest_display"]=obs["display_history"][-1] if obs["display_history"] else None
+    record["latest_reference"]=obs["brti_history"][-1] if obs["brti_history"] else None
+    with gzip.open(path,"at",encoding="utf-8") as file:
+        file.write(json.dumps(record,separators=(",",":"),sort_keys=True)+"\n")
+
+def cap(x,lo=.01,hi=.99):
+    return max(lo,min(hi,x))
+
+def fair_probability(strategy,obs,models):
+    if strategy in MODELS:
+        return models.get(strategy)
+    f=obs["features"]
+    quote=obs["quotes"]["Up"]
+    implied=(quote["bid"]+quote["ask"])/2
+    if strategy=="market_implied":
+        return None # Explicit hold / do-nothing benchmark.
+    if strategy.startswith("brti_distance"):
+        distance=f.get("strike_distance")
+        volatility=f.get("btc_vol15")
+        if distance is None or volatility is None or volatility <= 0:
+            return None
+        remaining=max(15,(obs["ends"]-obs["observed_at"]))/60
+        z=distance/max(volatility*math.sqrt(remaining/15),.0002)
+        return cap(.5*(1+math.erf(z/math.sqrt(2))))
+    if strategy=="book_imbalance":
+        return cap(implied+.10*f.get("yes_book_imbalance",0))
+    btc=f.get("btc_r5")
+    if btc is None:
+        return None
+    if strategy=="btc_momentum":
+        shift=80*btc
+    elif strategy=="btc_reversion":
+        shift=-80*btc
+    elif strategy=="cross_asset_momentum":
+        basket=[f.get(a+"_r5") for a in ("btc","eth","sol","xrp")]
+        known=[x for x in basket if x is not None]
+        if len(known)<3:
+            return None
+        shift=60*sum(known)/len(known)
+    else:
+        raise ValueError("Unexpected policy "+strategy)
+    logit=math.log(cap(implied)/(1-cap(implied)))
+    return cap(1/(1+math.exp(-max(-30,min(30,logit+shift)))))
+
+def risk_exposure(account):
+    return sum(t["cost"] for t in account["trades"] if t["status"]=="open")
+
+def available(account):
+    return account["cash"]-sum(o["reserved"] for o in account["orders"] if o["status"]=="open")
+
+def maybe_order(account,obs,probability,mode,now):
+    if probability is None or mode=="hold" or not .01 < probability < .99:
+        return None
+    slug=obs["slug"]
+    if any(o["slug"]==slug for o in account["orders"]) or any(t["slug"]==slug for t in account["trades"]):
+        return None
+    if risk_exposure(account)>=MAX_OPEN_COST or available(account)<1:
+        return None
+    candidates=[]
+    for side,prob in (("Up",probability),("Down",1-probability)):
+        book=obs["quotes"][side]
+        # Ask is executable for a marketable paper buy; resting bid for a limit.
+        if mode=="limit":
+            price=book["bid"]
+            if price<.05 or price>.95:
+                continue
+            # Even maker-style paper orders require positive modeled edge.
+            modeled_edge=prob-price*(1+FEE)
+        else:
+            price=book["ask"]+SLIPPAGE
+            if price<.05 or price>.95:
+                continue
+            modeled_edge=prob-price*(1+FEE)
+        if modeled_edge>=.05:
+            candidates.append((modeled_edge,side,price,book))
+    if not candidates:
+        return None
+    edge,side,price,book=max(candidates,key=lambda x:x[0])
+    allocation=min(MAX_STAKE,available(account),MAX_OPEN_COST-risk_exposure(account))
+    shares=math.floor(allocation/(price*(1+FEE))*10000)/10000
+    if shares<MIN_SHARES:
+        return None
+    cost=round(shares*price*(1+FEE),8)
+    if cost>available(account)+1e-8:
+        return None
+    entry={"slug":slug,"side":side,"price":round(price,6),
+           "shares":shares,"cost":cost,"edge":round(edge,6),"placed_at":now}
+    account["signals"]+=1
+    if mode=="limit":
+        order={**entry,"reserved":cost,"status":"open","type":"limit"}
+        account["orders"].append(order)
+        return "LIMIT "+side
+    if shares>book["ask_size"]:
+        return "MARKET no-fill: insufficient displayed top-ask depth"
+    account["cash"]=round(account["cash"]-cost,8)
+    account["trades"].append({**entry,"status":"open","type":"market","filled_at":now})
+    return "PAPER MARKET "+side
+
+def evaluate_limits(account,obs,now):
+    for order in account["orders"]:
+        if order["status"]!="open":
             continue
-        side = winner(market(obs["slug"]))
-        if side is None:
-            continue  # Never infer outcome from a third-party spot proxy.
-        obs["outcome"] = side
-        trade = trades.get(obs["slug"])
-        if trade and trade["status"] == "open":
-            payout = trade["shares"] if trade["side"] == side else 0.0
-            trade.update(status="settled", payout=round(payout, 8), pnl=round(payout-trade["stake"], 8), winner=side, settled_at=utc(now))
-            state["cash"] = round(state["cash"]+payout, 8)
-        count += 1
-    return count
+        if now>=obs["ends"] or order["slug"]!=obs["slug"]:
+            # Expired orders are not assumed filled; reservations are released.
+            order["status"]="expired"
+            order["cancelled_at"]=now
+            continue
+        if now<=order["placed_at"]:
+            continue # Never fill against same snapshot used for placement.
+        book=obs["quotes"][order["side"]]
+        if book["ask"] <= order["price"] and book["ask_size"] >= order["shares"]:
+            # Cross observed on a later poll: *hypothetical* fill at original
+            # limit price. No maker rebate claimed, no guarantee of actual fill.
+            order["status"]="filled"
+            order["filled_at"]=now
+            account["cash"]=round(account["cash"]-order["cost"],8)
+            account["trades"].append({k:v for k,v in order.items() if k not in ("reserved","status","type")} |
+                                    {"status":"open","type":"limit_cross","filled_at":now})
 
-def observe(now):
-    start = now//WINDOW*WINDOW
-    if start+WINDOW-now < 360:
-        start += WINDOW
-    slug = "btc-updown-15m-" + str(start)
-    item = market(slug)
-    if item.get("closed") or not item.get("acceptingOrders") or not item.get("enableOrderBook"):
-        raise ValueError("Market not accepting orders: " + slug)
-    tokens = arr(item["clobTokenIds"])
-    if len(tokens) != 2:
-        raise ValueError("Expected two outcome tokens")
-    return {"slug": slug, "ends": start+WINDOW, "observed_at": utc(now), "features": features(), "quotes": {"Up": best_ask(str(tokens[0])), "Down": best_ask(str(tokens[1]))}, "outcome": None}
+def process_snapshot(state,obs,predictions):
+    now=obs["observed_at"]
+    state["markets"].setdefault(obs["slug"],{"ends":obs["ends"],"outcome":None,"checked_at":0})
+    decisions=[]
+    for name,mode in POLICIES.items():
+        account=state["accounts"][name]
+        evaluate_limits(account,obs,now)
+        p=fair_probability(name,obs,predictions)
+        message=maybe_order(account,obs,p,mode,now)
+        if message:
+            decisions.append(name+":"+message)
+    return decisions
 
-def enter(state, obs, params):
-    chosen = choose(obs, params)
-    if not chosen:
-        return "No qualifying paper trade"
-    stake = min(chosen["stake"], state["cash"])
-    if stake < .99:
-        return "Not enough paper cash"
-    shares = stake / (chosen["price"] * (1+FEE))
-    if shares > obs["quotes"][chosen["side"]]["size"]:
-        return "Insufficient best-ask liquidity"
-    if any(t["slug"] == obs["slug"] for t in state["trades"]):
-        return "Duplicate entry blocked"
-    state["trades"].append({"slug": obs["slug"], "side": chosen["side"], "stake": round(stake,8), "shares": round(shares,8), "price": round(chosen["price"],6), "modeled_edge": round(chosen["edge"],6), "reason": chosen["reason"], "opened_at": obs["observed_at"], "status": "open"})
-    state["cash"] = round(state["cash"]-stake, 8)
-    return "Paper BUY %s for $%.2f at %.3f (%s)" % (chosen["side"],stake,chosen["price"],chosen["reason"])
+def reconcile(state,now):
+    due={slug:m for slug,m in state["markets"].items()
+         if m["outcome"] is None and now>=m["ends"]+30 and now-m["checked_at"]>=60}
+    for slug,info in due.items():
+        info["checked_at"]=now
+        outcome=settlement(slug)
+        if outcome is None:
+            continue
+        info["outcome"]=outcome
+        info["resolved_at"]=now
+        for account in state["accounts"].values():
+            for order in account["orders"]:
+                if order["slug"]==slug and order["status"]=="open":
+                    order["status"]="expired"
+                    order["cancelled_at"]=now
+            for trade in account["trades"]:
+                if trade["slug"]!=slug or trade["status"]!="open":
+                    continue
+                payout=trade["shares"] if trade["side"]==outcome else 0.0
+                trade.update(status="settled",won=trade["side"]==outcome,
+                             payout=round(payout,8),pnl=round(payout-trade["cost"],8),
+                             settled_at=now)
+                account["cash"]=round(account["cash"]+payout,8)
 
-def report(state):
-    trades = state["trades"]
-    done = [t for t in trades if t["status"] == "settled"]
-    opened = [t for t in trades if t["status"] == "open"]
-    pnl = sum(t["pnl"] for t in done)
-    wins = sum(t["pnl"] > 0 for t in done)
-    rows = ["# YeNo Paper Lab — Results", "", "Last run: **%s**" % (state["last_run"] or "Not yet run"), "", "| Metric | Value |", "|---|---:|", "| Starting cash | $100.00 |", "| Available paper cash | $%.2f |" % state["cash"], "| Open cost basis (not marked-to-market) | $%.2f |" % sum(t["stake"] for t in opened), "| Realized P&L | $%+.2f |" % pnl, "| Settled trades | %d |" % len(done), "| Win rate | %s |" % ("%.1f%%" % (100*wins/len(done)) if done else "N/A"), "| Open positions | %d |" % len(opened), "| Recorded observations | %d |" % len(state["observations"]), "", "## Latest trades", "", "| Market | Side | Stake | Status | P&L |", "|---|---|---:|---|---:|"]
-    for t in reversed(trades[-25:]):
-        rows.append("| [%s](https://polymarket.com/event/%s) | %s | $%.2f | %s | %s |" % (t["slug"], t["slug"], t["side"], t["stake"], t["status"], "$%+.2f" % t["pnl"] if "pnl" in t else "—"))
-    if not trades:
-        rows.append("| No trades | — | — | — | — |")
-    rows += ["", "## Assumptions", "", "Observed Polymarket 15-minute BTC Up/Down order-book asks; settlement uses only Gamma officially resolved outcomes.", "Execution is hypothetical: quoted best ask + $0.005/share and 2% modeled entry fees (not a real fee quote). A real order might not fill at this price.", "The baseline strategy is experimental and not calibrated. No leverage, no orders, no wallet, no signing, no exchange keys.", ""]
-    return "\n".join(rows)
+def render(state):
+    header=["# YeNo Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m BRTI Up/Down. All orders **simulated**.",
+            "Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest cycle: **%s**." %
+            (stamp(state["last_run"]) if state["last_run"] else "Not yet run"), "",
+            "| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |",
+            "|---|---:|---:|---:|---:|---:|"]
+    for name,account in state["accounts"].items():
+        settled=[t for t in account["trades"] if t["status"]=="settled"]
+        pending=[o for o in account["orders"] if o["status"]=="open"]
+        opening=[t for t in account["trades"] if t["status"]=="open"]
+        pnl=sum(t["pnl"] for t in settled)
+        header.append("| %s | $%.2f | $%+.2f | %d | %d | %d |" %
+                      (name,account["cash"],pnl,len(settled),len(opening),len(pending)))
+    header += ["", "Realized profit is **not** total equity: active positions are not marked to market.",
+                "US YES book is the market source; NO quotes are complement-derived.",
+                "Limit fills require a **later** observed ask crossing the resting bid and displayed size covering the order. This is an optimistic uncertainty bound, **not proof a resting order actually filled**.",
+                "Entry cost uses an assumed 2% fee buffer; marketable buys additionally add $0.005/share slippage. No actual fee or rebate schedule is inferred.",
+                "Five frozen 250K checkpoints use trained BRTI/display histories; 52 slow macro context fields are mean-imputed (not the original live feature distribution). Results are exploratory and uncalibrated.",
+                "The remaining seven strategies are explicit deterministic baselines, including a no-trade account.",
+                "No authentication, private APIs, real orders, funds or wallets.", ""]
+    return "\n".join(header)
 
-def run():
-    state = load()
-    now = int(time.time())
-    resolved = settle(state, now)
-    obs = observe(now)
-    if not any(x["slug"] == obs["slug"] for x in state["observations"]):
-        state["observations"].append(obs)
-        action = enter(state, obs, validate(json.loads(STRATEGY.read_text())))
-    else:
-        action = "Already observed; duplicate prevented"
-    state["last_run"] = utc(now)
+def cycle(state,feed,models,now=None):
+    now=int(time.time() if now is None else now)
+    reconcile(state,now)
+    observation=feed.observe(now)
+    probabilities=models.all(observation)
+    # The source quote must still be recent when the decision is made.
+    if time.time()-observation["observed_at"] > 12:
+        raise ValueError("Stale quote after model inference; no paper orders")
+    decisions=process_snapshot(state,observation,probabilities)
+    append_observation(observation)
+    state["last_run"]=observation["observed_at"]
     save(state)
-    REPORT.write_text(report(state))
-    print("%s | resolved=%d | %s | cash=$%.2f" % (state["last_run"], resolved, action, state["cash"]))
+    REPORT.write_text(render(state))
+    print(stamp(now),"US",observation["slug"],"signals",len(decisions),
+          "decisions",", ".join(decisions[:5]) or "none",flush=True)
 
-if __name__ == "__main__":
-    action = sys.argv[1] if len(sys.argv) > 1 else "run"
-    if action == "run":
-        run()
-    elif action == "report":
-        REPORT.write_text(report(load()))
+def main():
+    ap=argparse.ArgumentParser()
+    ap.add_argument("command",choices=("run","report","check"),nargs="?",default="run")
+    ap.add_argument("--duration",type=int,default=0,help="Seconds of 15s polling (0 = one observation)")
+    opts=ap.parse_args()
+    state=load()
+    if opts.command=="report":
+        REPORT.write_text(render(state))
         print(REPORT.read_text())
-    else:
-        sys.exit("Usage: python yeno.py [run|report]")
+        return
+    if opts.command=="check":
+        from predictors import SCALES
+        assert len(SCALES["x_mean"])==24 and len(SCALES["c_mean"])==64
+        print("US paper engine configured; models:",", ".join(MODELS))
+        return
+    feed,models=USFeed(),Predictions()
+    deadline=time.monotonic()+opts.duration
+    while True:
+        started=time.monotonic()
+        try:
+            cycle(state,feed,models)
+        except Exception as exc:
+            print(stamp(),"US feed/model cycle failed; NO speculative trade:",str(exc),flush=True)
+            save(state)
+            REPORT.write_text(render(state))
+            if not opts.duration:
+                raise
+        if not opts.duration:
+            return
+        remaining=deadline-time.monotonic()
+        if remaining<=0:
+            return
+        time.sleep(min(remaining,max(0,15-(time.monotonic()-started))))
+
+if __name__=="__main__":
+    main()

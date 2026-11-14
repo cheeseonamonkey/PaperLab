@@ -1,0 +1,34 @@
+{
+  "venue": "Polymarket US",
+  "source_repository": "https://github.com/cheeseonamonkey/YeNoVolumeLab",
+  "inspected_source_commit": "b6e333716976833b6cbc79102cec9824b590ee07",
+  "exact_original_training_commit": "unverified",
+  "run": "market_us/results/us-20-250k-all-days",
+  "models": [
+    "stacked_rnn",
+    "skip_gru_2",
+    "depthwise_tcn",
+    "lstm",
+    "conv_gru"
+  ],
+  "model_selection": "Five models with positive nonzero learned epochs and market-relative improvement on both chronological folds; not proven trade profits.",
+  "incomplete_40_model_sweep": "us-40-200k-oneepoch progress reports only 1 of 40 completed",
+  "feature_warning": "52 macro input channels mean-imputed during live US paper inference; compatibility has not been validated",
+  "sha256": {
+    "models/checkpoints/conv_gru.json": "3aefecb1daf3c4bbcf8f95ac01e3e33cbe09367c505ef7b670eb01a48d5d408e",
+    "models/checkpoints/conv_gru.pt": "e3c63339b12c51329a839654b41b377fb1b3122de97364bd26ec9a1f3eabc9af",
+    "models/checkpoints/depthwise_tcn.json": "952b9b38f23504e29bbe8a38c01434b2d6218186dc391c2c9bf15536d292defe",
+    "models/checkpoints/depthwise_tcn.pt": "b86af3059104f6811689604719e225b93917bdfa1a59db2d471f2827b9e90e29",
+    "models/checkpoints/lstm.json": "2d6f67a0c694c8ee3d042a17ebe1df81cfb038498bf53d40818242156915f9b4",
+    "models/checkpoints/lstm.pt": "2d6f655822572329bd2ce40145627066dfdd5f62bd920d3a015380af8555ef91",
+    "models/checkpoints/skip_gru_2.json": "c1b09c34cb05b68515289914704c6d517ac6fa3f7c0b408302bf4c1ce4d587d9",
+    "models/checkpoints/skip_gru_2.pt": "ff33d887b4bd8a0e1f2aa7f2c4be394009b82094a4e30901d784375d24a0ad9e",
+    "models/checkpoints/stacked_rnn.json": "971e7ce20f6e742a06fba8f20a73424f065bbe4e4da40ccebf3f3a23e8c37b3c",
+    "models/checkpoints/stacked_rnn.pt": "267adfba3b689bc136091da4e4df2db07f8265f08c6264a79444145fe28a2d3a",
+    "models/feature_audit.json": "990cb1b8f9d6e931ce59cf5f20222a913bbee46485fe4dc434a27bd3ca2d4fe4",
+    "models/finished.json": "35cc254c44a6e23ee952cbb02be09b9b6f74e1af7f1b62b14777373f71d3827b",
+    "models/fold_comparisons.json": "ee3293db02e55a969fe5e60b5180c61b7308a6864ab3e712b96c9583e49c208b",
+    "models/scalers.json": "eb96eb28322228a6fd851b40425c255a6a6ea09cf03af3f21acf3318c8bf8683",
+    "models/training_manifest.json": "5a608b3cc84d0af2fa88b10d65a5fef8f3c4cf36b4030d9f81e4eb1ae477990f"
+  }
+}

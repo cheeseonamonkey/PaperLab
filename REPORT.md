@@ -1,26 +1,27 @@
-# YeNo Paper Lab — Results
+# YeNo Paper Lab — Polymarket US
 
-Last run: **2026-11-14 07:02:36 UTC**
+Venue: **Polymarket US**, BTC 15m BRTI Up/Down. All orders **simulated**.
+Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest cycle: **2026-11-14T07:39:31+00:00**.
 
-| Metric | Value |
-|---|---:|
-| Starting cash | $100.00 |
-| Available paper cash | $99.00 |
-| Open cost basis (not marked-to-market) | $1.00 |
-| Realized P&L | $+0.00 |
-| Settled trades | 0 |
-| Win rate | N/A |
-| Open positions | 1 |
-| Recorded observations | 1 |
+| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |
+|---|---:|---:|---:|---:|---:|
+| book_imbalance | $100.00 | $+0.00 | 0 | 0 | 0 |
+| brti_distance | $100.00 | $+0.00 | 0 | 0 | 0 |
+| brti_distance_limit | $100.00 | $+0.00 | 0 | 0 | 0 |
+| btc_momentum | $100.00 | $+0.00 | 0 | 0 | 0 |
+| btc_reversion | $100.00 | $+0.00 | 0 | 0 | 0 |
+| conv_gru | $100.00 | $+0.00 | 0 | 0 | 0 |
+| cross_asset_momentum | $100.00 | $+0.00 | 0 | 0 | 0 |
+| depthwise_tcn | $100.00 | $+0.00 | 0 | 0 | 0 |
+| lstm | $100.00 | $+0.00 | 0 | 0 | 0 |
+| market_implied | $100.00 | $+0.00 | 0 | 0 | 0 |
+| skip_gru_2 | $100.00 | $+0.00 | 0 | 0 | 0 |
+| stacked_rnn | $100.00 | $+0.00 | 0 | 0 | 0 |
 
-## Latest trades
-
-| Market | Side | Stake | Status | P&L |
-|---|---|---:|---|---:|
-| [btc-updown-15m-1794639600](https://polymarket.com/event/btc-updown-15m-1794639600) | Up | $1.00 | open | — |
-
-## Assumptions
-
-Observed Polymarket 15-minute BTC Up/Down order-book asks; settlement uses only Gamma officially resolved outcomes.
-Execution is hypothetical: quoted best ask + $0.005/share and 2% modeled entry fees (not a real fee quote). A real order might not fill at this price.
-The baseline strategy is experimental and not calibrated. No leverage, no orders, no wallet, no signing, no exchange keys.
+Realized profit is **not** total equity: active positions are not marked to market.
+US YES book is the market source; NO quotes are complement-derived.
+Limit fills require a **later** observed ask crossing the resting bid and displayed size covering the order. This is an optimistic uncertainty bound, **not proof a resting order actually filled**.
+Entry cost uses an assumed 2% fee buffer; marketable buys additionally add $0.005/share slippage. No actual fee or rebate schedule is inferred.
+Five frozen 250K checkpoints use trained BRTI/display histories; 52 slow macro context fields are mean-imputed (not the original live feature distribution). Results are exploratory and uncalibrated.
+The remaining seven strategies are explicit deterministic baselines, including a no-trade account.
+No authentication, private APIs, real orders, funds or wallets.

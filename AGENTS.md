@@ -1,11 +1,13 @@
-# Autonomous research guardrails
+# YeNo US paper-only guardrails
 
-This is a PAPER-ONLY experiment. There are no real-money execution paths.
-
-- Never implement signing, wallets, exchange order submission, private REST endpoints, leverage, or real-money integrations.
-- Do not alter the ledger format, official-only settlement, trade-size limits, or execution-cost assumptions in autonomous research.
-- Never infer market resolution from spot prices or backfill historical snapshots with prices unavailable at observation time.
-- Only propose edits to strategies/champion.json for a human reviewer after independent validation. The automated Pi research workflow writes to research/proposals only.
-- Preserve chronological train/holdout isolation; never train on the withheld period. Multiple repeated holdout queries can overfit.
-- Do not enable paid-model fallback, run shell tools in an LLM agent, or expose the OpenRouter key in repository contents/logs.
-- Before changing the engine, update tests and run python -m unittest discover -s tests -v.
+- Canonical source: https://github.com/cheeseonamonkey/YeNoPaperLab
+- VENUE = Polymarket US (gateway.polymarket.us), BTC BRTI 15-minute contracts. Do not use international Gamma/CLOB API or treat those markets as equivalent.
+- Paper only, $100 independent initial cash for each of 12 strategies. Do not implement authentication, wallet signing, order submission, private endpoints, leverage, or live funds.
+- Five 250K PyTorch checkpoints and scalers originate from the preserved YeNoVolumeLab US 20-model screen; use their exact feature ordering, dimensionality, and causal timestamps. The 40-architecture run had only 1/40 checkpoints completed, not a winning 40-way study.
+- Model context currently mean-imputes 52 macro features; expose this deviation and DO NOT claim equivalent trained feature distribution or proven edge.
+- Limit orders are purely hypothetical cross-on-later-snapshot fills; never assume posted maker rebates or queue priority. A cross does not prove a real fill.
+- Settlement is ONLY from /v1/markets/{slug}/settlement returning 0 or 1; no third-party BTC price proxy.
+- New strategies get isolated paper portfolios; no shared capital or state leaks. Keep identical risk controls.
+- The Pi research workflow may write review-only hypotheses to research/proposals, never mutate execution, account balances, model checkpoints, or production strategy selection.
+- State and market observations are versioned in the repo, with compressed per-day observations. Preserve and test backward compatibility before schema changes.
+- Run python -m unittest discover -s tests -v and python -m py_compile on affected files.
