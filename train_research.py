@@ -93,6 +93,8 @@ def sigmoid(x):
 
 def transform(raw, kind):
     result=list(raw)
+    if kind=="market_only":
+        result[2:10] = [0.0] * 8
     if kind=="tanh_returns":
         for j in range(2,6):
             result[j]=math.tanh(result[j]*1000)
@@ -126,17 +128,33 @@ def fit(rows, epochs=25, rate=.08, regularization=.01, kind="linear"):
 
 def score(rows, model):
     counts = Counter(r[1] for r in rows)
-    sums = [0.0, 0.0]
+    sums = [0.0, 0.0, 0.0, 0.0]
     total = 0.0
     for at,name,raw,y,source in rows:
         z = [(v-m)/s for v,m,s in zip(transform(raw,model.get("transform","linear")),model["mean"],model["scale"])]
         pred = sigmoid(raw[0]+model["weights"][0]+sum(b*v for b,v in zip(model["weights"][1:],z)))
         w = 1/counts[name]
         sums[0] += w*(pred-y)**2
-        sums[1] += w*(sigmoid(raw[0])-y)**2
+        market = sigmoid(raw[0])
+        sums[1] += w*(market-y)**2
+        pred = min(1-1e-12, max(1e-12, pred))
+        market = min(1-1e-12, max(1e-12, market))
+        sums[2] -= w*(y*math.log(pred)+(1-y)*math.log1p(-pred))
+        sums[3] -= w*(y*math.log(market)+(1-y)*math.log1p(-market))
         total += w
     return {"brier":sums[0]/total,"market_brier":sums[1]/total,
+            "log_loss":sums[2]/total,"market_log_loss":sums[3]/total,
             "markets":len(counts),"rows":len(rows)}
+
+
+def grouped_scores(rows, model):
+    groups = {}
+    for horizon in ("15m", "1h"):
+        for source in ("bootstrap", "live"):
+            subset = [r for r in rows if ("-1h-" in r[1]) == (horizon == "1h") and r[4] == source]
+            if subset:
+                groups[horizon + ":" + source] = score(subset, model)
+    return groups
 
 
 def main():
@@ -151,11 +169,12 @@ def main():
         train, validation, cutoff, label = chronological_split(rows)
         if train and validation:
             experiments=[]
-            for name,kind,penalty in (("linear","linear",.01),("regularized","linear",.10),
+            for name,kind,penalty in (("linear","linear",.01),("market_only","market_only",.01),("regularized","linear",.10),
                                       ("tanh_returns","tanh_returns",.01)):
                 trial=fit(train,regularization=penalty,kind=kind)
                 experiments.append({"name":name,"transform":kind,"regularization":penalty,
-                                    "validation":score(validation,trial)})
+                                    "validation":score(validation,trial),
+                                    "validation_groups":grouped_scores(validation,trial)})
             manifest.update(status="trained", validation_window=label, validation_cutoff_utc=cutoff,
                             training_markets=len({r[1] for r in train}), validation=experiments[0]["validation"],
                             experiments=experiments,
@@ -179,6 +198,14 @@ def main():
             v=experiment["validation"]
             lines.append("| %s | %.4f | %.4f | %d |" %
                          (experiment["name"],v["brier"],v["market_brier"],v["markets"]))
+    if manifest.get("experiments"):
+        lines += ["", "## Baseline by horizon and source", "",
+                  "| Horizon / source | Markets | Brier | Market Brier | Log loss | Market log loss |",
+                  "|---|---:|---:|---:|---:|---:|"]
+        for name, v in manifest["experiments"][0]["validation_groups"].items():
+            lines.append("| %s | %d | %.4f | %.4f | %.4f | %.4f |" %
+                         (name, v["markets"], v["brier"], v["market_brier"], v["log_loss"], v["market_log_loss"]))
+        lines += ["", "Validation is repeatedly reused; small groups are descriptive and do not establish an edge."]
     page.write_text("\n".join(lines)+"\n")
     print(json.dumps(manifest, sort_keys=True), flush=True)
 

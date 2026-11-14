@@ -41,6 +41,22 @@ class ResearchChecks(unittest.TestCase):
             self.assertEqual(len(result),1)
             self.assertEqual(result[0][3:],(1,"bootstrap"))
 
+    def test_grouped_scores_and_market_only_ablation(self):
+        import math
+        m15 = "cpc-btc-updown-15m-2026-11-14-1000z"
+        m1 = "cpc-btc-updown-1h-2026-11-14-1000z"
+        f = train_research.features(.6, "15m", {"BTC": .001})
+        rows = [(ts("2026-11-14 10:05"),m15,f,1,"bootstrap"),
+                (ts("2026-11-14 10:05"),m1,f,0,"live")]
+        model = train_research.fit(rows, epochs=0, kind="market_only")
+        groups = train_research.grouped_scores(rows, model)
+        self.assertEqual(set(groups), {"15m:bootstrap", "1h:live"})
+        self.assertEqual(train_research.transform(f, "market_only")[2:], [0.0]*8)
+        self.assertAlmostEqual(groups["15m:bootstrap"]["brier"], .16)
+        self.assertAlmostEqual(groups["15m:bootstrap"]["log_loss"], -math.log(.6))
+        self.assertAlmostEqual(groups["1h:live"]["market_brier"], .36)
+        self.assertEqual(groups["1h:live"]["markets"], 1)
+
     def test_candles_are_not_used_until_closed(self):
         candles = {"BTC": [[ts("2026-11-14 10:00"), 0, 0, 0, 100, 1],
                            [ts("2026-11-14 10:01"), 0, 0, 0, 101, 1]]}
