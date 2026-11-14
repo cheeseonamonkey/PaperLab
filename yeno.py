@@ -278,7 +278,7 @@ def render(state):
     stats = state.get("polling", {})
     settled_markets=sum(m.get("outcome") is not None for m in state.get("markets",{}).values())
     settled_positions=sum(t["status"]=="settled" for a in state["accounts"].values() for t in a["trades"])
-    header=["# YeNo Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m BRTI Up/Down. All orders **simulated**.",
+    header=["# YeNo Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.",
             "Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **%s**." %
             (stamp(state["last_run"]) if state["last_run"] else "Not yet run"), "",
             "Research sample: **%d markets tracked / %d officially settled / %d settled strategy positions**." %
@@ -348,7 +348,7 @@ def cycle(state,feed,models,now=None):
     now=int(time.time() if now is None else now)
     reconcile(state,now)
     observation=feed.observe(now)
-    probabilities=models.all(observation)
+    probabilities=models.all(observation) if observation["ends"]-observation["start"] == 900 else {}
     # The source quote must still be recent when the decision is made.
     if time.time()-observation["observed_at"] > 12:
         raise ValueError("Stale quote after model inference; no paper orders")
@@ -378,22 +378,23 @@ def main():
         assert len(SCALES["x_mean"])==24 and len(SCALES["c_mean"])==64
         print("US paper engine configured; models:",", ".join(MODELS))
         return
-    feed,models=USFeed(),Predictions()
+    feeds,models=[USFeed("15m"),USFeed("1h")],Predictions()
     deadline=time.monotonic()+opts.duration
     while True:
         started=time.monotonic()
-        state["polling"]["attempts"]+=1
-        state["polling"]["last_attempt"]=int(time.time())
-        try:
-            cycle(state,feed,models)
-        except Exception as exc:
-            print(stamp(),"US feed/model cycle failed; NO speculative trade:",str(exc),flush=True)
-            state["polling"]["skipped"]+=1
-            state["polling"]["last_error"]=type(exc).__name__+": "+str(exc)[:160]
-            save(state)
-            write_outputs(state)
-            if not opts.duration:
-                raise
+        for feed in feeds:
+            state["polling"]["attempts"]+=1
+            state["polling"]["last_attempt"]=int(time.time())
+            try:
+                cycle(state,feed,models)
+            except Exception as exc:
+                print(stamp(),"US",feed.horizon,"feed/model cycle failed; NO speculative trade:",str(exc),flush=True)
+                state["polling"]["skipped"]+=1
+                state["polling"]["last_error"]=type(exc).__name__+": "+str(exc)[:160]
+                save(state)
+                write_outputs(state)
+                if not opts.duration:
+                    raise
         if not opts.duration:
             return
         remaining=deadline-time.monotonic()
