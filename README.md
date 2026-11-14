@@ -7,6 +7,9 @@
 - Simulates both marketable buys and **resting limit buys**, with cash reservations, expiry/cancellation and delayed observed crossing. Settles exclusively using the **official US 0/1 settlement endpoint**.
 - Competing independent models all see a **single shared, timestamped data feed**. Inputs include official BRTI minute candles, current Polymarket US bid/ask/top-5 depth, US price-to-beat and display history, time to expiry, book imbalance, and additional BTC/ETH/SOL/XRP spot context. Coinbase context does not determine official settlement.
 
+<!-- YENO_STATUS_START -->
+<!-- YENO_STATUS_END -->
+
 ## Strategies
 
 | Account | Signal | Paper execution |
