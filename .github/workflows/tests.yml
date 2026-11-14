@@ -1,6 +1,12 @@
 name: Tests
 on:
   push:
+    paths-ignore:
+      - 'data/**'
+      - 'docs/**'
+      - 'research/proposals/**'
+      - 'README.md'
+      - 'REPORT.md'
   pull_request:
 
 permissions:

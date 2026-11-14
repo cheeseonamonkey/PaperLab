@@ -11,6 +11,10 @@ on:
         description: 'Live collection duration (60-3600 seconds)'
         type: number
         default: 90
+      run_research:
+        description: 'Run the daily gated research proposal step'
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -89,7 +93,7 @@ jobs:
   publish:
     needs: [collect, bots]
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,6 +123,48 @@ jobs:
         if: always() && steps.merge.outcome == 'success'
         timeout-minutes: 6
         run: python train_research.py
+      - name: Gate daily review-only research
+        id: research_gate
+        if: always() && steps.merge.outcome == 'success'
+        continue-on-error: true
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_RESEARCH: ${{ inputs.run_research }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          day="$(date -u +%Y%m%d)"
+          requested=false
+          if [[ "$EVENT_NAME" == schedule || ( "$EVENT_NAME" == workflow_dispatch && "$RUN_RESEARCH" == true ) ]]; then
+            if ! compgen -G "research/proposals/${day}T*.json" > /dev/null; then
+              requested=true
+            fi
+          fi
+          if [[ "$requested" == true && -n "$OPENROUTER_API_KEY" ]] && [[ "$(python research.py ready)" == ready ]]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Skipping optional Pi research: already proposed today, not requested, key unavailable, or fewer than 40 settled US markets.'
+          fi
+      - name: Install Pi
+        id: install_pi
+        if: steps.research_gate.outputs.ready == 'true'
+        continue-on-error: true
+        timeout-minutes: 5
+        run: npm install -g @mariozechner/pi-coding-agent@0.73.1
+      - name: Generate bounded review-only proposal
+        if: steps.research_gate.outputs.ready == 'true' && steps.install_pi.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/yeno-research"
+          python research.py prompt > "$RUNNER_TEMP/yeno-research/summary.json"
+          cd "$RUNNER_TEMP/yeno-research"
+          pi --provider openrouter --model openrouter/free --no-session --tools read --print \
+            'Read summary.json and propose ONE practical next experiment. Output ONLY one JSON object with four string keys: title, hypothesis, evaluation, risks. No markdown. No real trading or execution commands.' \
+            > "$RUNNER_TEMP/yeno-research/proposal.txt"
+          cd "$GITHUB_WORKSPACE"
+          python research.py evaluate "$RUNNER_TEMP/yeno-research/proposal.txt"
       - name: Commit state, data and reports
         if: always() && steps.merge.outcome == 'success'
         run: |
@@ -127,7 +173,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           mkdir -p data/backfill data/bootstrap data/training data/ledgers docs
-          git add data/state.json data/observations data/backfill data/bootstrap data/training data/ledgers docs REPORT.md README.md
+          git add data/state.json data/observations data/backfill data/bootstrap data/training data/ledgers docs research/proposals REPORT.md README.md
           if ! git diff --cached --quiet; then
             git commit -m 'data: Polymarket US paper session [skip ci]'
             git pull --rebase origin "$GITHUB_REF_NAME"
@@ -142,5 +188,6 @@ jobs:
           path: |
             data/
             docs/
+            research/proposals/
             REPORT.md
           retention-days: 7
