@@ -36,6 +36,7 @@ def export(state):
         markets = metric.get("markets", 0)
         brier = "%.4f" % (metric["brier_sum"]/markets) if markets else "—"
         delta = "%+.4f" % ((metric["market_brier_sum"]-metric["brier_sum"])/markets) if markets else "—"
+        fees = sum(o.get("fee", 0) or 0 for o in orders if o.get("status") == "filled")
         page = ["# " + name, "", "Paper account · simulated orders", "",
                 "| Metric | Value |", "|---|---:|",
                 "| Cash | $%.2f |" % account["cash"],
@@ -43,7 +44,9 @@ def export(state):
                 "| Realized P&L | $%+.2f |" % pnl,
                 "| Settled wins / losses | %d / %d |" % (wins, losses),
                 "| Open positions | %d |" % sum(t["status"] == "open" for t in trades),
-                "| Pending limits | %d |" % sum(o["status"] == "open" for o in orders),
+                "| Pending orders | %d |" % sum(o["status"] == "open" for o in orders),
+                "| Orders filled / placed | %d / %d |" % (sum(o["status"] == "filled" for o in orders), len(orders)),
+                "| Recorded exit fees | $%.4f |" % fees,
                 "| Brier (markets) | %s (%d) |" % (brier, markets),
                 "| ΔBrier vs market | %s |" % delta, "",
                 "[Order ledger](../../data/ledgers/" + name + "-orders.csv) · " +
@@ -51,5 +54,15 @@ def export(state):
         if settled:
             page += ["```mermaid", "pie title Settled simulated trades",
                      '    "Wins" : %d' % wins, '    "Losses" : %d' % losses, "```", ""]
-        page += ["Limit fills are estimates based on later observed book crossings; queue priority is unknown.", ""]
+        page += ["## Results by market horizon", "",
+                 "| Horizon | Closed trades | Realized P&L |",
+                 "|---|---:|---:|"]
+        for horizon in ("15m", "1h"):
+            group = [t for t in settled if "-" + horizon + "-" in t.get("slug", "")]
+            page.append("| %s | %d | $%+.2f |" %
+                        (horizon, len(group), sum(t.get("pnl", 0) for t in group)))
+        page += ["", "## Research", "",
+                 "The shared research candidate is evaluated separately; it is not deployed to this account. "
+                 "[Latest experiments](../research/latest.md) · [Research plan](../RESEARCH.md)", "",
+                 "Limit fills are estimates based on later observed book crossings; queue priority is unknown.", ""]
         (PAGES / (name + ".md")).write_text("\n".join(page), encoding="utf-8")
