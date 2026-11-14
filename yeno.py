@@ -329,7 +329,9 @@ def write_outputs(state):
     report_lines=report.splitlines()
     table_start=report_lines.index("| Strategy | Paper cash | Realized P&L | Win rate | Brier (markets) | ΔBrier vs market | Settled | Open | Pending limits |")
     table_end=next(i for i in range(table_start+2,len(report_lines)) if not report_lines[i].startswith("|"))
+    benchmark_line=next(line for line in report_lines[table_end+1:] if line.startswith("Market-midpoint benchmark:"))
     status=[README_START,"## Current research status","",*report_lines[2:table_end],"",
+            benchmark_line,"",
             "Win rate uses settled simulated fills. Forecast Brier averages snapshots within each market, then averages markets; n is the number of settled markets. Positive ΔBrier means better than the paired market-midpoint forecast; lower Brier is better.",
             "",
             "Full caveats and the audit trail are in [REPORT.md](REPORT.md).",README_END]
