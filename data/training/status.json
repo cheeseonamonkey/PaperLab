@@ -14,12 +14,22 @@
     "sol_missing",
     "xrp_missing"
   ],
-  "markets": 16,
-  "rows": 376,
+  "final_fit": "all available settled rows; validation included after scoring",
+  "markets": 30,
+  "rows": 721,
   "sources": {
-    "history": 375,
+    "history": 720,
     "live": 1
   },
-  "status": "waiting",
-  "updated_at": "2026-11-14T14:30:58.828112+00:00"
+  "status": "trained",
+  "training_markets": 25,
+  "updated_at": "2026-11-14T14:34:13.592379+00:00",
+  "validation": {
+    "brier": 0.18915661489649985,
+    "market_brier": 0.1925796666666667,
+    "markets": 5,
+    "rows": 120
+  },
+  "validation_cutoff_utc": 1794657600,
+  "validation_window": "latest UTC hour (early sample)"
 }
