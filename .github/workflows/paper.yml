@@ -53,7 +53,7 @@ jobs:
             exit 2
           fi
           python yeno.py run --duration "$seconds"
-      - name: Backfill three hours of US market and exogenous history
+      - name: Backfill US history and recover the latest closed hour
         if: always()
         timeout-minutes: 8
         run: python backfill.py
