@@ -1,4 +1,8 @@
 import unittest
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+import train_research
 from datetime import datetime, timezone
 
 from train_research import candle_returns, chronological_split, market_window
@@ -9,6 +13,14 @@ def ts(value):
 
 
 class ResearchChecks(unittest.TestCase):
+    def test_archived_backfill_is_never_a_training_input(self):
+        with tempfile.TemporaryDirectory() as root:
+            archive=Path(root)/"data"/"backfill"/"hours"/"2026-11-14"
+            archive.mkdir(parents=True)
+            (archive/"10.json.gz").write_bytes(b"not a valid gzip")
+            with patch.object(train_research,"ROOT",Path(root)):
+                self.assertEqual(train_research.examples(),[])
+
     def test_candles_are_not_used_until_closed(self):
         candles = {"BTC": [[ts("2026-11-14 10:00"), 0, 0, 0, 100, 1],
                            [ts("2026-11-14 10:01"), 0, 0, 0, 101, 1]]}
