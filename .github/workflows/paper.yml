@@ -20,7 +20,7 @@ concurrency:
 jobs:
   paper:
     runs-on: ubuntu-latest
-    timeout-minutes: 59
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -48,6 +48,14 @@ jobs:
             exit 2
           fi
           python yeno.py run --duration "$seconds"
+      - name: Backfill three hours of US market and exogenous history
+        if: always()
+        timeout-minutes: 8
+        run: python backfill.py
+      - name: Train research candidate on all available settled data
+        if: always()
+        timeout-minutes: 6
+        run: python train_research.py
       - name: Commit recoverable paper state and raw snapshots
         if: always()
         shell: bash
@@ -55,7 +63,8 @@ jobs:
           python yeno.py report
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/state.json data/observations REPORT.md README.md
+          mkdir -p data/backfill data/training
+          git add data/state.json data/observations data/backfill data/training REPORT.md README.md
           if ! git diff --cached --quiet; then
             git commit -m 'data: Polymarket US paper session [skip ci]'
             git push
