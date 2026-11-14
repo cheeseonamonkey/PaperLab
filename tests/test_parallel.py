@@ -45,6 +45,14 @@ class ParallelTests(unittest.TestCase):
             parallel.merge()
             self.assertEqual(json.loads(paper.STATE.read_text()),state)
 
+            result_path = Path("shard-results/0.json")
+            result = json.loads(result_path.read_text())
+            forecast = next(iter(result["state"]["markets"].values()))["forecasts"][0]
+            forecast["probabilities"]["lstm"] = 0.5
+            result_path.write_text(json.dumps(result))
+            with self.assertRaisesRegex(ValueError, "foreign strategy"):
+                parallel.merge()
+
 
 if __name__ == "__main__":
     unittest.main()
