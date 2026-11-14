@@ -3,7 +3,7 @@
 - Venue: Polymarket US BTC 15-minute and 1-hour binary Up/Down markets.
 - Collection target: one observation every 15 seconds; one optional action per account and market per minute.
 - Accounts: twelve isolated $100 simulated bankrolls; maximum order stake $15.
-- Order execution: paper limit buys and sells only. See [execution policy](EXECUTION.md) for actual fill proxy and the proposed urgent-exit experiment.
+- Order execution: paper limit buys and simulated marketable exits. See [execution policy](EXECUTION.md) for actual fill proxy and the proposed urgent-exit experiment.
 - Research: deterministic experiments on bootstrap plus settled live data; separate historical archive stays untouched by training. See [research plan](RESEARCH.md).
 - Persistence: GitHub repository state is canonical; CSV files and bot pages are generated views of JSON state.
 - Automation: hourly GitHub Actions runs can start late, queue, or fail. Uncommitted observations from a cancelled runner may be lost.
@@ -26,3 +26,9 @@ flowchart TD
   Archive["Ongoing historical archive"] --> Later["Reserved for future use"]
   Train --> Docs["Reports and CSV views"]
 ```
+
+## Planned parallel pipeline
+
+Collect a shared timestamped observation batch once, then fan out six isolated shards with up to two parent accounts each; their descendants stay with their parent shard. Each shard reads the same immutable data and writes only its own account state and results. A downstream job validates and combines the six outputs, updates shared training and research, generates reports, and commits once. Missing or duplicate shards must fail visibly rather than overwrite state. This is a design target; the current workflow is serialized and does not implement this pipeline yet. Batch processing must preserve timestamp order and avoid training on future observations or the separate historical archive.
+
+The feed rejects source timestamps over 15 seconds old when supplied; a missing source timestamp cannot establish freshness. A stationary book may also be rejected if its last exchange update exceeds that age.

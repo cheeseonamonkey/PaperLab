@@ -9,7 +9,7 @@ LEDGERS = ROOT / "data" / "ledgers"
 PAGES = ROOT / "docs" / "bots"
 FIELDS = ("slug", "side", "type", "status", "placed_at", "filled_at", "cancelled_at",
           "settled_at", "price", "shares", "cost", "reserved", "edge", "won", "payout", "pnl",
-          "trade_placed_at", "exit_price", "close_reason")
+          "trade_placed_at", "exit_price", "close_reason", "fee")
 
 
 def write_csv(path, items):

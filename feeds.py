@@ -184,7 +184,7 @@ class USFeed:
         if recent_book:
             try:
                 updated = dt.datetime.fromisoformat(recent_book.replace("Z", "+00:00")).timestamp()
-                if received - updated > 90 or updated - received > 10:
+                if received - updated > 15 or updated - received > 10:
                     raise ValueError("US book timestamp stale/in future")
             except (TypeError, AttributeError) as error:
                 raise ValueError("Invalid US book timestamp") from error

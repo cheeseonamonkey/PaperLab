@@ -183,19 +183,32 @@ def maybe_exit(account,obs,probability,now):
     for trade in account["trades"]:
         if trade["status"]!="open" or trade["slug"]!=obs["slug"]:
             continue
-        active=any(o.get("type")=="limit_sell" and o.get("trade_placed_at")==trade["placed_at"]
-                   and o["slug"]==trade["slug"] and o["status"]=="open" for o in account["orders"])
-        if active:
-            continue
         book=obs["quotes"][trade["side"]]
         side_probability=(probability if trade["side"]=="Up" else 1-probability) if probability is not None else None
-        if now < obs["ends"]-60 and (side_probability is None or side_probability > book["bid"]):
+        urgent=now>=obs["ends"]-60 or (side_probability is not None and side_probability<=book["bid"])
+        if not urgent:
             continue
-        account["orders"].append({"slug":trade["slug"],"side":trade["side"],"type":"limit_sell",
-                                  "status":"open","placed_at":now,"price":book["ask"],
-                                  "shares":trade["shares"],"reserved":0,
+        # Existing passive exit must be cancelled before an IOC is simulated.
+        for order in account["orders"]:
+            if (order.get("type")=="limit_sell" and order["slug"]==trade["slug"] and
+                    order.get("trade_placed_at")==trade["placed_at"] and order["status"]=="open"):
+                order.update(status="cancelled",cancelled_at=now)
+        # Conservative top-of-book, all-or-none approximation. Insufficient depth
+        # leaves the position open; it may be retried or settle.
+        price=book["bid"]
+        if price<=0 or book["bid_size"]<trade["shares"]:
+            return "IOC SELL no-fill: insufficient displayed depth"
+        fee=TAKER_COEFFICIENT*trade["shares"]*price*(1-price)
+        proceeds=round(price*trade["shares"]-fee,8)
+        pnl=round(proceeds-trade["cost"],8)
+        account["orders"].append({"slug":trade["slug"],"side":trade["side"],"type":"ioc_sell",
+                                  "status":"filled","placed_at":now,"filled_at":now,"price":price,
+                                  "shares":trade["shares"],"reserved":0,"fee":round(fee,8),
                                   "trade_placed_at":trade["placed_at"]})
-        return "LIMIT SELL "+trade["side"]
+        trade.update(status="settled",settled_at=now,close_reason="ioc_sell",
+                     exit_price=price,payout=proceeds,pnl=pnl,won=pnl>0)
+        account["cash"]=round(account["cash"]+proceeds,8)
+        return "IOC SELL "+trade["side"]
     return None
 
 def evaluate_limits(account,obs,now,markets=None):

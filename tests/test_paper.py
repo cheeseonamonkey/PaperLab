@@ -127,23 +127,40 @@ class PaperTests(unittest.TestCase):
         self.assertLess(small["orders"][0]["cost"],large["orders"][0]["cost"])
         self.assertLessEqual(large["orders"][0]["cost"],15)
 
-    def test_limit_sell_requires_later_cross(self):
+    def test_existing_passive_sell_requires_later_cross(self):
+        acct=paper.initial()["accounts"]["brti_distance"]
+        trade={"slug":self.slug,"side":"Up","status":"open","placed_at":self.now-60,"shares":10,"cost":5}
+        acct["trades"].append(trade)
+        order={"slug":self.slug,"side":"Up","type":"limit_sell","status":"open",
+               "placed_at":self.now,"price":.7,"shares":10,"reserved":0,"trade_placed_at":trade["placed_at"]}
+        acct["orders"].append(order)
+        paper.evaluate_limits(acct,self.obs,self.now)
+        self.assertEqual(order["status"],"open")
+        obs=copy.deepcopy(self.obs)
+        obs["quotes"]["Up"].update(bid=.7,bid_size=100)
+        paper.evaluate_limits(acct,obs,self.now+15)
+        self.assertEqual(trade["close_reason"],"limit_sell")
+
+    def test_urgent_exit_charges_taker_fee(self):
         acct=paper.initial()["accounts"]["brti_distance"]
         trade={"slug":self.slug,"side":"Up","type":"limit_cross","status":"open",
                "placed_at":self.now-60,"shares":10,"cost":5}
         acct["trades"].append(trade)
-        self.assertEqual(paper.maybe_exit(acct,self.obs,.1,self.now),"LIMIT SELL Up")
-        order=acct["orders"][-1]
-        self.assertEqual(order["reserved"],0)
-        paper.evaluate_limits(acct,self.obs,self.now)
-        self.assertEqual(order["status"],"open")
-        newer=copy.deepcopy(self.obs)
-        newer["quotes"]["Up"]["bid"]=order["price"]
-        newer["quotes"]["Up"]["bid_size"]=100
-        paper.evaluate_limits(acct,newer,self.now+15)
-        self.assertEqual(order["status"],"filled")
-        self.assertEqual(trade["close_reason"],"limit_sell")
-        self.assertAlmostEqual(trade["pnl"],10*order["price"]-5)
+        obs=copy.deepcopy(self.obs)
+        obs["quotes"]["Up"]["bid_size"]=100
+        self.assertEqual(paper.maybe_exit(acct,obs,.1,self.now),"IOC SELL Up")
+        price=obs["quotes"]["Up"]["bid"]
+        self.assertAlmostEqual(trade["payout"],10*price-paper.TAKER_COEFFICIENT*10*price*(1-price))
+        self.assertEqual(trade["close_reason"],"ioc_sell")
+
+    def test_urgent_exit_leaves_position_if_depth_insufficient(self):
+        acct=paper.initial()["accounts"]["brti_distance"]
+        trade={"slug":self.slug,"side":"Up","status":"open","placed_at":self.now-60,"shares":10,"cost":5}
+        acct["trades"].append(trade)
+        obs=copy.deepcopy(self.obs)
+        obs["quotes"]["Up"]["bid_size"]=0
+        paper.maybe_exit(acct,obs,.1,self.now)
+        self.assertEqual(trade["status"],"open")
 
     def test_maker_fee_is_zero(self):
         acct=paper.initial()["accounts"]["brti_distance"]

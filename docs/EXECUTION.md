@@ -5,8 +5,8 @@ Paper simulation only. The runner has no authenticated order path.
 | Action | Current simulation | Research direction |
 |---|---|---|
 | Entry | Resting limit buy; cash reserved; expires if unfilled | Post-only intent, short TTL, cancel on stale or adverse cross-asset move |
-| Take profit | Resting limit sell | Keep passive |
-| Stop or urgent exit | No guaranteed exit; position may settle | Test marketable IOC limit with a hard price floor and taker fee |
+| Take profit | No new passive take-profit order; existing resting sells may fill | Add passive take-profit policy |
+| Stop or urgent exit | Simulated IOC at observed best bid with taker fee; no fill if displayed top-level depth is insufficient | Add explicit floor, partial fills, and latency |
 | Expiry | Official binary settlement | Compare hold-to-settlement with a defined exit cutoff |
 
 A limit price caps the execution price only if an order fills. It does not guarantee a fill, maker status, queue priority, or protection from adverse selection. “Post-only” is an exchange instruction; this paper simulator cannot certify that status.
@@ -15,7 +15,7 @@ A limit price caps the execution price only if an order fills. It does not guara
 
 A resting entry is credited only on a later observation when the displayed opposing best price crosses the limit and displayed size is sufficient. A sell uses a later bid crossing the offer. This is a book-crossing proxy, not queue simulation: trade prints, queue ahead, hidden liquidity, event ordering, and network latency are not modeled. It can miss fills and can also misstate their quality. Do not call it a validated backtest.
 
-Urgent exit execution is a separate experiment. If added, model a marketable IOC limit against visible depth, reject fills below its price floor, charge the applicable taker fee, and leave any unfilled remainder open. “Marketable limit” still cannot guarantee full execution in a thin book.
+Urgent exits are simulated at the observed best bid, only when displayed top-level depth covers the entire position. They charge the modeled taker fee; otherwise the position remains open. This is an immediate, all-or-none approximation: it has no latency, partial fills, or deeper book sweep, and does not guarantee real execution.
 
 ## Risk and lifecycle
 
