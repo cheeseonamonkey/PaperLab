@@ -229,9 +229,13 @@ def reconcile(state,now):
 
 def render(state):
     stats = state.get("polling", {})
+    settled_markets=sum(m.get("outcome") is not None for m in state.get("markets",{}).values())
+    settled_positions=sum(t["status"]=="settled" for a in state["accounts"].values() for t in a["trades"])
     header=["# YeNo Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m BRTI Up/Down. All orders **simulated**.",
             "Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **%s**." %
             (stamp(state["last_run"]) if state["last_run"] else "Not yet run"), "",
+            "Research sample: **%d markets tracked / %d officially settled / %d settled strategy positions**." %
+            (len(state.get("markets",{})),settled_markets,settled_positions), "",
             "Polls: **%s attempts / %s recorded / %s skipped**. Last error: %s." %
             (stats.get("attempts",0),stats.get("observed",0),stats.get("skipped",0),stats.get("last_error") or "None"),"",
             "| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |",
@@ -252,6 +256,25 @@ def render(state):
                 "No authentication, private APIs, real orders, funds or wallets.", ""]
     return "\n".join(header)
 
+README_START="<!-- YENO_STATUS_START -->"
+README_END="<!-- YENO_STATUS_END -->"
+
+def write_outputs(state):
+    report=render(state)
+    REPORT.write_text(report)
+    readme_path=ROOT/"README.md"
+    readme=readme_path.read_text()
+    if readme.count(README_START)!=1 or readme.count(README_END)!=1:
+        raise ValueError("README status markers missing or duplicated")
+    report_lines=report.splitlines()
+    table_start=report_lines.index("| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |")
+    table_end=next(i for i in range(table_start+2,len(report_lines)) if not report_lines[i].startswith("|"))
+    status=[README_START,"## Current research status","",*report_lines[2:table_end],"",
+            "Full caveats and the audit trail are in [REPORT.md](REPORT.md).",README_END]
+    start=readme.index(README_START)
+    end=readme.index(README_END)+len(README_END)
+    readme_path.write_text(readme[:start]+"\n".join(status)+readme[end:])
+
 def cycle(state,feed,models,now=None):
     now=int(time.time() if now is None else now)
     reconcile(state,now)
@@ -266,7 +289,7 @@ def cycle(state,feed,models,now=None):
     state["polling"]["observed"]+=1
     state["polling"]["last_error"]=None
     save(state)
-    REPORT.write_text(render(state))
+    write_outputs(state)
     print(stamp(now),"US",observation["slug"],"signals",len(decisions),
           "decisions",", ".join(decisions[:5]) or "none",flush=True)
 
@@ -278,7 +301,7 @@ def main():
     state=load()
     state.setdefault("polling",{"attempts":0,"observed":0,"skipped":0,"last_attempt":None,"last_error":None})
     if opts.command=="report":
-        REPORT.write_text(render(state))
+        write_outputs(state)
         print(REPORT.read_text())
         return
     if opts.command=="check":
@@ -299,7 +322,7 @@ def main():
             state["polling"]["skipped"]+=1
             state["polling"]["last_error"]=type(exc).__name__+": "+str(exc)[:160]
             save(state)
-            REPORT.write_text(render(state))
+            write_outputs(state)
             if not opts.duration:
                 raise
         if not opts.duration:
