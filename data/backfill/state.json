@@ -1,8 +1,9 @@
 {
   "done": false,
   "empty_hours": 0,
-  "hours_saved": 6,
+  "hours_saved": 9,
   "missing_markets": 0,
-  "next_end": 1794639600,
-  "updated_at": "2026-11-14T14:34:13.500769+00:00"
+  "next_end": 1794628800,
+  "recent_hours_saved": 1,
+  "updated_at": "2026-11-14T14:38:08.869246+00:00"
 }

@@ -15,21 +15,21 @@
     "xrp_missing"
   ],
   "final_fit": "all available settled rows; validation included after scoring",
-  "markets": 30,
-  "rows": 721,
+  "markets": 50,
+  "rows": 1201,
   "sources": {
-    "history": 720,
+    "history": 1200,
     "live": 1
   },
   "status": "trained",
-  "training_markets": 25,
-  "updated_at": "2026-11-14T14:34:13.592379+00:00",
+  "training_markets": 45,
+  "updated_at": "2026-11-14T14:38:09.024607+00:00",
   "validation": {
-    "brier": 0.18915661489649985,
-    "market_brier": 0.1925796666666667,
+    "brier": 0.07763543088540177,
+    "market_brier": 0.0801113333333333,
     "markets": 5,
     "rows": 120
   },
-  "validation_cutoff_utc": 1794657600,
+  "validation_cutoff_utc": 1794661200,
   "validation_window": "latest UTC hour (early sample)"
 }
