@@ -57,7 +57,9 @@ def chronological_split(rows):
 
 
 def examples():
-    # Only observations collected prospectively by the live paper loop are training inputs.\n    rows = {}\n    state_path = ROOT / "data" / "state.json"
+    # Only observations collected prospectively by the live paper loop are training inputs.
+    rows = {}
+    state_path = ROOT / "data" / "state.json"
     state = json.loads(state_path.read_text()) if state_path.exists() else {}
     for path in sorted((ROOT / "data" / "observations").glob("*.jsonl.gz")):
         with gzip.open(path, "rt", encoding="utf-8") as stream:
