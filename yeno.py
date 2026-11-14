@@ -303,6 +303,8 @@ def render(state):
         header += ["", "Market-midpoint benchmark: Brier %.3f / log loss %.3f across %d settled markets." %
                    (baseline["brier_sum"]/baseline["markets"],
                     baseline["logloss_sum"]/baseline["markets"],baseline["markets"])]
+    else:
+        header += ["", "Market-midpoint benchmark: awaiting first officially settled market."]
     header += ["", "Win rate is settled simulated fills only. Forecasts estimate Up probability; Brier and log loss use the official outcome.",
                 "Forecast losses average snapshots within each market, then average markets. Positive ΔBrier means improvement over the paired market midpoint; lower Brier/log loss is better.",
                 "Realized profit is **not** total equity: active positions are not marked to market.",
@@ -325,7 +327,7 @@ def write_outputs(state):
     if readme.count(README_START)!=1 or readme.count(README_END)!=1:
         raise ValueError("README status markers missing or duplicated")
     report_lines=report.splitlines()
-    table_start=report_lines.index("| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |")
+    table_start=report_lines.index("| Strategy | Paper cash | Realized P&L | Win rate | Brier (markets) | ΔBrier vs market | Settled | Open | Pending limits |")
     table_end=next(i for i in range(table_start+2,len(report_lines)) if not report_lines[i].startswith("|"))
     status=[README_START,"## Current research status","",*report_lines[2:table_end],"",
             "Win rate uses settled simulated fills. Forecast Brier averages snapshots within each market, then averages markets; n is the number of settled markets. Positive ΔBrier means better than the paired market-midpoint forecast; lower Brier is better.",
