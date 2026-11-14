@@ -124,9 +124,6 @@ def fair_probability(strategy,obs,models):
     logit=math.log(cap(implied)/(1-cap(implied)))
     return cap(1/(1+math.exp(-max(-30,min(30,logit+shift)))))
 
-def risk_exposure(account):
-    return sum(t["cost"] for t in account["trades"] if t["status"]=="open")
-
 def available(account):
     return account["cash"]-sum(o["reserved"] for o in account["orders"] if o["status"]=="open")
 
@@ -160,7 +157,8 @@ def maybe_order(account,obs,probability,mode,now):
     if not candidates:
         return None
     edge,side,price,book=max(candidates,key=lambda x:x[0])
-    allocation=min(MAX_STAKE,available(account))
+    # Size by estimated edge and available cash, capped at $15 per order.
+    allocation=min(MAX_STAKE,available(account)*min(.15,max(.01,edge)))
     shares=math.floor(allocation/(price*(1+FEE))*10000)/10000
     if shares<=0:
         return None
