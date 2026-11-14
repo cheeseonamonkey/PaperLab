@@ -118,6 +118,15 @@ class PaperTests(unittest.TestCase):
         self.assertEqual(len(acct["orders"]),2)
         self.assertTrue(all(mode in ("limit","hold") for mode in yeno.POLICIES.values()))
 
+    def test_size_varies_with_estimated_edge(self):
+        small=yeno.initial()["accounts"]["brti_distance"]
+        large=yeno.initial()["accounts"]["brti_distance"]
+        yeno.maybe_order(small,self.obs,.60,"limit",self.now)
+        yeno.maybe_order(large,self.obs,.90,"limit",self.now)
+        self.assertGreater(small["orders"][0]["cost"],0)
+        self.assertLess(small["orders"][0]["cost"],large["orders"][0]["cost"])
+        self.assertLessEqual(large["orders"][0]["cost"],15)
+
     def test_resolution_only_official_us_api_and_cash(self):
         state=yeno.initial()
         acct=state["accounts"]["conv_gru"]
