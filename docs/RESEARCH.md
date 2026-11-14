@@ -43,3 +43,9 @@ Here `γ` is risk aversion, `q` inventory, `σ²` price variance, and `T−t` ti
 - [US exchange fee notice (Oct. 23, 2026)](https://polymarketexchange.com/files/notices/Exchange%20Notice%20-%20Amendment%20to%20Taker%20and%20Maker%20Rebate%20Tiers%20%282026.10.23%29.pdf)
 
 Fee schedules are venue- and date-specific. The current repo uses the documented standard maker fee assumption of zero without rebates; its straight-taker coefficient is documented in [Operations](OPERATIONS.md). Recheck the official schedule before interpreting simulated net returns.
+
+## Strategy descendants and forks
+
+Creating a strategy fork (a new child variant or paper account) is currently **disabled**. The paper roster is fixed; the workflow does not spawn, train, or promote account descendants automatically. Keep candidate ideas in the review-only proposal path and compare them offline first. If a future fork is approved, give it a documented parent hypothesis, a distinct name, an isolated bankroll, identical risk controls, and a predeclared evaluation split. Related variants must remain labeled as dependent evidence; changing a name does not create an independent experiment.
+
+See the [strategy index](bots/README.md) for current signal relationships and the [execution policy](EXECUTION.md) for account-level constraints.

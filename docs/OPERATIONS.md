@@ -32,3 +32,5 @@ flowchart TD
 The collector records one shared sequence of observations and settlement checks. Six Actions jobs replay two accounts each using that sequence. One publish job verifies batch checksums, merges all six account results, updates research and reports, and commits state once. A missing or inconsistent shard stops publication. New descendants are not implemented yet.
 
 Decisions are replayed after the collection hour, in observation order; no orders are sent to an exchange. Actions scheduling, artifact transfer and post-processing introduce collection gaps between runs.
+
+For a directory of generated account views and the relationships between related strategies, see the [strategy index](bots/README.md). The index does not duplicate live metrics. The roster is fixed; [new strategy descendants are disabled](RESEARCH.md#strategy-descendants-and-forks) pending offline evaluation and review.

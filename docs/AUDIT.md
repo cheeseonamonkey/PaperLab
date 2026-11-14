@@ -10,3 +10,5 @@ Review results by 15m and 1h separately.
 - **Next step:** one small, falsifiable experiment with an unchanged baseline.
 
 Stop and investigate stale feeds, missing state, unexplained account changes, or a sudden rise in errors before interpreting performance. Actions are scheduled jobs, not a guaranteed continuous process; check gaps explicitly.
+
+Use the [strategy index](bots/README.md) to identify mirrored or shared-signal variants before counting evidence. Check the [research plan](RESEARCH.md#strategy-descendants-and-forks) before considering any roster expansion.

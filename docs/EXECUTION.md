@@ -20,3 +20,5 @@ Urgent exits are simulated at the observed best bid, only when displayed top-lev
 ## Risk and lifecycle
 
 Use explicit states: `FLAT → ENTERING → OPEN → EXITING → SETTLED`; unfilled entry expiry returns to `FLAT`. Before adding live or more detailed simulation, reject stale data, block new entries near expiry, cap exposure and order rate, and make cancel/fill races idempotent. A stale-data rule must use source event time where available; receive time alone hides feed age.
+
+The roster and account boundaries are described in the [strategy index](bots/README.md). New child strategies are currently disabled; see [research progression](RESEARCH.md#strategy-descendants-and-forks).
