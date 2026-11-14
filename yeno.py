@@ -179,7 +179,8 @@ def maybe_order(account,obs,probability,mode,now):
     account["trades"].append({**entry,"status":"open","type":"market","filled_at":now})
     return "PAPER MARKET "+side
 
-def evaluate_limits(account,obs,now,markets):
+def evaluate_limits(account,obs,now,markets=None):
+    markets=markets if markets is not None else {obs["slug"]:{"ends":obs["ends"]}}
     for order in account["orders"]:
         if order["status"]!="open":
             continue
