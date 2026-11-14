@@ -56,7 +56,7 @@ Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 | cross_asset_momentum | BTC/ETH/SOL/XRP momentum | Limit |
 | book_imbalance | US YES depth imbalance vs implied odds | Limit |
 
-Each account starts at **$100**. Each limit order can reserve up to **$15** of available paper cash, including the simulated fee buffer; share quantities may be fractional. Each strategy gets an opportunity to place an order for each market every **five minutes**. Pending orders reserve cash, and existing orders are monitored at every observation.
+Each account starts at **$100**. Order size varies with estimated edge and available paper cash, capped at **$15** per order including the simulated fee buffer; share quantities may be fractional. Each strategy gets an opportunity to place an order for each market every **five minutes**. Pending orders reserve cash, and existing orders are monitored at every observation.
 
 **Resting buy assumption:** post at the displayed bid, reserve its cost, and credit a hypothetical fill *only* if a **later US snapshot** has best ask at or below the posted limit and offers adequate displayed size. Fill is marked at the conservative original limit price, with the same 2% fee buffer; **no maker rebate is assumed**. This crossing is a proxy, **not evidence of queue priority or a real fill**. Otherwise orders remain pending and expire, returning reserved cash.
 
