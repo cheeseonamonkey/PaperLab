@@ -1,4 +1,4 @@
-"""Fit a market-relative research model from all settled repository data."""
+"""Fit a market-relative model using settled live observations only."""
 from __future__ import annotations
 
 import gzip
@@ -8,7 +8,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-from backfill import ROOT as ARCHIVE, write_json
+from backfill import write_json
 from feeds import value
 
 ROOT = Path(__file__).resolve().parent
@@ -57,32 +57,7 @@ def chronological_split(rows):
 
 
 def examples():
-    # Deduplicate identical market/timestamp rows; live observations take precedence.
-    rows = {}
-    for path in sorted((ARCHIVE / "hours").glob("*/*.json.gz")):
-        with gzip.open(path, "rt", encoding="utf-8") as stream:
-            hour = json.load(stream)
-        candles = hour.get("exogenous_coinbase_1m", {})
-        for market in hour.get("markets", []):
-            if market.get("status") != "collected":
-                continue
-            result = market.get("settlement", {}).get("settlement")
-            if type(result) not in (int, float) or result not in (0, 1):
-                continue
-            for quote in market.get("display_history", {}).get("history", []):
-                try:
-                    at = int(quote["timestamp"])
-                    p = value(quote.get("longPrice"))
-                    if p is None or not 0 < p < 1:
-                        continue
-                    name = market["slug"]
-                    start, end = market_window(name)
-                    if not start <= at < end:
-                        continue
-                    rows[(name, at)] = (at, name, features(p, market["horizon"], candle_returns(candles, at)), int(result), "history")
-                except (TypeError, ValueError, KeyError):
-                    continue
-    state_path = ROOT / "data" / "state.json"
+    # Only observations collected prospectively by the live paper loop are training inputs.\n    rows = {}\n    state_path = ROOT / "data" / "state.json"
     state = json.loads(state_path.read_text()) if state_path.exists() else {}
     for path in sorted((ROOT / "data" / "observations").glob("*.jsonl.gz")):
         with gzip.open(path, "rt", encoding="utf-8") as stream:
@@ -161,6 +136,8 @@ def main():
                             training_markets=len({r[1] for r in train}), validation=score(validation,trial),
                             final_fit="all available settled rows; validation included after scoring")
             write_json(OUTPUT / "model.json", fit(rows))
+    if manifest["status"] != "trained":
+        (OUTPUT / "model.json").unlink(missing_ok=True)
     write_json(OUTPUT / "status.json", manifest)
     print(json.dumps(manifest, sort_keys=True), flush=True)
 
