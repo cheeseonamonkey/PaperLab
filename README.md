@@ -1,6 +1,6 @@
 # YeNo Paper Lab — Polymarket US
 
-**12 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
+**12 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute and 1-hour Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
 
 - [Current results](REPORT.md) · [Persistent state](data/state.json) · [Raw, compressed observations](data/observations/) · [Workflows](../../actions)
 - **Hourly Actions** runs approximately 50 minutes, polling US public order books at a **15-second target cadence** (when network calls fit). Runs can start late or be dropped by GitHub; **not an always-on service**.
@@ -56,7 +56,7 @@ Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 | cross_asset_momentum | BTC/ETH/SOL/XRP momentum | Limit |
 | book_imbalance | US YES depth imbalance vs implied odds | Limit |
 
-Each account starts at **$100**, caps a proposed entry around **$5**, enforces a modeled **5-share minimum**, and caps open cost basis at **$15**. Pending orders reserve paper cash and cannot spend another strategy's money. Each account can initiate at most one position/order per 15-minute market.
+Each account starts at **$100**, caps a proposed entry around **$5**, enforces a modeled **5-share minimum**, and caps open cost basis at **$15**. Pending orders reserve paper cash and cannot spend another strategy's money. Each account can initiate at most one position/order per market.
 
 **Marketable buy assumption:** US displayed ask plus $0.005/share slippage, 2% all-in notional fee buffer, and top-of-book capacity.
 
@@ -78,7 +78,7 @@ The saved original 250K weights, metadata, training scalers, feature audit and f
 
 The frozen neural checkpoints expect **120 × 24** one-minute, point-in-time historical input features and **64 context** channels. The live US adapter reproduces the reference/price layout, *but currently mean-imputes the 52 slow macro and cross-asset ETF context fields* rather than reproducing their original vintage-aware as-of feeds. New Coinbase crypto context is **collected separately**, not silently substituted into those trained channels.
 
-**Consequently the neural predictions are out-of-distribution research signals.** They can make hypothetical paper decisions, but are neither calibrated nor comparable to the original held-out results without a feature-parity study. Models abstain when there is insufficient authentic US BRTI/display history. No fitted model has an established net-profit advantage.
+The frozen neural models are used only for 15-minute markets; the hourly paper market uses the deterministic strategies. **Consequently the neural predictions are out-of-distribution research signals.** They can make hypothetical paper decisions, but are neither calibrated nor comparable to the original held-out results without a feature-parity study. Models abstain when there is insufficient authentic US BRTI/display history. No fitted model has an established net-profit advantage.
 
 Training was on historical US **display** prices, not actual historical executable depth; price-history data must not be reported as fills. Official US settlement uses BRTI samples near the event's boundaries, *not* the Coinbase last price.
 
@@ -87,7 +87,7 @@ Training was on historical US **display** prices, not actual historical executab
 - [data/state.json](data/state.json): independent cash, open orders, filled trades, official settled outcomes, and audit timestamps.
 - [data/observations](data/observations/): **compressed daily JSONL**, one shared US book/feature snapshot per successful polling decision. Git commit history remains auditable.
 - [models/checkpoints](models/checkpoints/): five fitted PyTorch checkpoints (approximately 2.5 MB combined), frozen metadata and scalers. Never rewritten by the paper runner.
-- [REPORT.md](REPORT.md): auto-generated account comparison; the **Current research status** block above updates from the same saved state after paper runs.
+- [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The target is three prior market hours per hourly workflow run; historical display prices are not historical order books.\n- [data/training](data/training/): candidate research model and run status, trained on usable settled repository data with chronological validation. The candidate is not automatically promoted to a paper strategy.\n- [REPORT.md](REPORT.md): auto-generated account comparison; the **Current research status** block above updates from the same saved state after paper runs.
 - [research/proposals](research/proposals/): **review-only** Pi experiment suggestions, never deployed.
 
 The hourly process persists files locally on every successful tick; Actions commits state and new observations at job completion. A cancelled runner can lose its **uncommitted** session. Keeping all 15-second snapshots in Git indefinitely will enlarge repo history; storage can be moved to archive releases if growth becomes an issue.
@@ -96,7 +96,7 @@ The hourly process persists files locally on every successful tick; Actions comm
 
 The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python yeno.py run --duration 3000` (50 minutes, roughly four updates per minute). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3300 seconds** for verification.
 
-A separate **optional daily** Pi/OpenRouter research workflow needs only the Actions secret `OPENROUTER_API_KEY`:
+Each cycle also backfills up to three hours of market history and exogenous candles and retrains a market-relative research candidate once enough settled data supports a chronological split. Live and historical records are deduplicated by market and timestamp. The research model uses the market midpoint or display price, horizon, and completed prior-minute crypto returns.\n\nA separate **optional daily** Pi/OpenRouter research workflow needs only the Actions secret `OPENROUTER_API_KEY`:
 
 1. Get an OpenRouter key with zero/low allowed spend.
 2. Add [OPENROUTER_API_KEY](https://github.com/cheeseonamonkey/YeNoPaperLab/settings/secrets/actions) under repository Actions secrets.
