@@ -316,7 +316,7 @@ def render(state):
                 "US YES book is the market source; NO quotes are complement-derived.",
                 "Limit fills require a **later** observed ask crossing the resting bid and displayed size covering the order. This is an optimistic uncertainty bound, **not proof a resting order actually filled**.",
                 "Entry cost uses an assumed 2% fee buffer; marketable buys additionally add $0.005/share slippage. No actual fee or rebate schedule is inferred.",
-                "Five frozen 250K checkpoints use trained BRTI/display histories; 52 slow macro context fields are mean-imputed (not the original live feature distribution). Results are exploratory and uncalibrated.",
+                "Five legacy checkpoint accounts abstain in this fresh-start run; the repository-trained research candidate is evaluated separately.",
                 "The remaining seven strategies are explicit deterministic baselines, including a no-trade account.",
                 "No authentication, private APIs, real orders, funds or wallets.", ""]
     return "\n".join(header)
