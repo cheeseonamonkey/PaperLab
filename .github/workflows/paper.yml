@@ -1,0 +1,35 @@
+name: Paper trade
+on:
+  schedule:
+    - cron: '11 0,8,16 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: yeno-ledger-write
+  cancel-in-progress: false
+
+jobs:
+  observe-and-paper-trade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify paper-only engine
+        run: python -m unittest discover -s tests -v
+      - name: Settle old markets, observe, and simulate
+        run: python yeno.py run
+      - name: Persist immutable observations and paper ledger
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/ledger.json REPORT.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'data: paper observation and settlement [skip ci]'
+            git push
+          fi
