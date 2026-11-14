@@ -1,4 +1,4 @@
-name: Polymarket US paper — hourly 15s loop
+name: Polymarket US paper and research
 on:
   push:
     paths:
