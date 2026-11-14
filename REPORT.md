@@ -1,4 +1,4 @@
-# YeNo Paper Lab — Polymarket US
+# Paper Lab — Polymarket US
 
 Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.
 Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **2026-11-14T14:37:59+00:00**.
