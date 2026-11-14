@@ -14,6 +14,20 @@ import train_research
 
 
 class PipelineTests(unittest.TestCase):
+    def test_observation_persists_input_availability_timestamps(self):
+        with tempfile.TemporaryDirectory() as directory:
+            at = 1794632340
+            obs = {"venue":"polymarket_us", "slug":"test", "start":at, "ends":at+900,
+                   "observed_at":at, "quotes":{}, "features":{"sp500_r1":.01},
+                   "feature_available_at":{"sp500_r1":at}, "book_top5":{},
+                   "display_history":[], "brti_history":[]}
+            with patch.object(paper, "OBS_DIR", Path(directory)):
+                paper.append_observation(obs)
+            path = next(Path(directory).glob("*.jsonl.gz"))
+            with gzip.open(path, "rt", encoding="utf-8") as stream:
+                stored = json.loads(stream.readline())
+            self.assertEqual(stored["feature_available_at"], {"sp500_r1":at})
+
     def test_bootstrap_persists_in_training_location_without_archive(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)

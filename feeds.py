@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import datetime as dt
+import csv
+import io
 import json
 import math
 import time
@@ -63,7 +65,7 @@ def quotes(book):
     return {"Up": up, "Down": down}
 
 def _momentum(rows, now):
-    recent = {int(x[0]): x for x in rows if int(x[0]) + 60 <= now}
+    recent = {int(x[0]): x for x in rows if int(x[0]) + 63 <= now}
     candles = [recent[k] for k in sorted(recent)]
     if len(candles) < 16:
         return None
@@ -75,7 +77,35 @@ def _momentum(rows, now):
     return {"r1": returns[-1], "r5": math.log(close[-1]/close[-6]),
             "r15": math.log(close[-1]/close[-16]),
             "vol15": math.sqrt(sum((r-mean)**2 for r in returns[-15:])/15),
-            "volume15": sum(float(x[5]) for x in candles[-15:])}
+            "volume15": sum(float(x[5]) for x in candles[-15:]),
+            "available_at": candles[-1][0] + 63}
+
+
+def _sp500_context(now):
+    """FRED daily close return, usable only after a conservative next-day cutoff."""
+    today = dt.datetime.fromtimestamp(now, dt.timezone.utc).date()
+    start = today - dt.timedelta(days=14)
+    url = "https://fred.stlouisfed.org/graph/fredgraph.csv?" + urlencode({
+        "id": "SP500", "cosd": start.isoformat(), "coed": today.isoformat()})
+    with urlopen(Request(url, headers={"User-Agent": "PaperLab/1.0", "Accept": "text/csv"}), timeout=8) as response:
+        text = response.read().decode("utf-8-sig")
+    retrieved_at = int(time.time())
+    rows = []
+    for row in csv.DictReader(io.StringIO(text)):
+        try:
+            day = dt.date.fromisoformat(row.get("observation_date", row.get("DATE", "")))
+            close = float(row["SP500"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if math.isfinite(close) and close > 0:
+            # FRED publishes the daily close after market close; waiting until
+            # 05:00 UTC the next day is conservative across EST/EDT and holidays.
+            available = int(dt.datetime.combine(day + dt.timedelta(days=1), dt.time(5), dt.timezone.utc).timestamp())
+            if available <= retrieved_at:
+                rows.append((day, close, retrieved_at))
+    if len(rows) < 2 or (now - rows[-1][2]) > 4 * 86400:
+        return None
+    return {"r1": math.log(rows[-1][1] / rows[-2][1]), "available_at": rows[-1][2]}
 
 def settlement(slug):
     data = get("/v1/markets/"+slug+"/settlement", missing_ok=True)
@@ -98,6 +128,8 @@ class USFeed:
         self.cached_reference = []
         self.cached_display = []
         self.cached_exogenous = {}
+        self.cached_sp500 = None
+        self.sp500_at = 0
         self.reference_at = self.display_at = self.exogenous_at = 0
 
     def _reference(self, now):
@@ -142,10 +174,21 @@ class USFeed:
                     {"granularity": 60, "start": now-22*60, "end": now-60})
                 with urlopen(Request(url, headers={"User-Agent": "PaperLab/1.0"}), timeout=8) as response:
                     series = json.load(response)
-                context[asset.lower()] = _momentum(series, now)
+                fields = _momentum(series, now)
+                if fields:
+                    fields["available_at"] = max(fields["available_at"], int(time.time()))
+                context[asset.lower()] = fields
             except (OSError, ValueError, KeyError) as error:
                 print("Optional %s context unavailable: %s" % (asset, error), flush=True)
                 context[asset.lower()] = None
+        if now-self.sp500_at >= 3600:
+            try:
+                self.cached_sp500 = _sp500_context(now)
+            except (OSError, ValueError, KeyError) as error:
+                print("Optional S&P 500 context unavailable: %s" % error, flush=True)
+                self.cached_sp500 = None
+            self.sp500_at = now
+        context["sp500"] = self.cached_sp500
         self.cached_exogenous = context
         self.exogenous_at = now
         return context
@@ -202,11 +245,17 @@ class USFeed:
             "yes_book_imbalance": ((quote["Up"]["bid_depth"]-quote["Up"]["ask_depth"]) /
                 (quote["Up"]["bid_depth"]+quote["Up"]["ask_depth"])),
         }
+        feature_available_at = {}
         for asset, fields in exogenous.items():
-            for key in ("r1", "r5", "r15", "vol15", "volume15"):
-                numeric[asset+"_"+key] = fields.get(key) if fields else None
+            keys = ("r1",) if asset == "sp500" else ("r1", "r5", "r15", "vol15", "volume15")
+            for key in keys:
+                feature = asset+"_"+key
+                numeric[feature] = fields.get(key) if fields else None
+                if numeric[feature] is not None:
+                    feature_available_at[feature] = fields["available_at"]
         return {"venue":"polymarket_us", "slug": slug, "start": start, "ends": start+self.period,
                 "observed_at": received, "quotes":quote, "features": numeric,
+                "feature_available_at": feature_available_at,
                 "book_top5": {"bids":levels(result,"bids"), "asks":levels(result,"offers")},
                 "display_history":display, "brti_history":reference,
                 "is_live_book":True}

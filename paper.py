@@ -79,6 +79,8 @@ def append_observation(obs):
     path=OBS_DIR/(datetime.fromtimestamp(obs["observed_at"],timezone.utc).strftime("%Y-%m-%d")+".jsonl.gz")
     # Shared quote/data record, NOT 12 duplicated per-strategy observations.
     record={k:obs[k] for k in ("venue","slug","start","ends","observed_at","quotes","features")}
+    if "feature_available_at" in obs:
+        record["feature_available_at"] = obs["feature_available_at"]
     record["book_top5"] = obs.get("book_top5", {})
     record["latest_display"]=obs["display_history"][-1] if obs["display_history"] else None
     record["latest_reference"]=obs["brti_history"][-1] if obs["brti_history"] else None
