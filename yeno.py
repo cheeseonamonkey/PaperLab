@@ -22,19 +22,18 @@ OBS_DIR = ROOT/"data/observations"
 START = 100.0
 FEE = .02             # Conservative simulation buffer, not US actual venue fee
 SLIPPAGE = .005       # Marketable-entry execution penalty per share
-MAX_STAKE = 5.0
-MIN_SHARES = 5.0
-MAX_OPEN_COST = 15.0
+MAX_STAKE = 15.0
+DECISION_INTERVAL = 300
 POLICIES = {
     "stacked_rnn": "limit",
     "skip_gru_2": "limit",
-    "depthwise_tcn": "market",
+    "depthwise_tcn": "limit",
     "lstm": "limit",
-    "conv_gru": "market",
+    "conv_gru": "limit",
     "market_implied": "hold",
-    "brti_distance": "market",
+    "brti_distance": "limit",
     "brti_distance_limit": "limit",
-    "btc_momentum": "market",
+    "btc_momentum": "limit",
     "btc_reversion": "limit",
     "cross_asset_momentum": "limit",
     "book_imbalance": "limit",
@@ -135,9 +134,11 @@ def maybe_order(account,obs,probability,mode,now):
     if probability is None or mode=="hold" or not .01 < probability < .99:
         return None
     slug=obs["slug"]
-    if any(o["slug"]==slug for o in account["orders"]) or any(t["slug"]==slug for t in account["trades"]):
+    bucket=now//DECISION_INTERVAL
+    if any(o["slug"]==slug and o["placed_at"]//DECISION_INTERVAL==bucket for o in account["orders"]) or any(
+            t["slug"]==slug and t["placed_at"]//DECISION_INTERVAL==bucket for t in account["trades"]):
         return None
-    if risk_exposure(account)>=MAX_OPEN_COST or available(account)<1:
+    if available(account)<=0:
         return None
     candidates=[]
     for side,prob in (("Up",probability),("Down",1-probability)):
@@ -159,9 +160,9 @@ def maybe_order(account,obs,probability,mode,now):
     if not candidates:
         return None
     edge,side,price,book=max(candidates,key=lambda x:x[0])
-    allocation=min(MAX_STAKE,available(account),MAX_OPEN_COST-risk_exposure(account))
+    allocation=min(MAX_STAKE,available(account))
     shares=math.floor(allocation/(price*(1+FEE))*10000)/10000
-    if shares<MIN_SHARES:
+    if shares<=0:
         return None
     cost=round(shares*price*(1+FEE),8)
     if cost>available(account)+1e-8:
@@ -219,9 +220,13 @@ def process_snapshot(state,obs,predictions):
         p=market_probability if name=="market_implied" else fair_probability(name,obs,predictions)
         if p is not None and math.isfinite(p) and 0<=p<=1:
             forecast["probabilities"][name]=p
-        message=maybe_order(account,obs,p,mode,now)
-        if message:
-            decisions.append(name+":"+message)
+        bucket=now//DECISION_INTERVAL
+        last=account.setdefault("last_decision",{})
+        if mode!="hold" and last.get(obs["slug"])!=bucket:
+            last[obs["slug"]]=bucket
+            message=maybe_order(account,obs,p,mode,now)
+            if message:
+                decisions.append(name+":"+message)
     market["forecasts"].append(forecast)
     return decisions
 
@@ -278,7 +283,7 @@ def render(state):
     stats = state.get("polling", {})
     settled_markets=sum(m.get("outcome") is not None for m in state.get("markets",{}).values())
     settled_positions=sum(t["status"]=="settled" for a in state["accounts"].values() for t in a["trades"])
-    header=["# YeNo Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.",
+    header=["# Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.",
             "Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **%s**." %
             (stamp(state["last_run"]) if state["last_run"] else "Not yet run"), "",
             "Research sample: **%d markets tracked / %d officially settled / %d settled strategy positions**." %
@@ -366,7 +371,7 @@ def cycle(state,feed,models,now=None):
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("command",choices=("run","report","check"),nargs="?",default="run")
-    ap.add_argument("--duration",type=int,default=0,help="Seconds of 15s polling (0 = one observation)")
+    ap.add_argument("--duration",type=int,default=0,help="Seconds of 30s polling (0 = one observation)")
     opts=ap.parse_args()
     state=load()
     state.setdefault("polling",{"attempts":0,"observed":0,"skipped":0,"last_attempt":None,"last_error":None})
@@ -401,7 +406,7 @@ def main():
         remaining=deadline-time.monotonic()
         if remaining<=0:
             return
-        time.sleep(min(remaining,max(0,15-(time.monotonic()-started))))
+        time.sleep(min(remaining,max(0,30-(time.monotonic()-started))))
 
 if __name__=="__main__":
     main()
