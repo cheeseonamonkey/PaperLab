@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import feeds
 import predictors
-import yeno
+import paper
 
 class PaperTests(unittest.TestCase):
     def setUp(self):
@@ -33,15 +33,15 @@ class PaperTests(unittest.TestCase):
         self.addCleanup(self.dir.cleanup)
         for name in ("STATE","REPORT"):
             value=Path(self.dir.name)/("state.json" if name=="STATE" else "REPORT.md")
-            override=patch.object(yeno,name,value)
+            override=patch.object(paper,name,value)
             override.start()
             self.addCleanup(override.stop)
-        over=patch.object(yeno,"OBS_DIR",Path(self.dir.name)/"obs")
+        over=patch.object(paper,"OBS_DIR",Path(self.dir.name)/"obs")
         over.start()
         self.addCleanup(over.stop)
 
     def test_12_independent_paper_accounts(self):
-        s=yeno.initial()
+        s=paper.initial()
         self.assertEqual(len(s["accounts"]),12)
         self.assertTrue(all(a["cash"]==100 for a in s["accounts"].values()))
         self.assertNotIn("polymarket.com",feeds.API)
@@ -56,101 +56,101 @@ class PaperTests(unittest.TestCase):
         self.assertEqual(out["Down"]["ask_size"],90)
 
     def test_maker_limit_reserves_but_does_not_fill_same_tick(self):
-        acct=yeno.initial()["accounts"]["lstm"]
-        order=yeno.maybe_order(acct,self.obs,.9,"limit",self.now)
+        acct=paper.initial()["accounts"]["lstm"]
+        order=paper.maybe_order(acct,self.obs,.9,"limit",self.now)
         self.assertEqual(order,"LIMIT Up")
         self.assertEqual(len(acct["orders"]),1)
         self.assertEqual(acct["cash"],100)
-        self.assertLess(yeno.available(acct),100)
-        yeno.evaluate_limits(acct,self.obs,self.now)
+        self.assertLess(paper.available(acct),100)
+        paper.evaluate_limits(acct,self.obs,self.now)
         self.assertEqual(acct["orders"][0]["status"],"open")
         self.assertEqual(len(acct["trades"]),0)
 
     def test_limit_requires_later_ask_cross_and_depth(self):
-        acct=yeno.initial()["accounts"]["lstm"]
-        yeno.maybe_order(acct,self.obs,.9,"limit",self.now)
+        acct=paper.initial()["accounts"]["lstm"]
+        paper.maybe_order(acct,self.obs,.9,"limit",self.now)
         updated=copy.deepcopy(self.obs)
         updated["quotes"]["Up"]["ask"]=.47
         updated["quotes"]["Up"]["ask_size"]=.1
-        yeno.evaluate_limits(acct,updated,self.now+15)
+        paper.evaluate_limits(acct,updated,self.now+15)
         self.assertEqual(acct["orders"][0]["status"],"open")
         updated["quotes"]["Up"]["ask_size"]=100
-        yeno.evaluate_limits(acct,updated,self.now+30)
+        paper.evaluate_limits(acct,updated,self.now+30)
         self.assertEqual(acct["orders"][0]["status"],"filled")
         self.assertEqual(acct["trades"][0]["type"],"limit_cross")
         self.assertLess(acct["cash"],100)
 
     def test_unfilled_limit_expiration_and_released_cash(self):
-        acct=yeno.initial()["accounts"]["lstm"]
-        yeno.maybe_order(acct,self.obs,.9,"limit",self.now)
-        yeno.evaluate_limits(acct,self.obs,self.obs["ends"]+5)
+        acct=paper.initial()["accounts"]["lstm"]
+        paper.maybe_order(acct,self.obs,.9,"limit",self.now)
+        paper.evaluate_limits(acct,self.obs,self.obs["ends"]+5)
         self.assertEqual(acct["orders"][0]["status"],"expired")
-        self.assertEqual(yeno.available(acct),100)
+        self.assertEqual(paper.available(acct),100)
 
     def test_marketable_entry_respects_liquidity_and_min_shares(self):
-        acct=yeno.initial()["accounts"]["conv_gru"]
+        acct=paper.initial()["accounts"]["conv_gru"]
         updated=copy.deepcopy(self.obs)
         updated["quotes"]["Up"]["ask_size"]=1
-        self.assertIn("no-fill",yeno.maybe_order(acct,updated,.9,"market",self.now))
+        self.assertIn("no-fill",paper.maybe_order(acct,updated,.9,"market",self.now))
         self.assertEqual(acct["cash"],100)
         self.assertFalse(acct["trades"])
-        self.assertEqual(yeno.maybe_order(acct,self.obs,.9,"market",self.now),"PAPER MARKET Up")
+        self.assertEqual(paper.maybe_order(acct,self.obs,.9,"market",self.now),"PAPER MARKET Up")
         self.assertEqual(acct["trades"][0]["status"],"open")
 
     def test_isolated_duplicate_and_risk_budget(self):
-        state=yeno.initial()
-        yeno.process_snapshot(state,self.obs,{"lstm":.9,"conv_gru":.9})
+        state=paper.initial()
+        paper.process_snapshot(state,self.obs,{"lstm":.9,"conv_gru":.9})
         self.assertEqual(len(state["accounts"]["lstm"]["orders"]),1)
         self.assertEqual(len(state["accounts"]["conv_gru"]["orders"]),1)
         original=state["accounts"]["lstm"]["orders"][0]["reserved"]
-        yeno.process_snapshot(state,self.obs,{"lstm":.9,"conv_gru":.9})
+        paper.process_snapshot(state,self.obs,{"lstm":.9,"conv_gru":.9})
         self.assertEqual(len(state["accounts"]["lstm"]["orders"]),1)
         self.assertEqual(original,state["accounts"]["lstm"]["orders"][0]["reserved"])
         self.assertEqual(len(state["accounts"]["conv_gru"]["orders"]),1)
 
     def test_five_minute_limit_opportunities_and_size(self):
-        acct=yeno.initial()["accounts"]["brti_distance"]
-        self.assertEqual(yeno.maybe_order(acct,self.obs,.9,"limit",self.now),"LIMIT Up")
+        acct=paper.initial()["accounts"]["brti_distance"]
+        self.assertEqual(paper.maybe_order(acct,self.obs,.9,"limit",self.now),"LIMIT Up")
         self.assertGreater(acct["orders"][0]["cost"],5)
         self.assertLessEqual(acct["orders"][0]["cost"],15)
-        self.assertIsNone(yeno.maybe_order(acct,self.obs,.9,"limit",self.now+1))
-        self.assertEqual(yeno.maybe_order(acct,self.obs,.9,"limit",self.now+300),"LIMIT Up")
+        self.assertIsNone(paper.maybe_order(acct,self.obs,.9,"limit",self.now+1))
+        self.assertEqual(paper.maybe_order(acct,self.obs,.9,"limit",self.now+300),"LIMIT Up")
         self.assertEqual(len(acct["orders"]),2)
-        self.assertTrue(all(mode in ("limit","hold") for mode in yeno.POLICIES.values()))
+        self.assertTrue(all(mode in ("limit","hold") for mode in paper.POLICIES.values()))
 
     def test_size_varies_with_estimated_edge(self):
-        small=yeno.initial()["accounts"]["brti_distance"]
-        large=yeno.initial()["accounts"]["brti_distance"]
-        yeno.maybe_order(small,self.obs,.60,"limit",self.now)
-        yeno.maybe_order(large,self.obs,.90,"limit",self.now)
+        small=paper.initial()["accounts"]["brti_distance"]
+        large=paper.initial()["accounts"]["brti_distance"]
+        paper.maybe_order(small,self.obs,.60,"limit",self.now)
+        paper.maybe_order(large,self.obs,.90,"limit",self.now)
         self.assertGreater(small["orders"][0]["cost"],0)
         self.assertLess(small["orders"][0]["cost"],large["orders"][0]["cost"])
         self.assertLessEqual(large["orders"][0]["cost"],15)
 
     def test_resolution_only_official_us_api_and_cash(self):
-        state=yeno.initial()
+        state=paper.initial()
         acct=state["accounts"]["conv_gru"]
-        yeno.maybe_order(acct,self.obs,.9,"market",self.now)
+        paper.maybe_order(acct,self.obs,.9,"market",self.now)
         state["markets"][self.slug]={"ends":self.obs["ends"],"outcome":None,"checked_at":0}
-        with patch.object(yeno,"settlement",return_value=None):
-            yeno.reconcile(state,self.obs["ends"]+61)
+        with patch.object(paper,"settlement",return_value=None):
+            paper.reconcile(state,self.obs["ends"]+61)
         self.assertEqual(acct["trades"][0]["status"],"open")
-        with patch.object(yeno,"settlement",return_value="Up"):
-            yeno.reconcile(state,self.obs["ends"]+123)
+        with patch.object(paper,"settlement",return_value="Up"):
+            paper.reconcile(state,self.obs["ends"]+123)
         self.assertEqual(acct["trades"][0]["status"],"settled")
         self.assertGreater(acct["cash"],100)
         self.assertEqual(state["markets"][self.slug]["outcome"],"Up")
 
     def test_reject_other_venue_state(self):
-        state=yeno.initial();state["venue"]="polymarket_international"
-        yeno.STATE.write_text(json.dumps(state))
+        state=paper.initial();state["venue"]="polymarket_international"
+        paper.STATE.write_text(json.dumps(state))
         with self.assertRaises(ValueError):
-            yeno.load()
+            paper.load()
 
     def test_public_observation_archives_are_recoverable(self):
-        yeno.append_observation(self.obs)
+        paper.append_observation(self.obs)
         import gzip
-        only=list(yeno.OBS_DIR.glob("*.gz"))
+        only=list(paper.OBS_DIR.glob("*.gz"))
         self.assertEqual(len(only),1)
         with gzip.open(only[0],"rt") as handle:
             row=json.loads(handle.readline())

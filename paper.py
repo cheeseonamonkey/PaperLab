@@ -324,8 +324,8 @@ def render(state):
                 "No authentication, private APIs, real orders, funds or wallets.", ""]
     return "\n".join(header)
 
-README_START="<!-- YENO_STATUS_START -->"
-README_END="<!-- YENO_STATUS_END -->"
+README_START="<!-- PAPER_STATUS_START -->"
+README_END="<!-- PAPER_STATUS_END -->"
 
 def write_outputs(state):
     report=render(state)

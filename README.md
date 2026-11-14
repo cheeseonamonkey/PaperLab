@@ -7,7 +7,7 @@
 - Simulates **resting limit buys**, with cash reservations, expiration and delayed observed crossing. Settles exclusively using the **official US 0/1 settlement endpoint**.
 - Competing independent models all see a **single shared, timestamped data feed**. Inputs include official BRTI minute candles, current Polymarket US bid/ask/top-5 depth, US price-to-beat and display history, time to expiry, book imbalance, and additional BTC/ETH/SOL/XRP spot context. Coinbase context does not determine official settlement.
 
-<!-- YENO_STATUS_START -->
+<!-- PAPER_STATUS_START -->
 ## Current research status
 
 Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.
@@ -37,7 +37,7 @@ Market-midpoint benchmark: awaiting first officially settled market.
 Win rate uses settled simulated fills. Forecast Brier averages snapshots within each market, then averages markets; n is the number of settled markets. Positive ΔBrier means better than the paired market-midpoint forecast; lower Brier is better.
 
 Full caveats and the audit trail are in [REPORT.md](REPORT.md).
-<!-- YENO_STATUS_END -->
+<!-- PAPER_STATUS_END -->
 
 ## Strategies
 
@@ -84,7 +84,7 @@ The hourly process persists files locally on every successful tick; Actions comm
 
 ## GitHub Actions
 
-The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python yeno.py run --duration 3600` (one hour, targeting two observations per minute per horizon). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3600 seconds** for verification.
+The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python paper.py run --duration 3600` (one hour, targeting two observations per minute per horizon). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3600 seconds** for verification.
 
 Each cycle also stores up to three earlier hours of market history and exogenous candles. This archive is not used for training. The research model trains on all usable settled live observations and uses the market midpoint, horizon, and completed prior-minute crypto returns.
 
@@ -101,10 +101,10 @@ Requires Python 3.12+; CPU models need PyTorch.
 ```sh
 python -m pip install 'torch==2.14.1' --index-url https://download.pytorch.org/whl/cpu
 python -m unittest discover -s tests -v
-python yeno.py check
-python yeno.py run                 # Single US public-data observation
-python yeno.py run --duration 180 # 3-minute paper loop
-python yeno.py report
+python paper.py check
+python paper.py run                 # Single US public-data observation
+python paper.py run --duration 180 # 3-minute paper loop
+python paper.py report
 python research.py ready          # Needs 40 settled official US markets
 ```
 

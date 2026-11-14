@@ -34,7 +34,7 @@ jobs:
       - name: Preflight
         run: |
           python -m unittest discover -s tests -v
-          python yeno.py check
+          python paper.py check
       - name: Poll US order books and process 12 simulated portfolios
         env:
           DISPATCH_DURATION: ${{ inputs.duration_seconds }}
@@ -52,7 +52,7 @@ jobs:
             echo "Duration must be an integer from 60 to 3600 seconds"
             exit 2
           fi
-          python yeno.py run --duration "$seconds"
+          python paper.py run --duration "$seconds"
       - name: Backfill US history and recover the latest closed hour
         if: always()
         timeout-minutes: 8
@@ -65,7 +65,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          python yeno.py report
+          python paper.py report
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           mkdir -p data/backfill data/training
@@ -74,3 +74,16 @@ jobs:
             git commit -m 'data: Polymarket US paper session [skip ci]'
             git push
           fi
+
+      - name: Preserve session if committing fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-session-${{ github.run_id }}
+          path: |
+            data/state.json
+            data/observations/
+            data/backfill/
+            data/training/
+            REPORT.md
+          retention-days: 7

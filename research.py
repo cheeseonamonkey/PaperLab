@@ -5,7 +5,7 @@ import json
 import re
 import time
 from pathlib import Path
-from yeno import ROOT, load
+from paper import ROOT, load
 
 PROPOSALS = ROOT/"research/proposals"
 

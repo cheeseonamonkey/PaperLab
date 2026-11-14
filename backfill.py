@@ -66,7 +66,7 @@ def exogenous(start, end):
                             "start": datetime.fromtimestamp(start, timezone.utc).isoformat(),
                             "end": datetime.fromtimestamp(end, timezone.utc).isoformat()})
         url = "https://api.exchange.coinbase.com/products/" + asset + "-USD/candles?" + params
-        with urlopen(Request(url, headers={"User-Agent": "YeNoPaperLab/2.0"}), timeout=15) as response:
+        with urlopen(Request(url, headers={"User-Agent": "PaperLab/1.0"}), timeout=15) as response:
             rows = json.load(response)
         if not isinstance(rows, list):
             raise ValueError("Invalid exogenous candle response for " + asset)

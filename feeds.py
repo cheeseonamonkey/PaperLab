@@ -19,7 +19,7 @@ def get(path, params=None, missing_ok=False):
         raise ValueError("Unexpected US public read endpoint: " + path)
     url = API + path + ("?" + urlencode(params) if params else "")
     try:
-        with urlopen(Request(url, headers={"User-Agent": "YeNoPaperLab/2.0", "Accept": "application/json"}), timeout=12) as response:
+        with urlopen(Request(url, headers={"User-Agent": "PaperLab/1.0", "Accept": "application/json"}), timeout=12) as response:
             value = json.load(response)
     except HTTPError as error:
         if missing_ok and error.code == 404:
@@ -140,7 +140,7 @@ class USFeed:
             try:
                 url = "https://api.exchange.coinbase.com/products/"+asset+"-USD/candles?" + urlencode(
                     {"granularity": 60, "start": now-22*60, "end": now-60})
-                with urlopen(Request(url, headers={"User-Agent": "YeNoPaperLab/2.0"}), timeout=8) as response:
+                with urlopen(Request(url, headers={"User-Agent": "PaperLab/1.0"}), timeout=8) as response:
                     series = json.load(response)
                 context[asset.lower()] = _momentum(series, now)
             except (OSError, ValueError, KeyError) as error:
