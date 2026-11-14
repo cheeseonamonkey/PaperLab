@@ -250,7 +250,7 @@ def evaluate_limits(account,obs,now,markets=None):
             account["trades"].append({k:v for k,v in order.items() if k not in ("reserved","status","type")} |
                                     {"status":"open","type":"limit_cross","filled_at":now})
 
-def process_snapshot(state,obs,predictions):
+def process_snapshot(state,obs,predictions,names=None):
     now=obs["observed_at"]
     market=state["markets"].setdefault(obs["slug"],{"ends":obs["ends"],"outcome":None,"checked_at":0})
     market.setdefault("forecasts",[])
@@ -259,6 +259,8 @@ def process_snapshot(state,obs,predictions):
     forecast={"at":now,"market":market_probability,"probabilities":{}}
     decisions=[]
     for name,mode in POLICIES.items():
+        if names is not None and name not in names:
+            continue
         account=state["accounts"][name]
         evaluate_limits(account,obs,now,state["markets"])
         p=market_probability if name=="market_implied" else fair_probability(name,obs,predictions)

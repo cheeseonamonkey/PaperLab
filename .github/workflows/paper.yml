@@ -8,38 +8,30 @@ on:
   workflow_dispatch:
     inputs:
       duration_seconds:
-        description: 'Live paper polling duration (60-3600 seconds)'
-        required: false
+        description: 'Live collection duration (60-3600 seconds)'
         type: number
         default: 90
-
 permissions:
   contents: write
-
 concurrency:
   group: yeno-us-persistent-state
   cancel-in-progress: false
 
 jobs:
-  paper:
+  collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 95
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install CPU-only PyTorch
-        run: python -m pip install 'torch==2.14.1' --index-url https://download.pytorch.org/whl/cpu
-      - name: Preflight
-        run: |
-          python -m unittest discover -s tests -v
-          python paper.py check
-      - name: Poll US order books and process 12 simulated portfolios
+      - name: Verify paper engine
+        run: python -m unittest discover -s tests -v
+      - name: Collect shared observations and settlement events
         env:
-          DISPATCH_DURATION: ${{ inputs.duration_seconds }}
           EVENT_NAME: ${{ github.event_name }}
-        shell: bash
+          DISPATCH_DURATION: ${{ inputs.duration_seconds }}
         run: |
           if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
             seconds="${DISPATCH_DURATION:-90}"
@@ -48,26 +40,72 @@ jobs:
           else
             seconds=3600
           fi
-          if [[ ! "$seconds" =~ ^[0-9]+$ ]] || (( seconds < 60 || seconds > 3600 )); then
-            echo "Duration must be an integer from 60 to 3600 seconds"
-            exit 2
-          fi
-          python paper.py run --duration "$seconds"
+          python parallel.py collect --duration "$seconds"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shared-batch
+          path: |
+            batch/
+            data/observations/
+          retention-days: 7
+          if-no-files-found: error
+
+  bots:
+    needs: collect
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: shared-batch
+      - run: python parallel.py shard --index ${{ matrix.shard }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: shard-results/${{ matrix.shard }}.json
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: [collect, bots]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: shared-batch
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-*
+          path: shard-results
+          merge-multiple: true
+      - name: Merge isolated account states
+        id: merge
+        run: python parallel.py merge
       - name: Import two-day bootstrap once
-        if: always()
         timeout-minutes: 15
         run: python bootstrap.py
-      - name: Backfill US history and recover the latest closed hour
-        if: always()
+      - name: Backfill history
+        if: always() && steps.merge.outcome == 'success'
         timeout-minutes: 8
         run: python backfill.py
-      - name: Train research candidates on bootstrap and settled live observations
-        if: always()
+      - name: Train research candidates
+        if: always() && steps.merge.outcome == 'success'
         timeout-minutes: 6
         run: python train_research.py
-      - name: Commit recoverable paper state and raw snapshots
-        if: always()
-        shell: bash
+      - name: Commit state, data and reports
+        if: always() && steps.merge.outcome == 'success'
         run: |
           python paper.py report
           git config user.name 'github-actions[bot]'
@@ -76,24 +114,16 @@ jobs:
           git add data/state.json data/observations data/backfill data/bootstrap data/training data/ledgers docs REPORT.md README.md
           if ! git diff --cached --quiet; then
             git commit -m 'data: Polymarket US paper session [skip ci]'
-            # Replay the data commit over any code changes made during the session.
-            # A conflict fails safely and uploads the session artifact below.
             git pull --rebase origin "$GITHUB_REF_NAME"
             git push
           fi
-
       - name: Preserve session if committing fails
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: paper-session-${{ github.run_id }}
+          name: failed-session-${{ github.run_id }}
           path: |
-            data/state.json
-            data/observations/
-            data/backfill/
-            data/bootstrap/
-            data/ledgers/
+            data/
             docs/
-            data/training/
             REPORT.md
           retention-days: 7

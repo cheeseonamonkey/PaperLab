@@ -27,8 +27,8 @@ flowchart TD
   Train --> Docs["Reports and CSV views"]
 ```
 
-## Planned parallel pipeline
+## Parallel pipeline
 
-Collect a shared timestamped observation batch once, then fan out six isolated shards with up to two parent accounts each; their descendants stay with their parent shard. Each shard reads the same immutable data and writes only its own account state and results. A downstream job validates and combines the six outputs, updates shared training and research, generates reports, and commits once. Missing or duplicate shards must fail visibly rather than overwrite state. This is a design target; the current workflow is serialized and does not implement this pipeline yet. Batch processing must preserve timestamp order and avoid training on future observations or the separate historical archive.
+The collector records one shared sequence of observations and settlement checks. Six Actions jobs replay two accounts each using that sequence. One publish job verifies batch checksums, merges all six account results, updates research and reports, and commits state once. A missing or inconsistent shard stops publication. New descendants are not implemented yet.
 
-The feed rejects source timestamps over 15 seconds old when supplied; a missing source timestamp cannot establish freshness. A stationary book may also be rejected if its last exchange update exceeds that age.
+Decisions are replayed after the collection hour, in observation order; no orders are sent to an exchange. Actions scheduling, artifact transfer and post-processing introduce collection gaps between runs.
