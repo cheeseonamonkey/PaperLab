@@ -19,10 +19,18 @@ concurrency:
 
 jobs:
   collect:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
+    outputs:
+      revision: ${{ steps.revision.outputs.sha }}
     timeout-minutes: 70
     steps:
       - uses: actions/checkout@v4
+      - name: Refresh serialized repository state
+        id: revision
+        run: |
+          git pull --ff-only origin "$GITHUB_REF_NAME"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -42,13 +50,15 @@ jobs:
           fi
           python parallel.py collect --duration "$seconds"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: shared-batch
+          overwrite: true
           path: |
             batch/
             data/observations/
           retention-days: 7
-          if-no-files-found: error
+          if-no-files-found: warn
 
   bots:
     needs: collect
@@ -59,6 +69,8 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.collect.outputs.revision }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -69,6 +81,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: shard-${{ matrix.shard }}
+          overwrite: true
           path: shard-results/${{ matrix.shard }}.json
           retention-days: 7
           if-no-files-found: error
@@ -79,6 +92,8 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.collect.outputs.revision }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -108,6 +123,7 @@ jobs:
         if: always() && steps.merge.outcome == 'success'
         run: |
           python paper.py report
+          git switch -C "$GITHUB_REF_NAME"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           mkdir -p data/backfill data/bootstrap data/training data/ledgers docs
@@ -122,6 +138,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: failed-session-${{ github.run_id }}
+          overwrite: true
           path: |
             data/
             docs/
