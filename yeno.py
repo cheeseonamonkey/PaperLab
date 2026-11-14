@@ -179,14 +179,18 @@ def maybe_order(account,obs,probability,mode,now):
     account["trades"].append({**entry,"status":"open","type":"market","filled_at":now})
     return "PAPER MARKET "+side
 
-def evaluate_limits(account,obs,now):
+def evaluate_limits(account,obs,now,markets):
     for order in account["orders"]:
         if order["status"]!="open":
             continue
-        if now>=obs["ends"] or order["slug"]!=obs["slug"]:
+        market=markets.get(order["slug"],{})
+        ends=market.get("ends")
+        if ends is not None and now>=ends:
             # Expired orders are not assumed filled; reservations are released.
             order["status"]="expired"
             order["cancelled_at"]=now
+            continue
+        if order["slug"]!=obs["slug"]:
             continue
         if now<=order["placed_at"]:
             continue # Never fill against same snapshot used for placement.
@@ -210,7 +214,7 @@ def process_snapshot(state,obs,predictions):
     decisions=[]
     for name,mode in POLICIES.items():
         account=state["accounts"][name]
-        evaluate_limits(account,obs,now)
+        evaluate_limits(account,obs,now,state["markets"])
         p=market_probability if name=="market_implied" else fair_probability(name,obs,predictions)
         if p is not None and math.isfinite(p) and 0<=p<=1:
             forecast["probabilities"][name]=p
