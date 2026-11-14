@@ -8,6 +8,31 @@
 - Competing independent models all see a **single shared, timestamped data feed**. Inputs include official BRTI minute candles, current Polymarket US bid/ask/top-5 depth, US price-to-beat and display history, time to expiry, book imbalance, and additional BTC/ETH/SOL/XRP spot context. Coinbase context does not determine official settlement.
 
 <!-- YENO_STATUS_START -->
+## Current research status
+
+Venue: **Polymarket US**, BTC 15m BRTI Up/Down. All orders **simulated**.
+Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **2026-11-14T07:39:31+00:00**.
+
+Research sample: **1 markets tracked / 0 officially settled / 0 settled strategy positions**.
+
+Polls: **1 attempts / 1 recorded / 0 skipped**. Last error: None.
+
+| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |
+|---|---:|---:|---:|---:|---:|
+| book_imbalance | $100.00 | $+0.00 | 0 | 0 | 0 |
+| brti_distance | $100.00 | $+0.00 | 0 | 0 | 0 |
+| brti_distance_limit | $100.00 | $+0.00 | 0 | 0 | 0 |
+| btc_momentum | $100.00 | $+0.00 | 0 | 0 | 0 |
+| btc_reversion | $100.00 | $+0.00 | 0 | 0 | 0 |
+| conv_gru | $100.00 | $+0.00 | 0 | 0 | 0 |
+| cross_asset_momentum | $100.00 | $+0.00 | 0 | 0 | 0 |
+| depthwise_tcn | $100.00 | $+0.00 | 0 | 0 | 0 |
+| lstm | $100.00 | $+0.00 | 0 | 0 | 0 |
+| market_implied | $100.00 | $+0.00 | 0 | 0 | 0 |
+| skip_gru_2 | $100.00 | $+0.00 | 0 | 0 | 0 |
+| stacked_rnn | $100.00 | $+0.00 | 0 | 0 | 0 |
+
+Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 <!-- YENO_STATUS_END -->
 
 ## Strategies
