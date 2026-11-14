@@ -38,9 +38,9 @@ def value(x):
         return None
     return f if math.isfinite(f) else None
 
-def window_slug(start):
+def window_slug(start, horizon="15m"):
     at = dt.datetime.fromtimestamp(start, dt.timezone.utc)
-    return "cpc-btc-updown-15m-" + at.strftime("%Y-%m-%d-%H%M") + "z"
+    return "cpc-btc-updown-" + horizon + "-" + at.strftime("%Y-%m-%d-%H%M") + "z"
 
 def levels(book, key):
     entries = []
@@ -88,7 +88,11 @@ def settlement(slug):
     return "Up" if result == 1 else "Down"
 
 class USFeed:
-    def __init__(self):
+    def __init__(self, horizon="15m"):
+        if horizon not in ("15m", "1h"):
+            raise ValueError("Unsupported US market horizon")
+        self.horizon = horizon
+        self.period = 900 if horizon == "15m" else 3600
         self.slug = None
         self.metadata = None
         self.cached_reference = []
@@ -148,8 +152,8 @@ class USFeed:
 
     def observe(self, now=None):
         now = int(time.time() if now is None else now)
-        start = (now//PERIOD)*PERIOD
-        slug = window_slug(start)
+        start = (now//self.period)*self.period
+        slug = window_slug(start, self.horizon)
         if slug != self.slug:
             self.slug, self.metadata = slug, None
             self.cached_display, self.display_at = [], 0
@@ -158,8 +162,8 @@ class USFeed:
             self.metadata = item.get("market")
         m = self.metadata or {}
         terms = m.get("assetPriceTerms") or {}
-        if m.get("status") != "MARKET_STATUS_OPEN" or terms.get("indexSymbol") != "BRTI" or terms.get("horizon") != "15m":
-            raise ValueError("Expected open Polymarket US 15m BRTI market")
+        if m.get("status") != "MARKET_STATUS_OPEN" or terms.get("indexSymbol") != "BRTI" or terms.get("horizon") != self.horizon:
+            raise ValueError("Expected open Polymarket US " + self.horizon + " BRTI market")
         strike = value(terms.get("priceToBeat"))
         if strike is None or strike <= 0:
             raise ValueError("US price-to-beat unavailable")
@@ -174,7 +178,7 @@ class USFeed:
         quote = quotes(result)
         # Capture timestamp AFTER fetching book; never backdate stale data.
         received = int(time.time())
-        if received >= start+PERIOD:
+        if received >= start+self.period:
             raise ValueError("Expired during book acquisition")
         recent_book = result.get("transactTime")
         if recent_book:
@@ -189,7 +193,7 @@ class USFeed:
         last = reference[-1] if reference else {}
         current_brti = value(last.get("close"))
         numeric = {
-            "time_left": (start+PERIOD-received)/PERIOD, "price_to_beat": strike,
+            "time_left": (start+self.period-received)/self.period, "price_to_beat": strike,
             "brti_close": current_brti,
             "strike_distance": (current_brti/strike-1) if current_brti else None,
             "yes_spread": quote["Up"]["ask"]-quote["Up"]["bid"],
@@ -201,7 +205,7 @@ class USFeed:
         for asset, fields in exogenous.items():
             for key in ("r1", "r5", "r15", "vol15", "volume15"):
                 numeric[asset+"_"+key] = fields.get(key) if fields else None
-        return {"venue":"polymarket_us", "slug": slug, "start": start, "ends": start+PERIOD,
+        return {"venue":"polymarket_us", "slug": slug, "start": start, "ends": start+self.period,
                 "observed_at": received, "quotes":quote, "features": numeric,
                 "book_top5": {"bids":levels(result,"bids"), "asks":levels(result,"offers")},
                 "display_history":display, "brti_history":reference,
