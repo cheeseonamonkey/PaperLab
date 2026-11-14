@@ -1,0 +1,25 @@
+{
+  "days": [
+    "2026-11-14"
+  ],
+  "features": [
+    "market_logit",
+    "one_hour",
+    "btc_r1",
+    "eth_r1",
+    "sol_r1",
+    "xrp_r1",
+    "btc_missing",
+    "eth_missing",
+    "sol_missing",
+    "xrp_missing"
+  ],
+  "markets": 16,
+  "rows": 376,
+  "sources": {
+    "history": 375,
+    "live": 1
+  },
+  "status": "waiting",
+  "updated_at": "2026-11-14T14:30:58.828112+00:00"
+}

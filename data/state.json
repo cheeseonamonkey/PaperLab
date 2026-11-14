@@ -7,15 +7,41 @@
       "trades": []
     },
     "brti_distance": {
-      "cash": 100.0,
+      "cash": 95.0000365,
       "orders": [],
-      "signals": 0,
-      "trades": []
+      "signals": 1,
+      "trades": [
+        {
+          "cost": 4.9999635,
+          "edge": 0.199484,
+          "filled_at": 1794666611,
+          "placed_at": 1794666611,
+          "price": 0.525,
+          "shares": 9.337,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1430z",
+          "status": "open",
+          "type": "market"
+        }
+      ]
     },
     "brti_distance_limit": {
       "cash": 100.0,
-      "orders": [],
-      "signals": 0,
+      "orders": [
+        {
+          "cost": 4.99995432,
+          "edge": 0.214784,
+          "placed_at": 1794666611,
+          "price": 0.51,
+          "reserved": 4.99995432,
+          "shares": 9.6116,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1430z",
+          "status": "open",
+          "type": "limit"
+        }
+      ],
+      "signals": 1,
       "trades": []
     },
     "btc_momentum": {
@@ -74,21 +100,251 @@
     }
   },
   "cash_per_strategy": 100.0,
-  "last_run": 1794641971,
+  "forecast_metrics": {
+    "book_imbalance": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "brti_distance": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "brti_distance_limit": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "btc_momentum": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "btc_reversion": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "conv_gru": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "cross_asset_momentum": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "depthwise_tcn": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "lstm": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "market_implied": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "skip_gru_2": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    },
+    "stacked_rnn": {
+      "brier_sum": 0.0,
+      "forecasts": 0,
+      "logloss_sum": 0.0,
+      "market_brier_sum": 0.0,
+      "market_logloss_sum": 0.0,
+      "markets": 0
+    }
+  },
+  "last_run": 1794666656,
   "markets": {
     "cpc-btc-updown-15m-2026-11-14-0730z": {
-      "checked_at": 0,
+      "checked_at": 1794666596,
       "ends": 1794642300,
+      "outcome": "Down",
+      "resolved_at": 1794666596
+    },
+    "cpc-btc-updown-15m-2026-11-14-1430z": {
+      "checked_at": 0,
+      "ends": 1794667500,
+      "forecasts": [
+        {
+          "at": 1794666611,
+          "market": 0.515,
+          "probabilities": {
+            "book_imbalance": 0.5002718673728771,
+            "brti_distance": 0.7349844614398265,
+            "brti_distance_limit": 0.7349844614398265,
+            "btc_momentum": 0.5085485894648261,
+            "btc_reversion": 0.521446415422888,
+            "cross_asset_momentum": 0.48869319531694044,
+            "market_implied": 0.515
+          }
+        },
+        {
+          "at": 1794666626,
+          "market": 0.515,
+          "probabilities": {
+            "book_imbalance": 0.5002718673728771,
+            "brti_distance": 0.7367390598621456,
+            "brti_distance_limit": 0.7367390598621456,
+            "btc_momentum": 0.5085485894648261,
+            "btc_reversion": 0.521446415422888,
+            "cross_asset_momentum": 0.48869319531694044,
+            "market_implied": 0.515
+          }
+        },
+        {
+          "at": 1794666641,
+          "market": 0.615,
+          "probabilities": {
+            "book_imbalance": 0.5997156000558734,
+            "brti_distance": 0.7385332309868125,
+            "brti_distance_limit": 0.7385332309868125,
+            "btc_momentum": 0.6088685281004637,
+            "btc_reversion": 0.6210951689027019,
+            "cross_asset_momentum": 0.5897969377138257,
+            "market_implied": 0.615
+          }
+        },
+        {
+          "at": 1794666656,
+          "market": 0.615,
+          "probabilities": {
+            "book_imbalance": 0.5997156000558734,
+            "brti_distance": 0.4808131909458493,
+            "brti_distance_limit": 0.4808131909458493,
+            "btc_momentum": 0.6088685281004637,
+            "btc_reversion": 0.6210951689027019,
+            "cross_asset_momentum": 0.5897969377138257,
+            "market_implied": 0.615
+          }
+        }
+      ],
+      "outcome": null
+    },
+    "cpc-btc-updown-1h-2026-11-14-1400z": {
+      "checked_at": 0,
+      "ends": 1794668400,
+      "forecasts": [
+        {
+          "at": 1794666597,
+          "market": 0.095,
+          "probabilities": {
+            "book_imbalance": 0.13749572611152708,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.09280319260104224,
+            "btc_reversion": 0.09724323536521308,
+            "cross_asset_momentum": 0.0863285251193807,
+            "market_implied": 0.095
+          }
+        },
+        {
+          "at": 1794666611,
+          "market": 0.095,
+          "probabilities": {
+            "book_imbalance": 0.13749572611152708,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.09280319260104224,
+            "btc_reversion": 0.09724323536521308,
+            "cross_asset_momentum": 0.0863285251193807,
+            "market_implied": 0.095
+          }
+        },
+        {
+          "at": 1794666626,
+          "market": 0.10500000000000001,
+          "probabilities": {
+            "book_imbalance": 0.12264086672203817,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.10259816529224047,
+            "btc_reversion": 0.10745132950689716,
+            "cross_asset_momentum": 0.09551207216999516,
+            "market_implied": 0.10500000000000001
+          }
+        },
+        {
+          "at": 1794666641,
+          "market": 0.10500000000000001,
+          "probabilities": {
+            "book_imbalance": 0.12264086672203817,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.10259816529224047,
+            "btc_reversion": 0.10745132950689716,
+            "cross_asset_momentum": 0.09551207216999516,
+            "market_implied": 0.10500000000000001
+          }
+        },
+        {
+          "at": 1794666656,
+          "market": 0.10500000000000001,
+          "probabilities": {
+            "book_imbalance": 0.1277366518829984,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.10259816529224047,
+            "btc_reversion": 0.10745132950689716,
+            "cross_asset_momentum": 0.09551207216999516,
+            "market_implied": 0.10500000000000001
+          }
+        }
+      ],
       "outcome": null
     }
   },
   "mode": "paper",
   "polling": {
-    "attempts": 1,
-    "last_attempt": 1794641971,
+    "attempts": 11,
+    "last_attempt": 1794666656,
     "last_error": null,
-    "observed": 1,
-    "skipped": 0
+    "observed": 10,
+    "skipped": 1
   },
   "venue": "polymarket_us",
   "version": 2

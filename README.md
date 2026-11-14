@@ -10,18 +10,18 @@
 <!-- YENO_STATUS_START -->
 ## Current research status
 
-Venue: **Polymarket US**, BTC 15m BRTI Up/Down. All orders **simulated**.
-Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **2026-11-14T07:39:31+00:00**.
-Research sample: **1 markets tracked / 0 officially settled / 0 settled strategy positions**.
+Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.
+Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **2026-11-14T14:30:56+00:00**.
 
+Research sample: **3 markets tracked / 1 officially settled / 0 settled strategy positions**.
 
-Polls: **1 attempts / 1 recorded / 0 skipped**. Last error: None.
+Polls: **11 attempts / 10 recorded / 1 skipped**. Last error: None.
 
 | Strategy | Paper cash | Realized P&L | Win rate | Brier (markets) | ΔBrier vs market | Settled | Open | Pending limits |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | book_imbalance | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
-| brti_distance | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
-| brti_distance_limit | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| brti_distance | $95.00 | $+0.00 | — | — (n=0) | — | 0 | 1 | 0 |
+| brti_distance_limit | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 1 |
 | btc_momentum | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
 | btc_reversion | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
 | conv_gru | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
