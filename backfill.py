@@ -75,6 +75,25 @@ def exogenous(start, end):
     return candles
 
 
+def collect_hour(start, end):
+    at = datetime.fromtimestamp(start, timezone.utc)
+    path = ROOT / "hours" / at.strftime("%Y-%m-%d") / (at.strftime("%H") + ".json.gz")
+    markets = [market(t, horizon, period)
+               for horizon, period in HORIZONS
+               for t in range(start, end, period)]
+    item = {"venue": "polymarket_us", "start": start, "end": end,
+            "kind": "historical_display_not_order_book", "markets": markets,
+            "exogenous_coinbase_1m": exogenous(start, end)}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    with tmp.open("wb") as raw:
+        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as out:
+            out.write((json.dumps(item, sort_keys=True, separators=(",", ":")) + "\n").encode())
+    os.replace(tmp, path)
+    missing = sum(m["status"] == "not_found" for m in markets)
+    return path, missing, len(markets)
+
+
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     # Leave the most recently closed hour for settlements to become available.
@@ -82,30 +101,30 @@ def main():
         "next_end": int(time.time()) // HOUR * HOUR - HOUR,
         "hours_saved": 0, "missing_markets": 0, "empty_hours": 0,
     }
+    # Backfill the latest closed hour as well, covering live-run gaps.
+    recent_end = int(time.time()) // HOUR * HOUR
+    recent_start = recent_end - HOUR
+    recent_at = datetime.fromtimestamp(recent_start, timezone.utc)
+    recent_path = ROOT / "hours" / recent_at.strftime("%Y-%m-%d") / (recent_at.strftime("%H") + ".json.gz")
+    if not recent_path.exists():
+        try:
+            collect_hour(recent_start, recent_end)
+            state["recent_hours_saved"] = state.get("recent_hours_saved", 0) + 1
+            state.pop("recent_error", None)
+        except (OSError, ValueError) as exc:
+            state["recent_error"] = str(exc)[:200]
+            print("Latest hour deferred:", exc, flush=True)
+        write_json(STATE, state)
     for _ in range(HOURS_PER_RUN):
         if state.get("done"):
             break
         end = state["next_end"]
         start = end - HOUR
-        at = datetime.fromtimestamp(start, timezone.utc)
-        path = ROOT / "hours" / at.strftime("%Y-%m-%d") / (at.strftime("%H") + ".json.gz")
-        markets = [market(t, horizon, period)
-                   for horizon, period in HORIZONS
-                   for t in range(start, end, period)]
-        item = {"venue": "polymarket_us", "start": start, "end": end,
-                "kind": "historical_display_not_order_book", "markets": markets,
-                "exogenous_coinbase_1m": exogenous(start, end)}
-        path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(".tmp")
-        with tmp.open("wb") as raw:
-            with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as out:
-                out.write((json.dumps(item, sort_keys=True, separators=(",", ":")) + "\n").encode())
-        os.replace(tmp, path)
-        missing = sum(m["status"] == "not_found" for m in markets)
+        path, missing, total = collect_hour(start, end)
         state["next_end"] = start
         state["hours_saved"] += 1
         state["missing_markets"] += missing
-        state["empty_hours"] = state.get("empty_hours", 0) + 1 if missing == len(markets) else 0
+        state["empty_hours"] = state.get("empty_hours", 0) + 1 if missing == total else 0
         # Record the 404s; stop after a full day without either horizon.
         state["done"] = state["empty_hours"] >= 24
         state["updated_at"] = datetime.now(timezone.utc).isoformat()
