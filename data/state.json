@@ -83,6 +83,13 @@
     }
   },
   "mode": "paper",
+  "polling": {
+    "attempts": 1,
+    "last_attempt": 1794641971,
+    "last_error": null,
+    "observed": 1,
+    "skipped": 0
+  },
   "venue": "polymarket_us",
   "version": 2
 }

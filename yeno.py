@@ -46,6 +46,7 @@ def stamp(ts=None):
 def initial():
     return {"version":2, "venue":"polymarket_us", "mode":"paper",
             "cash_per_strategy":START, "last_run":None, "markets":{},
+            "polling":{"attempts":0,"observed":0,"skipped":0,"last_attempt":None,"last_error":None},
             "accounts":{name:{"cash":START,"orders":[],"trades":[],"signals":0} for name in POLICIES}}
 
 def load():
@@ -227,9 +228,12 @@ def reconcile(state,now):
                 account["cash"]=round(account["cash"]+payout,8)
 
 def render(state):
+    stats = state.get("polling", {})
     header=["# YeNo Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m BRTI Up/Down. All orders **simulated**.",
-            "Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest cycle: **%s**." %
+            "Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **%s**." %
             (stamp(state["last_run"]) if state["last_run"] else "Not yet run"), "",
+            "Polls: **%s attempts / %s recorded / %s skipped**. Last error: %s." %
+            (stats.get("attempts",0),stats.get("observed",0),stats.get("skipped",0),stats.get("last_error") or "None"),"",
             "| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |",
             "|---|---:|---:|---:|---:|---:|"]
     for name,account in state["accounts"].items():
@@ -259,6 +263,8 @@ def cycle(state,feed,models,now=None):
     decisions=process_snapshot(state,observation,probabilities)
     append_observation(observation)
     state["last_run"]=observation["observed_at"]
+    state["polling"]["observed"]+=1
+    state["polling"]["last_error"]=None
     save(state)
     REPORT.write_text(render(state))
     print(stamp(now),"US",observation["slug"],"signals",len(decisions),
@@ -270,6 +276,7 @@ def main():
     ap.add_argument("--duration",type=int,default=0,help="Seconds of 15s polling (0 = one observation)")
     opts=ap.parse_args()
     state=load()
+    state.setdefault("polling",{"attempts":0,"observed":0,"skipped":0,"last_attempt":None,"last_error":None})
     if opts.command=="report":
         REPORT.write_text(render(state))
         print(REPORT.read_text())
@@ -283,10 +290,14 @@ def main():
     deadline=time.monotonic()+opts.duration
     while True:
         started=time.monotonic()
+        state["polling"]["attempts"]+=1
+        state["polling"]["last_attempt"]=int(time.time())
         try:
             cycle(state,feed,models)
         except Exception as exc:
             print(stamp(),"US feed/model cycle failed; NO speculative trade:",str(exc),flush=True)
+            state["polling"]["skipped"]+=1
+            state["polling"]["last_error"]=type(exc).__name__+": "+str(exc)[:160]
             save(state)
             REPORT.write_text(render(state))
             if not opts.duration:
