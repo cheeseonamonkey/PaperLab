@@ -134,14 +134,9 @@ def merge():
             if len(forecasts) != len(theirs):
                 raise ValueError("Forecast count mismatch")
             for left,right in zip(forecasts,theirs):
-                if left["at"] != right["at"] or left["market"] != right["market"]:
+                if (left["at"],left["market"]) != (right["at"],right["market"]):
                     raise ValueError("Forecast alignment mismatch")
                 left["probabilities"].update(right["probabilities"])
-        owned = set(SHARDS[i])
-        for market in shard_state["markets"].values():
-            for forecast in market.get("forecasts", []):
-                if set(forecast.get("probabilities", {})) - owned:
-                    raise ValueError("Shard forecast contains a foreign strategy")
         for name in SHARDS[i]:
             state["accounts"][name] = shard_state["accounts"][name]
             state["forecast_metrics"][name] = shard_state["forecast_metrics"][name]
