@@ -14,7 +14,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-from feeds import get
+from feeds import get, window_slug
 
 ROOT = Path(__file__).resolve().parent / "data" / "backfill"
 STATE = ROOT / "state.json"
@@ -31,8 +31,8 @@ def write_json(path, value):
 
 
 def slug(start, horizon):
-    date = datetime.fromtimestamp(start, timezone.utc).strftime("%Y-%m-%d-%H%M")
-    return "cpc-btc-updown-" + horizon + "-" + date + "z"
+    """Compatibility wrapper; market identifiers come from the canonical feed helper."""
+    return window_slug(start, horizon)
 
 
 def market(start, horizon, period):
