@@ -1,10 +1,10 @@
-# YeNo Paper Lab — Polymarket US
+# Paper Lab — Polymarket US
 
 **12 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute and 1-hour Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
 
 - [Current results](REPORT.md) · [Persistent state](data/state.json) · [Raw, compressed observations](data/observations/) · [Workflows](../../actions)
-- **Hourly Actions** runs approximately 50 minutes, polling US public order books at a **15-second target cadence** (when network calls fit). Runs can start late or be dropped by GitHub; **not an always-on service**.
-- Simulates both marketable buys and **resting limit buys**, with cash reservations, expiry/cancellation and delayed observed crossing. Settles exclusively using the **official US 0/1 settlement endpoint**.
+- **Hourly Actions** runs approximately one hour, polling US public order books at a **30-second target cadence** (when network calls fit). Runs can start late or be dropped by GitHub; **not an always-on service**.
+- Simulates **resting limit buys**, with cash reservations, expiration and delayed observed crossing. Settles exclusively using the **official US 0/1 settlement endpoint**.
 - Competing independent models all see a **single shared, timestamped data feed**. Inputs include official BRTI minute candles, current Polymarket US bid/ask/top-5 depth, US price-to-beat and display history, time to expiry, book imbalance, and additional BTC/ETH/SOL/XRP spot context. Coinbase context does not determine official settlement.
 
 <!-- YENO_STATUS_START -->
@@ -45,60 +45,48 @@ Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 |---|---|---|
 | stacked_rnn | Inactive legacy 250K recurrent model | Limit |
 | skip_gru_2 | Inactive legacy 250K skip-GRU | Limit |
-| depthwise_tcn | Inactive legacy 250K causal CNN | Marketable |
+| depthwise_tcn | Inactive legacy 250K causal CNN | Limit |
 | lstm | Inactive legacy 250K LSTM | Limit |
-| conv_gru | Inactive legacy 250K conv-GRU | Marketable |
+| conv_gru | Inactive legacy 250K conv-GRU | Limit |
 | market_implied | Explicit never-trade benchmark | Hold |
-| brti_distance | BRTI distance vs strike and volatility | Marketable |
+| brti_distance | BRTI distance vs strike and volatility | Limit |
 | brti_distance_limit | Same estimated probability | Limit |
-| btc_momentum | BTC 5-minute signal vs implied odds | Marketable |
+| btc_momentum | BTC 5-minute signal vs implied odds | Limit |
 | btc_reversion | Counter-trend vs implied odds | Limit |
 | cross_asset_momentum | BTC/ETH/SOL/XRP momentum | Limit |
 | book_imbalance | US YES depth imbalance vs implied odds | Limit |
 
-Each account starts at **$100**, caps a proposed entry around **$5**, enforces a modeled **5-share minimum**, and caps open cost basis at **$15**. Pending orders reserve paper cash and cannot spend another strategy's money. Each account can initiate at most one position/order per market.
-
-**Marketable buy assumption:** US displayed ask plus $0.005/share slippage, 2% all-in notional fee buffer, and top-of-book capacity.
+Each account starts at **$100**. Each limit order can reserve up to **$15** of available paper cash, including the simulated fee buffer; share quantities may be fractional. Each strategy gets an opportunity to place an order for each market every **five minutes**. Pending orders reserve cash, and existing orders are monitored at every observation.
 
 **Resting buy assumption:** post at the displayed bid, reserve its cost, and credit a hypothetical fill *only* if a **later US snapshot** has best ask at or below the posted limit and offers adequate displayed size. Fill is marked at the conservative original limit price, with the same 2% fee buffer; **no maker rebate is assumed**. This crossing is a proxy, **not evidence of queue priority or a real fill**. Otherwise orders remain pending and expire, returning reserved cash.
 
 Fees are illustrative **stress assumptions**, not a verified US fee schedule. Results are speculative paper P&L, not live-executable returns.
 
-## Model provenance and limitations
+## Training and evaluation
 
-The 20-architecture, approximately 250K-parameter Polymarket US experiment in [YeNoVolumeLab](https://github.com/cheeseonamonkey/YeNoVolumeLab) finished on November 6, 2026. Five checkpoint families had nontrivial trained residuals and improved market-relative validation loss on both older-day chronological folds:
+The research candidate trains only on settled **live observations** collected by this repo. BTC, ETH, SOL, and XRP context is included where available. Validation uses a chronological split and compares forecast error against the market-implied price. The candidate is research only and is not automatically placed into the paper accounts.
 
-**Stacked RNN · Skip-GRU-2 · Depthwise TCN · LSTM · Conv-GRU.**
+The backward historical archive is stored separately and is **not** read by the trainer. Historical display prices do not represent executable order books. No historical bootstrap is enabled.
 
-Its **40-architecture, 200K** screening attempt finished **1/40**, so it cannot provide a credible 40-way winner list.
-
-The saved original 250K weights, metadata, training scalers, feature audit and fold comparisons are committed here under [models](models/). Model implementations are retained in [legacy_us](legacy_us/) for exact tensor layout and checkpoint compatibility. Training source revision and SHA-256 provenance are in [models/provenance.json](models/provenance.json).
-
-### Critical live inference caveat
-
-The frozen neural checkpoints expect **120 × 24** one-minute, point-in-time historical input features and **64 context** channels. The live US adapter reproduces the reference/price layout, *but currently mean-imputes the 52 slow macro and cross-asset ETF context fields* rather than reproducing their original vintage-aware as-of feeds. New Coinbase crypto context is **collected separately**, not silently substituted into those trained channels.
-
-The legacy neural checkpoints are inactive in the fresh-start run; both horizons use the deterministic strategies while the new candidate is researched separately. **Consequently the neural predictions are out-of-distribution research signals.** They can make hypothetical paper decisions, but are neither calibrated nor comparable to the original held-out results without a feature-parity study. Models abstain when there is insufficient authentic US BRTI/display history. No fitted model has an established net-profit advantage.
-
-Training was on historical US **display** prices, not actual historical executable depth; price-history data must not be reported as fills. Official US settlement uses BRTI samples near the event's boundaries, *not* the Coinbase last price.
+Five legacy checkpoint accounts are inactive. Their earlier files remain in Git history for provenance.
 
 ## Persistence and cost
 
 - [data/state.json](data/state.json): independent cash, open orders, filled trades, official settled outcomes, and audit timestamps.
 - [data/observations](data/observations/): **compressed daily JSONL**, one shared US book/feature snapshot per successful polling decision. Git commit history remains auditable.
-- [models/checkpoints](models/checkpoints/): five fitted PyTorch checkpoints (approximately 2.5 MB combined), frozen metadata and scalers. Never rewritten by the paper runner.
+- [models/checkpoints](models/checkpoints/): inactive legacy checkpoints, retained for provenance.
 - [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The target is three prior market hours per hourly workflow run; historical display prices are not historical order books.
-- [data/training](data/training/): candidate research model and run status, trained on usable settled repository data with chronological validation. The candidate is not automatically promoted to a paper strategy.
+- [data/training](data/training/): candidate research model and run status, trained on settled live observations with chronological validation. The candidate is not automatically promoted to a paper strategy.
 - [REPORT.md](REPORT.md): auto-generated account comparison; the **Current research status** block above updates from the same saved state after paper runs.
 - [research/proposals](research/proposals/): **review-only** Pi experiment suggestions, never deployed.
 
-The hourly process persists files locally on every successful tick; Actions commits state and new observations at job completion. A cancelled runner can lose its **uncommitted** session. Keeping all 15-second snapshots in Git indefinitely will enlarge repo history; storage can be moved to archive releases if growth becomes an issue.
+The hourly process persists files locally on every successful tick; Actions commits state and new observations at job completion. A cancelled runner can lose its **uncommitted** session. Keeping all 30-second snapshots in Git indefinitely will enlarge repo history; storage can be moved to archive releases if growth becomes an issue.
 
 ## GitHub Actions
 
-The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python yeno.py run --duration 3000` (50 minutes, roughly four updates per minute). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3300 seconds** for verification.
+The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python yeno.py run --duration 3600` (one hour, targeting two observations per minute per horizon). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3600 seconds** for verification.
 
-Each cycle also backfills up to three hours of market history and exogenous candles and retrains a market-relative research candidate once enough settled data supports a chronological split. Live and historical records are deduplicated by market and timestamp. The research model uses the market midpoint or display price, horizon, and completed prior-minute crypto returns.
+Each cycle also stores up to three earlier hours of market history and exogenous candles. This archive is not used for training. The research model trains on all usable settled live observations and uses the market midpoint, horizon, and completed prior-minute crypto returns.
 
 A separate **optional daily** Pi/OpenRouter research workflow needs only the Actions secret `OPENROUTER_API_KEY`:
 
