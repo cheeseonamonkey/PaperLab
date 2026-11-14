@@ -11,6 +11,8 @@ import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from feeds import get
 
@@ -56,6 +58,23 @@ def market(start, horizon, period):
             "metadata": meta, "display_history": history, "settlement": result}
 
 
+def exogenous(start, end):
+    """Minute OHLCV for context; candles become available only after closing."""
+    candles = {}
+    for asset in ("BTC", "ETH", "SOL", "XRP"):
+        params = urlencode({"granularity": 60,
+                            "start": datetime.fromtimestamp(start, timezone.utc).isoformat(),
+                            "end": datetime.fromtimestamp(end, timezone.utc).isoformat()})
+        url = "https://api.exchange.coinbase.com/products/" + asset + "-USD/candles?" + params
+        with urlopen(Request(url, headers={"User-Agent": "YeNoPaperLab/2.0"}), timeout=15) as response:
+            rows = json.load(response)
+        if not isinstance(rows, list):
+            raise ValueError("Invalid exogenous candle response for " + asset)
+        candles[asset] = sorted((row for row in rows if len(row) >= 6 and start <= int(row[0]) < end),
+                                key=lambda row: row[0])
+    return candles
+
+
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     # Leave the most recently closed hour for settlements to become available.
@@ -74,7 +93,8 @@ def main():
                    for horizon, period in HORIZONS
                    for t in range(start, end, period)]
         item = {"venue": "polymarket_us", "start": start, "end": end,
-                "kind": "historical_display_not_order_book", "markets": markets}
+                "kind": "historical_display_not_order_book", "markets": markets,
+                "exogenous_coinbase_1m": exogenous(start, end)}
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
         with tmp.open("wb") as raw:
