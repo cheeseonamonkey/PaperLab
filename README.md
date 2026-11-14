@@ -32,6 +32,8 @@ Polls: **1 attempts / 1 recorded / 0 skipped**. Last error: None.
 | skip_gru_2 | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
 | stacked_rnn | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
 
+Market-midpoint benchmark: awaiting first officially settled market.
+
 Win rate uses settled simulated fills. Forecast Brier averages snapshots within each market, then averages markets; n is the number of settled markets. Positive ΔBrier means better than the paired market-midpoint forecast; lower Brier is better.
 
 Full caveats and the audit trail are in [REPORT.md](REPORT.md).
