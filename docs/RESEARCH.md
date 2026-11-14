@@ -49,3 +49,15 @@ Fee schedules are venue- and date-specific. The current repo uses the documented
 Creating a strategy fork (a new child variant or paper account) is currently **disabled**. The paper roster is fixed; the workflow does not spawn, train, or promote account descendants automatically. Keep candidate ideas in the review-only proposal path and compare them offline first. If a future fork is approved, give it a documented parent hypothesis, a distinct name, an isolated bankroll, identical risk controls, and a predeclared evaluation split. Related variants must remain labeled as dependent evidence; changing a name does not create an independent experiment.
 
 See the [strategy index](bots/README.md) for current signal relationships and the [execution policy](EXECUTION.md) for account-level constraints.
+
+## Per-bot online calibration
+
+Each active account tracks its own forecast error after official settlement. Each resolved market gets one update, regardless of snapshot count. An offset is accumulated with learning rate 0.05 and bounded to ±0.15 logit; it is only applied after 20 resolved markets. It learns from forecasts even when no order fills, so signal evaluation and trading execution stay separate. This is a small experimental calibration, not an optimized strategy or a guarantee of better forecasts.
+
+The default minimum edge is 0.045 (formerly 0.05). `MIN_EDGE`, `STRATEGY_MIN_EDGE`, `CALIBRATION_WARMUP`, `CALIBRATION_RATE`, and `CALIBRATION_MAX_LOGIT` in paper.py are explicit manual knobs. Risk limits remain separate. No parameter is selected from a small profit sample and no automatic forks are created.
+
+## Exo research
+
+The existing automated proposal path uses Pi and OpenRouter; it is **not** the Exo harness. [Exo](https://github.com/exoharness/exo) is a separate agent framework with a protected event history and editable policies; its [research paper](https://arxiv.org/abs/2611.00463) describes results on other tasks, not trading performance. Its upstream setup requires Docker and a toolchain, and gives the agent substantial self-modification capability. It is not installed or enabled here.
+
+A later integration should preserve the repo as the canonical record, restrict proposals to bounded experiment configurations, log outcomes and failures, and require chronological unseen evaluation before any strategy changes. Repeated experiments can overfit even when each has a holdout; see [Probability of Backtest Overfitting](https://escholarship.org/uc/item/4w1110bb). Online calibration research is relevant but does not validate our simple update: [Online Learning in Betting Markets](https://proceedings.mlr.press/v235/zhu24k.html). Continue comparing signal loss to the market separately from paper P&L.

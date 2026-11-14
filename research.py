@@ -27,14 +27,16 @@ def prompt():
     return {
         "goal":"Research PAPER trading improvements only. No real-money trading.",
         "venue":"polymarket_us",
-        "sample_scope":"Prospective but early and correlated 15-minute BTC markets; not a sealed holdout.",
+        "sample_scope":"Prospective but early and correlated 15-minute and 1-hour BTC markets; not a sealed holdout.",
         "important_caveats":[
             "All execution hypothetical; limit cross may not mean actual queue fill.",
-            "Five neural models use mean-imputed 52 auxiliary inputs, an unverified distribution shift.",
+            "Five legacy neural accounts currently abstain; research_linear is a separate paper baseline.",
             "No evidence any strategy is profitable or statistically significant.",
             "No strategy can be automatically deployed by this review.",
         ],
         "settled_market_count":count, "strategies":accounts,
+        "forecast_metrics":state.get("forecast_metrics", {}),
+        "calibration":{name: account.get("learning", {}) for name,account in state["accounts"].items()},
         "required_output":"Output ONE JSON object: title (<=100 chars), hypothesis (<=500 chars), evaluation (<=700 chars), risks (<=500 chars). No markdown. Recommend one safe experiment with chronological evaluation and realistic fees.",
     }
 

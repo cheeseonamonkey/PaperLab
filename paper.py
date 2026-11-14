@@ -29,6 +29,11 @@ MAX_ORDER_EQUITY_FRACTION = .05
 MAX_EXPOSURE_EQUITY_FRACTION = .20
 MIN_ORDER_COST = .01
 DECISION_INTERVAL = 60
+MIN_EDGE = .045
+STRATEGY_MIN_EDGE = {}  # Optional per-account overrides.
+CALIBRATION_WARMUP = 20
+CALIBRATION_RATE = .05
+CALIBRATION_MAX_LOGIT = .15
 POLICIES = {
     "stacked_rnn": "limit",
     "skip_gru_2": "limit",
@@ -148,7 +153,7 @@ def committed_exposure(account):
     reservations=sum(o.get("reserved",0) for o in account["orders"] if o["status"]=="open")
     return positions+reservations
 
-def maybe_order(account,obs,probability,mode,now):
+def maybe_order(account,obs,probability,mode,now,min_edge=MIN_EDGE):
     if probability is None or mode=="hold" or not .01 < probability < .99:
         return None
     slug=obs["slug"]
@@ -175,7 +180,7 @@ def maybe_order(account,obs,probability,mode,now):
                 continue
             unit_fee=TAKER_COEFFICIENT*price*(1-price)
             modeled_edge=prob-price-unit_fee
-        if modeled_edge>=.05:
+        if modeled_edge>=min_edge:
             candidates.append((modeled_edge,side,price,book,unit_fee))
     if not candidates:
         return None
@@ -278,6 +283,16 @@ def evaluate_limits(account,obs,now,markets=None):
             account["trades"].append({k:v for k,v in order.items() if k not in ("reserved","status","type")} |
                                     {"status":"open","type":"limit_cross","filled_at":now})
 
+def calibrate(probability, account):
+    """Apply bounded online correction after enough settled market forecasts."""
+    learning = account.get("learning", {})
+    if probability is None or learning.get("markets", 0) < CALIBRATION_WARMUP:
+        return probability
+    p = min(.999, max(.001, probability))
+    logit = math.log(p/(1-p)) + learning.get("logit_offset", 0.0)
+    return 1/(1+math.exp(-max(-30, min(30, logit))))
+
+
 def process_snapshot(state,obs,predictions,names=None):
     now=obs["observed_at"]
     market=state["markets"].setdefault(obs["slug"],{"ends":obs["ends"],"outcome":None,"checked_at":0})
@@ -293,12 +308,14 @@ def process_snapshot(state,obs,predictions,names=None):
         evaluate_limits(account,obs,now,state["markets"])
         p=market_probability if name=="market_implied" else fair_probability(name,obs,predictions)
         if p is not None and math.isfinite(p) and 0<=p<=1:
+            if mode != "hold":
+                p = calibrate(p, account)
             forecast["probabilities"][name]=p
         bucket=now//DECISION_INTERVAL
         last=account.setdefault("last_decision",{})
         if mode!="hold" and last.get(obs["slug"])!=bucket:
             last[obs["slug"]]=bucket
-            message=maybe_exit(account,obs,p,now) or maybe_order(account,obs,p,mode,now)
+            message=maybe_exit(account,obs,p,now) or maybe_order(account,obs,p,mode,now,STRATEGY_MIN_EDGE.get(name,MIN_EDGE))
             if message:
                 decisions.append(name+":"+message)
     market["forecasts"].append(forecast)
@@ -327,6 +344,13 @@ def score_market_forecasts(state,market,outcome):
         metric["logloss_sum"]+=sum(x[1] for x in losses)/len(losses)
         metric["market_brier_sum"]+=sum(x[0] for x in baseline)/len(baseline)
         metric["market_logloss_sum"]+=sum(x[1] for x in baseline)/len(baseline)
+        if name in state["accounts"] and POLICIES.get(name) != "hold":
+            # One update per resolved market, regardless of snapshot count.
+            learning = state["accounts"][name].setdefault("learning", {"markets":0,"logit_offset":0.0})
+            error = actual - sum(p for p,_ in pairs)/len(pairs)
+            learning["markets"] += 1
+            learning["logit_offset"] = max(-CALIBRATION_MAX_LOGIT, min(
+                CALIBRATION_MAX_LOGIT, learning["logit_offset"] + CALIBRATION_RATE*error))
 
 def reconcile(state,now):
     due={slug:m for slug,m in state["markets"].items()

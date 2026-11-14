@@ -242,5 +242,20 @@ class PaperTests(unittest.TestCase):
         self.assertEqual(len(predictors.SCALES["c_mean"]),64)
         self.assertEqual(len(predictors.MODELS),5)
 
+    def test_calibration_learns_per_account_only_on_settlement(self):
+        state = paper.initial()
+        market = {"forecasts": [
+            {"at": self.now, "market": .5, "probabilities": {"btc_momentum": .6}},
+            {"at": self.now + 15, "market": .5, "probabilities": {"btc_momentum": .8}},
+        ]}
+        paper.score_market_forecasts(state, market, "Up")
+        learner = state["accounts"]["btc_momentum"]["learning"]
+        self.assertEqual(learner["markets"], 1)
+        self.assertAlmostEqual(learner["logit_offset"], .015)
+        self.assertNotIn("learning", state["accounts"]["btc_reversion"])
+        self.assertEqual(paper.calibrate(.6, state["accounts"]["btc_momentum"]), .6)
+        learner["markets"] = paper.CALIBRATION_WARMUP
+        self.assertGreater(paper.calibrate(.6, state["accounts"]["btc_momentum"]), .6)
+
 if __name__=="__main__":
     unittest.main()

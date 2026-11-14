@@ -37,6 +37,7 @@ def export(state):
         brier = "%.4f" % (metric["brier_sum"]/markets) if markets else "—"
         delta = "%+.4f" % ((metric["market_brier_sum"]-metric["brier_sum"])/markets) if markets else "—"
         fees = sum(o.get("fee", 0) or 0 for o in orders if o.get("status") == "filled")
+        learning = account.get("learning", {})
         page = ["# " + name, "", "Paper account · simulated orders", "",
                 "| Metric | Value |", "|---|---:|",
                 "| Cash | $%.2f |" % account["cash"],
@@ -47,6 +48,8 @@ def export(state):
                 "| Pending orders | %d |" % sum(o["status"] == "open" for o in orders),
                 "| Orders filled / placed | %d / %d |" % (sum(o["status"] == "filled" for o in orders), len(orders)),
                 "| Recorded exit fees | $%.4f |" % fees,
+                "| Calibration markets | %d |" % learning.get("markets", 0),
+                "| Calibration logit offset | %+.4f |" % learning.get("logit_offset", 0.0),
                 "| Brier (markets) | %s (%d) |" % (brier, markets),
                 "| ΔBrier vs market | %s |" % delta, "",
                 "[Order ledger](../../data/ledgers/" + name + "-orders.csv) · " +
