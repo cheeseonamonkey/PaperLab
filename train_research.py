@@ -1,0 +1,148 @@
+"""Fit a market-relative research model from all settled repository data."""
+from __future__ import annotations
+
+import gzip
+import json
+import math
+from collections import Counter
+from datetime import datetime, timezone
+from pathlib import Path
+
+from backfill import ROOT as ARCHIVE, write_json
+from feeds import value
+
+ROOT = Path(__file__).resolve().parent
+OUTPUT = ROOT / "data" / "training"
+ASSETS = ("BTC", "ETH", "SOL", "XRP")
+
+
+def features(probability, horizon, returns):
+    p = min(.999, max(.001, probability))
+    vals = [returns.get(asset) for asset in ASSETS]
+    return [math.log(p / (1-p)), float(horizon == "1h")] + [
+        0.0 if v is None else max(-.1, min(.1, v)) for v in vals
+    ] + [float(v is None) for v in vals]
+
+
+def candle_returns(candles, timestamp):
+    result = {}
+    for asset in ASSETS:
+        rows = [r for r in candles.get(asset, []) if len(r) >= 6
+                and int(r[0]) + 63 <= timestamp and value(r[4]) is not None]
+        rows.sort(key=lambda r: r[0])
+        if len(rows) >= 2 and int(rows[-1][0])-int(rows[-2][0]) == 60:
+            a, b = value(rows[-2][4]), value(rows[-1][4])
+            result[asset] = math.log(b/a) if a and b and a > 0 and b > 0 else None
+    return result
+
+
+def examples():
+    # Deduplicate identical market/timestamp rows; live observations take precedence.
+    rows = {}
+    for path in sorted((ARCHIVE / "hours").glob("*/*.json.gz")):
+        with gzip.open(path, "rt", encoding="utf-8") as stream:
+            hour = json.load(stream)
+        candles = hour.get("exogenous_coinbase_1m", {})
+        for market in hour.get("markets", []):
+            if market.get("status") != "collected":
+                continue
+            result = market.get("settlement", {}).get("settlement")
+            if type(result) not in (int, float) or result not in (0, 1):
+                continue
+            for quote in market.get("display_history", {}).get("history", []):
+                try:
+                    at = int(quote["timestamp"])
+                    p = value(quote.get("longPrice"))
+                    if p is None or not 0 < p < 1:
+                        continue
+                    name = market["slug"]
+                    rows[(name, at)] = (at, name, features(p, market["horizon"], candle_returns(candles, at)), int(result), "history")
+                except (TypeError, ValueError, KeyError):
+                    continue
+    state_path = ROOT / "data" / "state.json"
+    state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    for path in sorted((ROOT / "data" / "observations").glob("*.jsonl.gz")):
+        with gzip.open(path, "rt", encoding="utf-8") as stream:
+            for line in stream:
+                obs = json.loads(line)
+                name = obs.get("slug")
+                outcome = state.get("markets", {}).get(name, {}).get("outcome")
+                if outcome not in ("Up", "Down"):
+                    continue
+                quote = obs["quotes"]["Up"]
+                p = (float(quote["bid"])+float(quote["ask"]))/2
+                at = int(obs["observed_at"])
+                context = obs.get("features", {})
+                returns = {asset: value(context.get(asset.lower()+"_r1")) for asset in ASSETS}
+                horizon = "1h" if "-1h-" in name else "15m"
+                rows[(name, at)] = (at, name, features(p, horizon, returns), int(outcome == "Up"), "live")
+    return sorted(rows.values(), key=lambda x: (x[0], x[1]))
+
+
+def sigmoid(x):
+    return 1 / (1 + math.exp(-max(-30, min(30, x))))
+
+
+def fit(rows, epochs=25, rate=.08, regularization=.01):
+    counts = Counter(r[1] for r in rows)
+    weights = [1/counts[r[1]] for r in rows]
+    total = sum(weights)
+    nfeatures = len(rows[0][2])
+    means = [sum(w*r[2][j] for r,w in zip(rows,weights))/total for j in range(nfeatures)]
+    scales = [max(1e-6, math.sqrt(sum(w*(r[2][j]-means[j])**2 for r,w in zip(rows,weights))/total))
+              for j in range(nfeatures)]
+    beta = [0.0]*(nfeatures+1)
+    for _ in range(epochs):
+        grad = [0.0]*len(beta)
+        for row, weight in zip(rows, weights):
+            x = [(v-m)/s for v,m,s in zip(row[2],means,scales)]
+            # Offset by the contemporaneous market probability.
+            error = sigmoid(row[2][0] + beta[0] + sum(b*v for b,v in zip(beta[1:],x))) - row[3]
+            grad[0] += weight*error
+            for j,v in enumerate(x):
+                grad[j+1] += weight*error*v
+        beta[0] -= rate*grad[0]/total
+        for j in range(1,len(beta)):
+            beta[j] -= rate*(grad[j]/total + regularization*beta[j])
+    return {"mean":means,"scale":scales,"weights":beta,"epochs":epochs}
+
+
+def score(rows, model):
+    counts = Counter(r[1] for r in rows)
+    sums = [0.0, 0.0]
+    total = 0.0
+    for at,name,raw,y,source in rows:
+        z = [(v-m)/s for v,m,s in zip(raw,model["mean"],model["scale"])]
+        pred = sigmoid(raw[0]+model["weights"][0]+sum(b*v for b,v in zip(model["weights"][1:],z)))
+        w = 1/counts[name]
+        sums[0] += w*(pred-y)**2
+        sums[1] += w*(sigmoid(raw[0])-y)**2
+        total += w
+    return {"brier":sums[0]/total,"market_brier":sums[1]/total,
+            "markets":len(counts),"rows":len(rows)}
+
+
+def main():
+    rows = examples()
+    days = sorted({datetime.fromtimestamp(r[0],timezone.utc).strftime("%Y-%m-%d") for r in rows})
+    manifest = {"status":"waiting", "rows":len(rows), "markets":len({r[1] for r in rows}),
+                "days":days, "updated_at":datetime.now(timezone.utc).isoformat(),
+                "sources":dict(Counter(r[4] for r in rows)),
+                "features":["market_logit","one_hour","btc_r1","eth_r1","sol_r1","xrp_r1",
+                            "btc_missing","eth_missing","sol_missing","xrp_missing"]}
+    if len(rows) >= 50 and len(days) >= 2:
+        holdout = days[-1]
+        train = [r for r in rows if datetime.fromtimestamp(r[0],timezone.utc).strftime("%Y-%m-%d") < holdout]
+        validation = [r for r in rows if datetime.fromtimestamp(r[0],timezone.utc).strftime("%Y-%m-%d") == holdout]
+        if train and validation:
+            trial = fit(train)
+            manifest.update(status="trained", validation_day=holdout,
+                            validation=score(validation,trial),
+                            final_fit="all available settled rows; validation day included after scoring")
+            write_json(OUTPUT / "model.json", fit(rows))
+    write_json(OUTPUT / "status.json", manifest)
+    print(json.dumps(manifest, sort_keys=True), flush=True)
+
+
+if __name__ == "__main__":
+    main()
