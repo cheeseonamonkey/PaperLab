@@ -3,8 +3,8 @@
     "book_imbalance": {
       "cash": 95.0000008,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
@@ -19,9 +19,33 @@
           "slug": "cpc-btc-updown-1h-2026-11-14-1400z",
           "status": "filled",
           "type": "limit"
+        },
+        {
+          "cost": 5.257776,
+          "edge": 0.055345,
+          "placed_at": 1794671724,
+          "price": 0.06,
+          "reserved": 5.257776,
+          "shares": 87.6296,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-14-1500z",
+          "status": "open",
+          "type": "limit"
+        },
+        {
+          "cost": 6.94091,
+          "edge": 0.077343,
+          "placed_at": 1794671783,
+          "price": 0.05,
+          "reserved": 6.94091,
+          "shares": 138.8182,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-14-1500z",
+          "status": "open",
+          "type": "limit"
         }
       ],
-      "signals": 1,
+      "signals": 3,
       "trades": [
         {
           "cost": 4.9999992,
@@ -42,26 +66,52 @@
       ]
     },
     "brti_distance": {
-      "cash": 95.0000365,
+      "cash": 77.2691195,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
           "cost": 12.198221,
           "edge": 0.128403,
+          "filled_at": 1794671767,
           "placed_at": 1794671526,
           "price": 0.67,
           "reserved": 12.198221,
           "shares": 18.2063,
           "side": "Down",
           "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 5.532696,
+          "edge": 0.066819,
+          "filled_at": 1794671767,
+          "placed_at": 1794671737,
+          "price": 0.72,
+          "reserved": 5.532696,
+          "shares": 7.6843,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 11.59032,
+          "edge": 0.20097,
+          "placed_at": 1794671767,
+          "price": 0.6,
+          "reserved": 11.59032,
+          "shares": 19.3172,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
           "status": "open",
           "type": "limit"
         }
       ],
-      "signals": 2,
+      "signals": 4,
       "trades": [
         {
           "cost": 4.9999635,
@@ -78,14 +128,38 @@
           "status": "settled",
           "type": "market",
           "won": false
+        },
+        {
+          "cost": 12.198221,
+          "edge": 0.128403,
+          "filled_at": 1794671767,
+          "placed_at": 1794671526,
+          "price": 0.67,
+          "shares": 18.2063,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "open",
+          "type": "limit_cross"
+        },
+        {
+          "cost": 5.532696,
+          "edge": 0.066819,
+          "filled_at": 1794671767,
+          "placed_at": 1794671737,
+          "price": 0.72,
+          "shares": 7.6843,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "open",
+          "type": "limit_cross"
         }
       ]
     },
     "brti_distance_limit": {
-      "cash": 95.00004568,
+      "cash": 77.26912868,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
@@ -104,17 +178,43 @@
         {
           "cost": 12.198221,
           "edge": 0.128403,
+          "filled_at": 1794671767,
           "placed_at": 1794671526,
           "price": 0.67,
           "reserved": 12.198221,
           "shares": 18.2063,
           "side": "Down",
           "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 5.532696,
+          "edge": 0.066819,
+          "filled_at": 1794671767,
+          "placed_at": 1794671737,
+          "price": 0.72,
+          "reserved": 5.532696,
+          "shares": 7.6843,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 11.59032,
+          "edge": 0.20097,
+          "placed_at": 1794671767,
+          "price": 0.6,
+          "reserved": 11.59032,
+          "shares": 19.3172,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
           "status": "open",
           "type": "limit"
         }
       ],
-      "signals": 2,
+      "signals": 4,
       "trades": [
         {
           "cost": 4.99995432,
@@ -131,37 +231,75 @@
           "status": "settled",
           "type": "limit_cross",
           "won": false
+        },
+        {
+          "cost": 12.198221,
+          "edge": 0.128403,
+          "filled_at": 1794671767,
+          "placed_at": 1794671526,
+          "price": 0.67,
+          "shares": 18.2063,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "open",
+          "type": "limit_cross"
+        },
+        {
+          "cost": 5.532696,
+          "edge": 0.066819,
+          "filled_at": 1794671767,
+          "placed_at": 1794671737,
+          "price": 0.72,
+          "shares": 7.6843,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "open",
+          "type": "limit_cross"
         }
       ]
     },
     "btc_momentum": {
-      "cash": 100.0,
+      "cash": 92.305854,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
           "cost": 7.694146,
           "edge": 0.076942,
+          "filled_at": 1794671767,
           "placed_at": 1794671526,
           "price": 0.67,
           "reserved": 7.694146,
           "shares": 11.4838,
           "side": "Down",
           "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
-          "status": "open",
+          "status": "filled",
           "type": "limit"
         }
       ],
       "signals": 1,
-      "trades": []
+      "trades": [
+        {
+          "cost": 7.694146,
+          "edge": 0.076942,
+          "filled_at": 1794671767,
+          "placed_at": 1794671526,
+          "price": 0.67,
+          "shares": 11.4838,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "open",
+          "type": "limit_cross"
+        }
+      ]
     },
     "btc_reversion": {
       "cash": 86.804427,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
@@ -226,8 +364,8 @@
     "conv_gru": {
       "cash": 95.000011,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [],
       "signals": 1,
@@ -251,10 +389,10 @@
       ]
     },
     "cross_asset_momentum": {
-      "cash": 100.0,
+      "cash": 93.374772,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
@@ -273,24 +411,38 @@
         {
           "cost": 6.625228,
           "edge": 0.066253,
+          "filled_at": 1794671767,
           "placed_at": 1794671526,
           "price": 0.67,
           "reserved": 6.625228,
           "shares": 9.8884,
           "side": "Down",
           "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
-          "status": "open",
+          "status": "filled",
           "type": "limit"
         }
       ],
       "signals": 2,
-      "trades": []
+      "trades": [
+        {
+          "cost": 6.625228,
+          "edge": 0.066253,
+          "filled_at": 1794671767,
+          "placed_at": 1794671526,
+          "price": 0.67,
+          "shares": 9.8884,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-14-1545z",
+          "status": "open",
+          "type": "limit_cross"
+        }
+      ]
     },
     "depthwise_tcn": {
       "cash": 95.000011,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [],
       "signals": 1,
@@ -316,8 +468,8 @@
     "lstm": {
       "cash": 95.00000896,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
@@ -364,8 +516,8 @@
     "skip_gru_2": {
       "cash": 95.00003752,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
@@ -405,8 +557,8 @@
     "stacked_rnn": {
       "cash": 95.00003752,
       "last_decision": {
-        "cpc-btc-updown-15m-2026-11-14-1545z": 29911192,
-        "cpc-btc-updown-1h-2026-11-14-1500z": 29911192
+        "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
+        "cpc-btc-updown-1h-2026-11-14-1500z": 29911196
       },
       "orders": [
         {
@@ -543,7 +695,7 @@
       "markets": 1
     }
   },
-  "last_run": 1794671570,
+  "last_run": 1794671783,
   "markets": {
     "cpc-btc-updown-15m-2026-11-14-0730z": {
       "checked_at": 1794666596,
@@ -555,6 +707,7 @@
     "cpc-btc-updown-15m-2026-11-14-1430z": {
       "checked_at": 1794671525,
       "ends": 1794667500,
+      "forecasts": [],
       "outcome": "Down",
       "resolved_at": 1794671525
     },
@@ -587,6 +740,32 @@
             "cross_asset_momentum": 0.1651195426875767,
             "market_implied": 0.21000000000000002
           }
+        },
+        {
+          "at": 1794671737,
+          "market": 0.275,
+          "probabilities": {
+            "book_imbalance": 0.2770047296875798,
+            "brti_distance": 0.21318093620899947,
+            "brti_distance_limit": 0.21318093620899947,
+            "btc_momentum": 0.27700253487041954,
+            "btc_reversion": 0.2730064755171985,
+            "cross_asset_momentum": 0.2724149415975903,
+            "market_implied": 0.275
+          }
+        },
+        {
+          "at": 1794671767,
+          "market": 0.395,
+          "probabilities": {
+            "book_imbalance": 0.3915206322905754,
+            "brti_distance": 0.19903009692429252,
+            "brti_distance_limit": 0.19903009692429252,
+            "btc_momentum": 0.397397390183151,
+            "btc_reversion": 0.3926076498140812,
+            "cross_asset_momentum": 0.3918966670477909,
+            "market_implied": 0.395
+          }
         }
       ],
       "outcome": null
@@ -594,6 +773,7 @@
     "cpc-btc-updown-1h-2026-11-14-1400z": {
       "checked_at": 1794671525,
       "ends": 1794668400,
+      "forecasts": [],
       "outcome": "Down",
       "resolved_at": 1794671525
     },
@@ -626,6 +806,45 @@
             "cross_asset_momentum": 0.033870865887259426,
             "market_implied": 0.045
           }
+        },
+        {
+          "at": 1794671724,
+          "market": 0.065,
+          "probabilities": {
+            "book_imbalance": 0.11534507121818018,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.06561171813918348,
+            "btc_reversion": 0.06439359205650125,
+            "cross_asset_momentum": 0.06421414263524593,
+            "market_implied": 0.065
+          }
+        },
+        {
+          "at": 1794671752,
+          "market": 0.060000000000000005,
+          "probabilities": {
+            "book_imbalance": 0.13834171177263516,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.06056771105628474,
+            "btc_reversion": 0.059437273520291364,
+            "cross_asset_momentum": 0.05927076116851342,
+            "market_implied": 0.060000000000000005
+          }
+        },
+        {
+          "at": 1794671783,
+          "market": 0.060000000000000005,
+          "probabilities": {
+            "book_imbalance": 0.12734275893275332,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.06056771105628474,
+            "btc_reversion": 0.059437273520291364,
+            "cross_asset_momentum": 0.05927076116851342,
+            "market_implied": 0.060000000000000005
+          }
         }
       ],
       "outcome": null
@@ -633,11 +852,11 @@
   },
   "mode": "paper",
   "polling": {
-    "attempts": 41,
-    "last_attempt": 1794671585,
-    "last_error": "ValueError: US book timestamp stale/in future",
-    "observed": 34,
-    "skipped": 7
+    "attempts": 51,
+    "last_attempt": 1794671782,
+    "last_error": null,
+    "observed": 39,
+    "skipped": 12
   },
   "venue": "polymarket_us",
   "version": 2

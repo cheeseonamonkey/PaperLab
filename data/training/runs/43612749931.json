@@ -1,0 +1,72 @@
+{
+  "days": [
+    "2026-11-12",
+    "2026-11-13",
+    "2026-11-14"
+  ],
+  "experiments": [
+    {
+      "name": "linear",
+      "regularization": 0.01,
+      "transform": "linear",
+      "validation": {
+        "brier": 0.1560295431939711,
+        "market_brier": 0.15697237289186436,
+        "markets": 72,
+        "rows": 1710
+      }
+    },
+    {
+      "name": "regularized",
+      "regularization": 0.1,
+      "transform": "linear",
+      "validation": {
+        "brier": 0.15604769647700378,
+        "market_brier": 0.15697237289186436,
+        "markets": 72,
+        "rows": 1710
+      }
+    },
+    {
+      "name": "tanh_returns",
+      "regularization": 0.01,
+      "transform": "tanh_returns",
+      "validation": {
+        "brier": 0.15609484646380123,
+        "market_brier": 0.15697237289186436,
+        "markets": 72,
+        "rows": 1710
+      }
+    }
+  ],
+  "features": [
+    "market_logit",
+    "one_hour",
+    "btc_r1",
+    "eth_r1",
+    "sol_r1",
+    "xrp_r1",
+    "btc_missing",
+    "eth_missing",
+    "sol_missing",
+    "xrp_missing"
+  ],
+  "final_fit": "baseline refit on all available settled rows after validation; no automatic promotion",
+  "markets": 240,
+  "rows": 5730,
+  "sources": {
+    "bootstrap": 5700,
+    "live": 30
+  },
+  "status": "trained",
+  "training_markets": 168,
+  "updated_at": "2026-11-14T15:57:01.533123+00:00",
+  "validation": {
+    "brier": 0.1560295431939711,
+    "market_brier": 0.15697237289186436,
+    "markets": 72,
+    "rows": 1710
+  },
+  "validation_cutoff_utc": 1794614400,
+  "validation_window": "latest UTC day"
+}

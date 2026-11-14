@@ -4,11 +4,11 @@ Paper account · simulated orders
 
 | Metric | Value |
 |---|---:|
-| Cash | $95.00 |
-| Reserved | $12.20 |
+| Cash | $77.27 |
+| Reserved | $11.59 |
 | Realized P&L | $-5.00 |
 | Settled wins / losses | 0 / 1 |
-| Open positions | 0 |
+| Open positions | 2 |
 | Pending limits | 1 |
 | Brier (markets) | 0.0934 (2) |
 | ΔBrier vs market | -0.0014 |

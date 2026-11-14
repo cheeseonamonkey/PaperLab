@@ -60,7 +60,7 @@
   },
   "status": "trained",
   "training_markets": 168,
-  "updated_at": "2026-11-14T15:54:39.504622+00:00",
+  "updated_at": "2026-11-14T15:57:01.533123+00:00",
   "validation": {
     "brier": 0.1560295431939711,
     "market_brier": 0.15697237289186436,

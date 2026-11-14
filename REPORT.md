@@ -1,21 +1,21 @@
 # Paper Lab — Polymarket US
 
 Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.
-Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **2026-11-14T15:52:50+00:00**.
+Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **2026-11-14T15:56:23+00:00**.
 
 Research sample: **5 markets tracked / 3 officially settled / 9 settled strategy positions**.
 
-Polls: **41 attempts / 34 recorded / 7 skipped**. Last error: ValueError: US book timestamp stale/in future.
+Polls: **51 attempts / 39 recorded / 12 skipped**. Last error: None.
 
 | Strategy | Paper cash | Realized P&L | Win rate | Brier (markets) | ΔBrier vs market | Settled | Open | Pending limits |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| [book_imbalance](docs/bots/book_imbalance.md) | $95.00 | $-5.00 | 0/1 (0.0%) | 0.092 (n=2) | -0.000 | 1 | 0 | 0 |
-| [brti_distance](docs/bots/brti_distance.md) | $95.00 | $-5.00 | 0/1 (0.0%) | 0.093 (n=2) | -0.001 | 1 | 0 | 1 |
-| [brti_distance_limit](docs/bots/brti_distance_limit.md) | $95.00 | $-5.00 | 0/1 (0.0%) | 0.093 (n=2) | -0.001 | 1 | 0 | 1 |
-| [btc_momentum](docs/bots/btc_momentum.md) | $100.00 | $+0.00 | — | 0.083 (n=2) | +0.009 | 0 | 0 | 1 |
+| [book_imbalance](docs/bots/book_imbalance.md) | $95.00 | $-5.00 | 0/1 (0.0%) | 0.092 (n=2) | -0.000 | 1 | 0 | 2 |
+| [brti_distance](docs/bots/brti_distance.md) | $77.27 | $-5.00 | 0/1 (0.0%) | 0.093 (n=2) | -0.001 | 1 | 2 | 1 |
+| [brti_distance_limit](docs/bots/brti_distance_limit.md) | $77.27 | $-5.00 | 0/1 (0.0%) | 0.093 (n=2) | -0.001 | 1 | 2 | 1 |
+| [btc_momentum](docs/bots/btc_momentum.md) | $92.31 | $+0.00 | — | 0.083 (n=2) | +0.009 | 0 | 1 | 0 |
 | [btc_reversion](docs/bots/btc_reversion.md) | $86.80 | $-5.00 | 0/1 (0.0%) | 0.103 (n=2) | -0.011 | 1 | 1 | 0 |
 | [conv_gru](docs/bots/conv_gru.md) | $95.00 | $-5.00 | 0/1 (0.0%) | 0.216 (n=1) | -0.032 | 1 | 0 | 0 |
-| [cross_asset_momentum](docs/bots/cross_asset_momentum.md) | $100.00 | $+0.00 | — | 0.079 (n=2) | +0.013 | 0 | 0 | 1 |
+| [cross_asset_momentum](docs/bots/cross_asset_momentum.md) | $93.37 | $+0.00 | — | 0.079 (n=2) | +0.013 | 0 | 1 | 0 |
 | [depthwise_tcn](docs/bots/depthwise_tcn.md) | $95.00 | $-5.00 | 0/1 (0.0%) | 0.244 (n=1) | -0.059 | 1 | 0 | 0 |
 | [lstm](docs/bots/lstm.md) | $95.00 | $-5.00 | 0/1 (0.0%) | 0.284 (n=1) | -0.099 | 1 | 0 | 0 |
 | [market_implied](docs/bots/market_implied.md) | $100.00 | $+0.00 | — | 0.092 (n=2) | +0.000 | 0 | 0 | 0 |
