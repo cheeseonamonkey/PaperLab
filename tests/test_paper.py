@@ -108,13 +108,13 @@ class PaperTests(unittest.TestCase):
         self.assertEqual(original,state["accounts"]["lstm"]["orders"][0]["reserved"])
         self.assertEqual(len(state["accounts"]["conv_gru"]["orders"]),1)
 
-    def test_five_minute_limit_opportunities_and_size(self):
+    def test_one_minute_limit_opportunities_and_size(self):
         acct=paper.initial()["accounts"]["brti_distance"]
         self.assertEqual(paper.maybe_order(acct,self.obs,.9,"limit",self.now),"LIMIT Up")
         self.assertGreater(acct["orders"][0]["cost"],5)
         self.assertLessEqual(acct["orders"][0]["cost"],15)
         self.assertIsNone(paper.maybe_order(acct,self.obs,.9,"limit",self.now+1))
-        self.assertEqual(paper.maybe_order(acct,self.obs,.9,"limit",self.now+300),"LIMIT Up")
+        self.assertEqual(paper.maybe_order(acct,self.obs,.9,"limit",self.now+60),"LIMIT Up")
         self.assertEqual(len(acct["orders"]),2)
         self.assertTrue(all(mode in ("limit","hold") for mode in paper.POLICIES.values()))
 
@@ -126,6 +126,30 @@ class PaperTests(unittest.TestCase):
         self.assertGreater(small["orders"][0]["cost"],0)
         self.assertLess(small["orders"][0]["cost"],large["orders"][0]["cost"])
         self.assertLessEqual(large["orders"][0]["cost"],15)
+
+    def test_limit_sell_requires_later_cross(self):
+        acct=paper.initial()["accounts"]["brti_distance"]
+        trade={"slug":self.slug,"side":"Up","type":"limit_cross","status":"open",
+               "placed_at":self.now-60,"shares":10,"cost":5}
+        acct["trades"].append(trade)
+        self.assertEqual(paper.maybe_exit(acct,self.obs,.1,self.now),"LIMIT SELL Up")
+        order=acct["orders"][-1]
+        self.assertEqual(order["reserved"],0)
+        paper.evaluate_limits(acct,self.obs,self.now)
+        self.assertEqual(order["status"],"open")
+        newer=copy.deepcopy(self.obs)
+        newer["quotes"]["Up"]["bid"]=order["price"]
+        newer["quotes"]["Up"]["bid_size"]=100
+        paper.evaluate_limits(acct,newer,self.now+15)
+        self.assertEqual(order["status"],"filled")
+        self.assertEqual(trade["close_reason"],"limit_sell")
+        self.assertAlmostEqual(trade["pnl"],10*order["price"]-5)
+
+    def test_maker_fee_is_zero(self):
+        acct=paper.initial()["accounts"]["brti_distance"]
+        paper.maybe_order(acct,self.obs,.9,"limit",self.now)
+        order=acct["orders"][0]
+        self.assertAlmostEqual(order["cost"],order["shares"]*order["price"],places=7)
 
     def test_resolution_only_official_us_api_and_cash(self):
         state=paper.initial()

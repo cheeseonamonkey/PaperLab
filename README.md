@@ -3,8 +3,8 @@
 **12 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute and 1-hour Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
 
 - [Current results](REPORT.md) · [Persistent state](data/state.json) · [Raw, compressed observations](data/observations/) · [Workflows](../../actions)
-- **Hourly Actions** runs approximately one hour, polling US public order books at a **30-second target cadence** (when network calls fit). Runs can start late or be dropped by GitHub; **not an always-on service**.
-- Simulates **resting limit buys**, with cash reservations, expiration and delayed observed crossing. Settles exclusively using the **official US 0/1 settlement endpoint**.
+- **Hourly Actions** runs approximately one hour, polling US public order books at a **15-second target cadence** (when network calls fit). Runs can start late or be dropped by GitHub; **not an always-on service**.
+- Simulates **resting limit buys and sells**, with cash reservations, expiration and delayed observed crossing. Settles exclusively using the **official US 0/1 settlement endpoint**.
 - Competing independent models all see a **single shared, timestamped data feed**. Inputs include official BRTI minute candles, current Polymarket US bid/ask/top-5 depth, US price-to-beat and display history, time to expiry, book imbalance, and additional BTC/ETH/SOL/XRP spot context. Coinbase context does not determine official settlement.
 
 <!-- PAPER_STATUS_START -->
@@ -56,17 +56,17 @@ Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 | cross_asset_momentum | BTC/ETH/SOL/XRP momentum | Limit |
 | book_imbalance | US YES depth imbalance vs implied odds | Limit |
 
-Each account starts at **$100**. Order size varies with estimated edge and available paper cash, capped at **$15** per order including the simulated fee buffer; share quantities may be fractional. Each strategy gets an opportunity to place an order for each market every **five minutes**. Pending orders reserve cash, and existing orders are monitored at every observation.
+Each account starts at **$100**. Order size varies with estimated edge and available paper cash, capped at **$15** per order with fractional simulated shares; maker fills currently use zero exchange fee and no rebate. Each strategy gets an opportunity to place an order for each market every **one minute**. Pending orders reserve cash, and existing orders are monitored at every observation.
 
-**Resting buy assumption:** post at the displayed bid, reserve its cost, and credit a hypothetical fill *only* if a **later US snapshot** has best ask at or below the posted limit and offers adequate displayed size. Fill is marked at the conservative original limit price, with the same 2% fee buffer; **no maker rebate is assumed**. This crossing is a proxy, **not evidence of queue priority or a real fill**. Otherwise orders remain pending and expire, returning reserved cash.
+**Resting buy assumption:** post at the displayed bid, reserve its cost, and credit a hypothetical fill *only* if a **later US snapshot** has best ask at or below the posted limit and offers adequate displayed size. Fills use the original limit price, zero maker exchange fee, and **no maker rebate**. Sell limits require a later observed bid crossing the offer with sufficient displayed size. This crossing is a proxy, **not evidence of queue priority or a real fill**. Otherwise orders remain pending and expire, returning reserved cash.
 
-Fees are illustrative **stress assumptions**, not a verified US fee schedule. Results are speculative paper P&L, not live-executable returns.
+The maker fee is zero with no rebate assumed; the separately implemented taker formula follows the published straight-contract coefficient. An order-book crossing cannot establish actual queue priority. Results are speculative paper P&L, not live-executable returns.
 
 ## Training and evaluation
 
-The research candidate trains only on settled **live observations** collected by this repo. BTC, ETH, SOL, and XRP context is included where available. Validation uses a chronological split and compares forecast error against the market-implied price. The candidate is research only and is not automatically placed into the paper accounts.
+The research candidate trains on a fixed two-day historical bootstrap plus settled **live observations** collected by this repo. BTC, ETH, SOL, and XRP context is included where available. Validation uses a chronological split and compares forecast error against the market-implied price. The candidate is research only and is not automatically placed into the paper accounts.
 
-The backward historical archive is stored separately and is **not** read by the trainer. Historical display prices do not represent executable order books. No historical bootstrap is enabled.
+The bootstrap is fetched once and placed in the normal observation directory, with separate settlement labels. The backward historical archive is stored separately and is **not** read by the trainer. Historical display prices do not represent executable order books.
 
 Five legacy checkpoint accounts are inactive. Their earlier files remain in Git history for provenance.
 
@@ -76,17 +76,19 @@ Five legacy checkpoint accounts are inactive. Their earlier files remain in Git 
 - [data/observations](data/observations/): **compressed daily JSONL**, one shared US book/feature snapshot per successful polling decision. Git commit history remains auditable.
 - [models/checkpoints](models/checkpoints/): inactive legacy checkpoints, retained for provenance.
 - [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The target is three prior market hours per hourly workflow run; historical display prices are not historical order books.
-- [data/training](data/training/): candidate research model and run status, trained on settled live observations with chronological validation. The candidate is not automatically promoted to a paper strategy.
+- [data/training](data/training/): candidate model, chronological validation, and research run history.
+- [data/ledgers](data/ledgers/): per-bot orders and trades in CSV.
+- [docs](docs/): research notes and generated per-bot pages. The candidate is not automatically promoted to a paper strategy.
 - [REPORT.md](REPORT.md): auto-generated account comparison; the **Current research status** block above updates from the same saved state after paper runs.
 - [research/proposals](research/proposals/): **review-only** Pi experiment suggestions, never deployed.
 
-The hourly process persists files locally on every successful tick; Actions commits state and new observations at job completion. A cancelled runner can lose its **uncommitted** session. Keeping all 30-second snapshots in Git indefinitely will enlarge repo history; storage can be moved to archive releases if growth becomes an issue.
+The hourly process persists files locally on every successful tick; Actions commits state and new observations at job completion. A cancelled runner can lose its **uncommitted** session. Keeping all 15-second snapshots in Git indefinitely will enlarge repo history; storage can be moved to archive releases if growth becomes an issue.
 
 ## GitHub Actions
 
-The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python paper.py run --duration 3600` (one hour, targeting two observations per minute per horizon). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3600 seconds** for verification.
+The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python paper.py run --duration 3600` (one hour, targeting four observations per minute per horizon). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3600 seconds** for verification.
 
-Each cycle also stores up to three earlier hours of market history and exogenous candles. This archive is not used for training. The research model trains on all usable settled live observations and uses the market midpoint, horizon, and completed prior-minute crypto returns.
+Each cycle experiments with simple regularization and exogenous-return transforms, records their results without automatically promoting a candidate, and stores up to three earlier hours of market history and exogenous candles. This archive is not used for training. The research model trains on the fixed bootstrap and all usable settled live observations and uses the market midpoint, horizon, and completed prior-minute crypto returns.
 
 A separate **optional daily** Pi/OpenRouter research workflow needs only the Actions secret `OPENROUTER_API_KEY`:
 

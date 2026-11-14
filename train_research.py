@@ -1,4 +1,4 @@
-"""Fit a market-relative model using settled live observations only."""
+"""Fit a market-relative model using one bootstrap plus settled live observations."""
 from __future__ import annotations
 
 import gzip
@@ -57,8 +57,11 @@ def chronological_split(rows):
 
 
 def examples():
-    # Only observations collected prospectively by the live paper loop are training inputs.
+    # Bootstrap and prospective observations share this directory; the separate archive is never scanned.
     rows = {}
+    labels = {}
+    for label_path in sorted((ROOT / "data" / "bootstrap" / "labels").glob("*.json")):
+        labels.update(json.loads(label_path.read_text()))
     state_path = ROOT / "data" / "state.json"
     state = json.loads(state_path.read_text()) if state_path.exists() else {}
     for path in sorted((ROOT / "data" / "observations").glob("*.jsonl.gz")):
@@ -66,16 +69,21 @@ def examples():
             for line in stream:
                 obs = json.loads(line)
                 name = obs.get("slug")
-                outcome = state.get("markets", {}).get(name, {}).get("outcome")
+                source = obs.get("source", "live")
+                outcome = labels.get(name) if source == "bootstrap" else state.get("markets", {}).get(name, {}).get("outcome")
                 if outcome not in ("Up", "Down"):
                     continue
-                quote = obs["quotes"]["Up"]
-                p = (float(quote["bid"])+float(quote["ask"]))/2
+                if source == "bootstrap":
+                    p = float(obs["display_up"])
+                else:
+                    quote = obs["quotes"]["Up"]
+                    p = (float(quote["bid"])+float(quote["ask"]))/2
                 at = int(obs["observed_at"])
                 context = obs.get("features", {})
                 returns = {asset: value(context.get(asset.lower()+"_r1")) for asset in ASSETS}
                 horizon = "1h" if "-1h-" in name else "15m"
-                rows[(name, at)] = (at, name, features(p, horizon, returns), int(outcome == "Up"), "live")
+                if source != "bootstrap" or (name, at) not in rows:
+                    rows[(name, at)] = (at, name, features(p, horizon, returns), int(outcome == "Up"), source)
     return sorted(rows.values(), key=lambda x: (x[0], x[1]))
 
 
@@ -83,19 +91,28 @@ def sigmoid(x):
     return 1 / (1 + math.exp(-max(-30, min(30, x))))
 
 
-def fit(rows, epochs=25, rate=.08, regularization=.01):
+def transform(raw, kind):
+    result=list(raw)
+    if kind=="tanh_returns":
+        for j in range(2,6):
+            result[j]=math.tanh(result[j]*1000)
+    return result
+
+
+def fit(rows, epochs=25, rate=.08, regularization=.01, kind="linear"):
     counts = Counter(r[1] for r in rows)
     weights = [1/counts[r[1]] for r in rows]
     total = sum(weights)
-    nfeatures = len(rows[0][2])
-    means = [sum(w*r[2][j] for r,w in zip(rows,weights))/total for j in range(nfeatures)]
-    scales = [max(1e-6, math.sqrt(sum(w*(r[2][j]-means[j])**2 for r,w in zip(rows,weights))/total))
+    inputs=[transform(r[2],kind) for r in rows]
+    nfeatures = len(inputs[0])
+    means = [sum(w*x[j] for x,w in zip(inputs,weights))/total for j in range(nfeatures)]
+    scales = [max(1e-6, math.sqrt(sum(w*(x[j]-means[j])**2 for x,w in zip(inputs,weights))/total))
               for j in range(nfeatures)]
     beta = [0.0]*(nfeatures+1)
     for _ in range(epochs):
         grad = [0.0]*len(beta)
-        for row, weight in zip(rows, weights):
-            x = [(v-m)/s for v,m,s in zip(row[2],means,scales)]
+        for row, raw, weight in zip(rows, inputs, weights):
+            x = [(v-m)/s for v,m,s in zip(raw,means,scales)]
             # Offset by the contemporaneous market probability.
             error = sigmoid(row[2][0] + beta[0] + sum(b*v for b,v in zip(beta[1:],x))) - row[3]
             grad[0] += weight*error
@@ -104,7 +121,7 @@ def fit(rows, epochs=25, rate=.08, regularization=.01):
         beta[0] -= rate*grad[0]/total
         for j in range(1,len(beta)):
             beta[j] -= rate*(grad[j]/total + regularization*beta[j])
-    return {"mean":means,"scale":scales,"weights":beta,"epochs":epochs}
+    return {"mean":means,"scale":scales,"weights":beta,"epochs":epochs,"transform":kind,"regularization":regularization}
 
 
 def score(rows, model):
@@ -112,7 +129,7 @@ def score(rows, model):
     sums = [0.0, 0.0]
     total = 0.0
     for at,name,raw,y,source in rows:
-        z = [(v-m)/s for v,m,s in zip(raw,model["mean"],model["scale"])]
+        z = [(v-m)/s for v,m,s in zip(transform(raw,model.get("transform","linear")),model["mean"],model["scale"])]
         pred = sigmoid(raw[0]+model["weights"][0]+sum(b*v for b,v in zip(model["weights"][1:],z)))
         w = 1/counts[name]
         sums[0] += w*(pred-y)**2
@@ -133,14 +150,36 @@ def main():
     if len(rows) >= 50:
         train, validation, cutoff, label = chronological_split(rows)
         if train and validation:
-            trial = fit(train)
+            experiments=[]
+            for name,kind,penalty in (("linear","linear",.01),("regularized","linear",.10),
+                                      ("tanh_returns","tanh_returns",.01)):
+                trial=fit(train,regularization=penalty,kind=kind)
+                experiments.append({"name":name,"transform":kind,"regularization":penalty,
+                                    "validation":score(validation,trial)})
             manifest.update(status="trained", validation_window=label, validation_cutoff_utc=cutoff,
-                            training_markets=len({r[1] for r in train}), validation=score(validation,trial),
-                            final_fit="all available settled rows; validation included after scoring")
+                            training_markets=len({r[1] for r in train}), validation=experiments[0]["validation"],
+                            experiments=experiments,
+                            final_fit="baseline refit on all available settled rows after validation; no automatic promotion")
             write_json(OUTPUT / "model.json", fit(rows))
     if manifest["status"] != "trained":
         (OUTPUT / "model.json").unlink(missing_ok=True)
     write_json(OUTPUT / "status.json", manifest)
+    run_id = __import__("os").environ.get("GITHUB_RUN_ID") or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    write_json(OUTPUT / "runs" / (run_id + ".json"), manifest)
+    page = ROOT / "docs" / "research" / "latest.md"
+    page.parent.mkdir(parents=True, exist_ok=True)
+    lines = ["# Research experiments", "", "Status: **%s**. Markets: %d. Rows: %d." %
+             (manifest["status"],manifest["markets"],manifest["rows"]), "",
+             "Archive backfill is excluded. Bootstrap and live sources: %s." % manifest["sources"], "",
+             "Candidates are evaluated chronologically and are not automatically promoted.", ""]
+    if manifest.get("experiments"):
+        lines += ["| Candidate | Brier | Market Brier | Validation markets |",
+                  "|---|---:|---:|---:|"]
+        for experiment in manifest["experiments"]:
+            v=experiment["validation"]
+            lines.append("| %s | %.4f | %.4f | %d |" %
+                         (experiment["name"],v["brier"],v["market_brier"],v["markets"]))
+    page.write_text("\n".join(lines)+"\n")
     print(json.dumps(manifest, sort_keys=True), flush=True)
 
 

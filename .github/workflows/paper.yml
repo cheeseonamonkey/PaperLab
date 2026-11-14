@@ -23,7 +23,7 @@ concurrency:
 jobs:
   paper:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 95
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,11 +53,15 @@ jobs:
             exit 2
           fi
           python paper.py run --duration "$seconds"
+      - name: Import two-day bootstrap once
+        if: always()
+        timeout-minutes: 15
+        run: python bootstrap.py
       - name: Backfill US history and recover the latest closed hour
         if: always()
         timeout-minutes: 8
         run: python backfill.py
-      - name: Train research candidate on settled live observations
+      - name: Train research candidates on bootstrap and settled live observations
         if: always()
         timeout-minutes: 6
         run: python train_research.py
@@ -68,8 +72,8 @@ jobs:
           python paper.py report
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          mkdir -p data/backfill data/training
-          git add data/state.json data/observations data/backfill data/training REPORT.md README.md
+          mkdir -p data/backfill data/bootstrap data/training data/ledgers docs
+          git add data/state.json data/observations data/backfill data/bootstrap data/training data/ledgers docs REPORT.md README.md
           if ! git diff --cached --quiet; then
             git commit -m 'data: Polymarket US paper session [skip ci]'
             git push
@@ -84,6 +88,9 @@ jobs:
             data/state.json
             data/observations/
             data/backfill/
+            data/bootstrap/
+            data/ledgers/
+            docs/
             data/training/
             REPORT.md
           retention-days: 7

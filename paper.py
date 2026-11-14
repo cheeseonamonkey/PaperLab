@@ -20,10 +20,10 @@ STATE = ROOT/"data/state.json"
 REPORT = ROOT/"REPORT.md"
 OBS_DIR = ROOT/"data/observations"
 START = 100.0
-FEE = .02             # Conservative simulation buffer, not US actual venue fee
+TAKER_COEFFICIENT = .0695  # US straight-contract fee; maker fee is zero
 SLIPPAGE = .005       # Marketable-entry execution penalty per share
 MAX_STAKE = 15.0
-DECISION_INTERVAL = 300
+DECISION_INTERVAL = 60
 POLICIES = {
     "stacked_rnn": "limit",
     "skip_gru_2": "limit",
@@ -146,12 +146,12 @@ def maybe_order(account,obs,probability,mode,now):
             if price<.05 or price>.95:
                 continue
             # Even maker-style paper orders require positive modeled edge.
-            modeled_edge=prob-price*(1+FEE)
+            modeled_edge=prob-price-(0 if mode=="limit" else TAKER_COEFFICIENT*price*(1-price))
         else:
             price=book["ask"]+SLIPPAGE
             if price<.05 or price>.95:
                 continue
-            modeled_edge=prob-price*(1+FEE)
+            modeled_edge=prob-price-(0 if mode=="limit" else TAKER_COEFFICIENT*price*(1-price))
         if modeled_edge>=.05:
             candidates.append((modeled_edge,side,price,book))
     if not candidates:
@@ -159,10 +159,11 @@ def maybe_order(account,obs,probability,mode,now):
     edge,side,price,book=max(candidates,key=lambda x:x[0])
     # Size by estimated edge and available cash, capped at $15 per order.
     allocation=min(MAX_STAKE,available(account)*min(.15,max(.01,edge)))
-    shares=math.floor(allocation/(price*(1+FEE))*10000)/10000
+    unit_fee=0 if mode=="limit" else TAKER_COEFFICIENT*price*(1-price)
+    shares=math.floor(allocation/(price+unit_fee)*10000)/10000
     if shares<=0:
         return None
-    cost=round(shares*price*(1+FEE),8)
+    cost=round(shares*(price+unit_fee),8)
     if cost>available(account)+1e-8:
         return None
     entry={"slug":slug,"side":side,"price":round(price,6),
@@ -177,6 +178,25 @@ def maybe_order(account,obs,probability,mode,now):
     account["cash"]=round(account["cash"]-cost,8)
     account["trades"].append({**entry,"status":"open","type":"market","filled_at":now})
     return "PAPER MARKET "+side
+
+def maybe_exit(account,obs,probability,now):
+    for trade in account["trades"]:
+        if trade["status"]!="open" or trade["slug"]!=obs["slug"]:
+            continue
+        active=any(o.get("type")=="limit_sell" and o.get("trade_placed_at")==trade["placed_at"]
+                   and o["slug"]==trade["slug"] and o["status"]=="open" for o in account["orders"])
+        if active:
+            continue
+        book=obs["quotes"][trade["side"]]
+        side_probability=(probability if trade["side"]=="Up" else 1-probability) if probability is not None else None
+        if now < obs["ends"]-60 and (side_probability is None or side_probability > book["bid"]):
+            continue
+        account["orders"].append({"slug":trade["slug"],"side":trade["side"],"type":"limit_sell",
+                                  "status":"open","placed_at":now,"price":book["ask"],
+                                  "shares":trade["shares"],"reserved":0,
+                                  "trade_placed_at":trade["placed_at"]})
+        return "LIMIT SELL "+trade["side"]
+    return None
 
 def evaluate_limits(account,obs,now,markets=None):
     markets=markets if markets is not None else {obs["slug"]:{"ends":obs["ends"]}}
@@ -195,6 +215,19 @@ def evaluate_limits(account,obs,now,markets=None):
         if now<=order["placed_at"]:
             continue # Never fill against same snapshot used for placement.
         book=obs["quotes"][order["side"]]
+        if order.get("type")=="limit_sell":
+            trade=next((t for t in account["trades"] if t["slug"]==order["slug"] and
+                        t["placed_at"]==order["trade_placed_at"] and t["status"]=="open"),None)
+            if trade is None:
+                order.update(status="cancelled",cancelled_at=now)
+            elif book["bid"]>=order["price"] and book["bid_size"]>=order["shares"]:
+                proceeds=round(order["price"]*order["shares"],8)
+                pnl=round(proceeds-trade["cost"],8)
+                order.update(status="filled",filled_at=now)
+                trade.update(status="settled",settled_at=now,close_reason="limit_sell",
+                             exit_price=order["price"],payout=proceeds,pnl=pnl,won=pnl>0)
+                account["cash"]=round(account["cash"]+proceeds,8)
+            continue
         if book["ask"] <= order["price"] and book["ask_size"] >= order["shares"]:
             # Cross observed on a later poll: *hypothetical* fill at original
             # limit price. No maker rebate claimed, no guarantee of actual fill.
@@ -222,7 +255,7 @@ def process_snapshot(state,obs,predictions):
         last=account.setdefault("last_decision",{})
         if mode!="hold" and last.get(obs["slug"])!=bucket:
             last[obs["slug"]]=bucket
-            message=maybe_order(account,obs,p,mode,now)
+            message=maybe_exit(account,obs,p,now) or maybe_order(account,obs,p,mode,now)
             if message:
                 decisions.append(name+":"+message)
     market["forecasts"].append(forecast)
@@ -303,8 +336,8 @@ def render(state):
         winrate="%d/%d (%.1f%%)" % (wins,len(settled),100*wins/len(settled)) if settled else "—"
         brier_text="%.3f (n=%d)" % (brier,n) if brier is not None else "— (n=0)"
         gain_text="%+.3f" % gain if gain is not None else "—"
-        header.append("| %s | $%.2f | $%+.2f | %s | %s | %s | %d | %d | %d |" %
-                      (name,account["cash"],pnl,winrate,brier_text,gain_text,
+        header.append("| [%s](docs/bots/%s.md) | $%.2f | $%+.2f | %s | %s | %s | %d | %d | %d |" %
+                      (name,name,account["cash"],pnl,winrate,brier_text,gain_text,
                        len(settled),len(opening),len(pending)))
     baseline=state.get("forecast_metrics",{}).get("market_implied",empty_forecast_metric())
     if baseline["markets"]:
@@ -318,7 +351,7 @@ def render(state):
                 "Realized profit is **not** total equity: active positions are not marked to market.",
                 "US YES book is the market source; NO quotes are complement-derived.",
                 "Limit fills require a **later** observed ask crossing the resting bid and displayed size covering the order. This is an optimistic uncertainty bound, **not proof a resting order actually filled**.",
-                "Entry cost uses an assumed 2% fee buffer; marketable buys additionally add $0.005/share slippage. No actual fee or rebate schedule is inferred.",
+                "Resting maker fills assume zero exchange fee and no rebate; marketable test fills use the published straight-contract taker formula and $0.005/share slippage. Historical orders retain their original fee assumptions.",
                 "Five legacy checkpoint accounts abstain in this fresh-start run; the repository-trained research candidate is evaluated separately.",
                 "The remaining seven strategies are explicit deterministic baselines, including a no-trade account.",
                 "No authentication, private APIs, real orders, funds or wallets.", ""]
@@ -369,18 +402,20 @@ def cycle(state,feed,models,now=None):
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("command",choices=("run","report","check"),nargs="?",default="run")
-    ap.add_argument("--duration",type=int,default=0,help="Seconds of 30s polling (0 = one observation)")
+    ap.add_argument("--duration",type=int,default=0,help="Seconds of 15s polling (0 = one observation)")
     opts=ap.parse_args()
     state=load()
     state.setdefault("polling",{"attempts":0,"observed":0,"skipped":0,"last_attempt":None,"last_error":None})
     if opts.command=="report":
         write_outputs(state)
+        from reports import export
+        export(state)
         print(REPORT.read_text())
         return
     if opts.command=="check":
         from predictors import SCALES
         assert len(SCALES["x_mean"])==24 and len(SCALES["c_mean"])==64
-        print("US paper engine configured; models:",", ".join(MODELS))
+        print("Paper engine configured; inactive legacy models:",", ".join(MODELS))
         return
     feeds,models=[USFeed("15m"),USFeed("1h")],Predictions()
     deadline=time.monotonic()+opts.duration
@@ -404,7 +439,7 @@ def main():
         remaining=deadline-time.monotonic()
         if remaining<=0:
             return
-        time.sleep(min(remaining,max(0,30-(time.monotonic()-started))))
+        time.sleep(min(remaining,max(0,15-(time.monotonic()-started))))
 
 if __name__=="__main__":
     main()

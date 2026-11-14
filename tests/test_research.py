@@ -1,4 +1,6 @@
 import unittest
+import gzip
+import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -20,6 +22,24 @@ class ResearchChecks(unittest.TestCase):
             (archive/"10.json.gz").write_bytes(b"not a valid gzip")
             with patch.object(train_research,"ROOT",Path(root)):
                 self.assertEqual(train_research.examples(),[])
+
+    def test_bootstrap_joins_normal_observations_with_official_labels(self):
+        with tempfile.TemporaryDirectory() as root:
+            root=Path(root)
+            observations=root/"data"/"observations"
+            labels=root/"data"/"bootstrap"/"labels"
+            observations.mkdir(parents=True)
+            labels.mkdir(parents=True)
+            name="cpc-btc-updown-15m-2026-11-14-1000z"
+            (labels/"one.json").write_text(json.dumps({name:"Up"}))
+            row={"source":"bootstrap","slug":name,"observed_at":ts("2026-11-14 10:05"),
+                 "display_up":.6,"features":{"btc_r1":.001}}
+            with gzip.open(observations/"bootstrap-one.jsonl.gz","wt") as stream:
+                stream.write(json.dumps(row)+"\n")
+            with patch.object(train_research,"ROOT",root):
+                result=train_research.examples()
+            self.assertEqual(len(result),1)
+            self.assertEqual(result[0][3:],(1,"bootstrap"))
 
     def test_candles_are_not_used_until_closed(self):
         candles = {"BTC": [[ts("2026-11-14 10:00"), 0, 0, 0, 100, 1],
