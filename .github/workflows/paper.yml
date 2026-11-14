@@ -1,5 +1,8 @@
 name: Polymarket US paper — hourly 15s loop
 on:
+  push:
+    paths:
+      - '.github/workflows/paper.yml'
   schedule:
     - cron: '5 * * * *'
   workflow_dispatch:
@@ -40,6 +43,8 @@ jobs:
         run: |
           if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
             seconds="${DISPATCH_DURATION:-90}"
+          elif [[ "$EVENT_NAME" == push ]]; then
+            seconds=60
           else
             seconds=3000
           fi
