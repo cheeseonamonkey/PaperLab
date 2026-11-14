@@ -58,7 +58,7 @@ Training was on historical US **display** prices, not actual historical executab
 - [data/state.json](data/state.json): independent cash, open orders, filled trades, official settled outcomes, and audit timestamps.
 - [data/observations](data/observations/): **compressed daily JSONL**, one shared US book/feature snapshot per successful polling decision. Git commit history remains auditable.
 - [models/checkpoints](models/checkpoints/): five fitted PyTorch checkpoints (approximately 2.5 MB combined), frozen metadata and scalers. Never rewritten by the paper runner.
-- [REPORT.md](REPORT.md): auto-generated account comparison.
+- [REPORT.md](REPORT.md): auto-generated account comparison; the **Current research status** block above updates from the same saved state after paper runs.
 - [research/proposals](research/proposals/): **review-only** Pi experiment suggestions, never deployed.
 
 The hourly process persists files locally on every successful tick; Actions commits state and new observations at job completion. A cancelled runner can lose its **uncommitted** session. Keeping all 15-second snapshots in Git indefinitely will enlarge repo history; storage can be moved to archive releases if growth becomes an issue.
