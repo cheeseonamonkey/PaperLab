@@ -43,11 +43,11 @@ Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 
 | Account | Signal | Paper execution |
 |---|---|---|
-| stacked_rnn | Frozen 250K fitted recurrent model | Limit |
-| skip_gru_2 | Frozen 250K fitted skip-GRU | Limit |
-| depthwise_tcn | Frozen 250K fitted causal CNN | Marketable |
-| lstm | Frozen 250K fitted LSTM | Limit |
-| conv_gru | Frozen 250K fitted conv-GRU | Marketable |
+| stacked_rnn | Inactive legacy 250K recurrent model | Limit |
+| skip_gru_2 | Inactive legacy 250K skip-GRU | Limit |
+| depthwise_tcn | Inactive legacy 250K causal CNN | Marketable |
+| lstm | Inactive legacy 250K LSTM | Limit |
+| conv_gru | Inactive legacy 250K conv-GRU | Marketable |
 | market_implied | Explicit never-trade benchmark | Hold |
 | brti_distance | BRTI distance vs strike and volatility | Marketable |
 | brti_distance_limit | Same estimated probability | Limit |
@@ -78,7 +78,7 @@ The saved original 250K weights, metadata, training scalers, feature audit and f
 
 The frozen neural checkpoints expect **120 × 24** one-minute, point-in-time historical input features and **64 context** channels. The live US adapter reproduces the reference/price layout, *but currently mean-imputes the 52 slow macro and cross-asset ETF context fields* rather than reproducing their original vintage-aware as-of feeds. New Coinbase crypto context is **collected separately**, not silently substituted into those trained channels.
 
-The frozen neural models are used only for 15-minute markets; the hourly paper market uses the deterministic strategies. **Consequently the neural predictions are out-of-distribution research signals.** They can make hypothetical paper decisions, but are neither calibrated nor comparable to the original held-out results without a feature-parity study. Models abstain when there is insufficient authentic US BRTI/display history. No fitted model has an established net-profit advantage.
+The legacy neural checkpoints are inactive in the fresh-start run; both horizons use the deterministic strategies while the new candidate is researched separately. **Consequently the neural predictions are out-of-distribution research signals.** They can make hypothetical paper decisions, but are neither calibrated nor comparable to the original held-out results without a feature-parity study. Models abstain when there is insufficient authentic US BRTI/display history. No fitted model has an established net-profit advantage.
 
 Training was on historical US **display** prices, not actual historical executable depth; price-history data must not be reported as fills. Official US settlement uses BRTI samples near the event's boundaries, *not* the Coinbase last price.
 
