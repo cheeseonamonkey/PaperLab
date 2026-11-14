@@ -43,9 +43,14 @@ POLICIES = {
 def stamp(ts=None):
     return datetime.fromtimestamp(time.time() if ts is None else ts, timezone.utc).isoformat(timespec="seconds")
 
+def empty_forecast_metric():
+    return {"markets":0,"forecasts":0,"brier_sum":0.0,"market_brier_sum":0.0,
+            "logloss_sum":0.0,"market_logloss_sum":0.0}
+
 def initial():
     return {"version":2, "venue":"polymarket_us", "mode":"paper",
             "cash_per_strategy":START, "last_run":None, "markets":{},
+            "forecast_metrics":{name:empty_forecast_metric() for name in POLICIES},
             "polling":{"attempts":0,"observed":0,"skipped":0,"last_attempt":None,"last_error":None},
             "accounts":{name:{"cash":START,"orders":[],"trades":[],"signals":0} for name in POLICIES}}
 
@@ -57,6 +62,11 @@ def load():
         raise ValueError("Non-US or non-paper account state rejected")
     if set(data.get("accounts",{})) != set(POLICIES):
         raise ValueError("Strategy account set mismatch")
+    data.setdefault("forecast_metrics",{})
+    for name in POLICIES:
+        data["forecast_metrics"].setdefault(name,empty_forecast_metric())
+    for market in data.get("markets",{}).values():
+        market.setdefault("forecasts",[])
     return data
 
 def save(state):
@@ -192,16 +202,47 @@ def evaluate_limits(account,obs,now):
 
 def process_snapshot(state,obs,predictions):
     now=obs["observed_at"]
-    state["markets"].setdefault(obs["slug"],{"ends":obs["ends"],"outcome":None,"checked_at":0})
+    market=state["markets"].setdefault(obs["slug"],{"ends":obs["ends"],"outcome":None,"checked_at":0})
+    market.setdefault("forecasts",[])
+    up=obs["quotes"]["Up"]
+    market_probability=cap((up["bid"]+up["ask"])/2)
+    forecast={"at":now,"market":market_probability,"probabilities":{}}
     decisions=[]
     for name,mode in POLICIES.items():
         account=state["accounts"][name]
         evaluate_limits(account,obs,now)
-        p=fair_probability(name,obs,predictions)
+        p=market_probability if name=="market_implied" else fair_probability(name,obs,predictions)
+        if p is not None and math.isfinite(p) and 0<=p<=1:
+            forecast["probabilities"][name]=p
         message=maybe_order(account,obs,p,mode,now)
         if message:
             decisions.append(name+":"+message)
+    market["forecasts"].append(forecast)
     return decisions
+
+def forecast_losses(probability,actual):
+    p=min(1-1e-12,max(1e-12,probability))
+    return (probability-actual)**2, -(actual*math.log(p)+(1-actual)*math.log(1-p))
+
+def score_market_forecasts(state,market,outcome):
+    actual=1.0 if outcome=="Up" else 0.0
+    paired={}
+    for row in market.pop("forecasts",[]):
+        benchmark=row.get("market")
+        if benchmark is None:
+            continue
+        for name,probability in row.get("probabilities",{}).items():
+            paired.setdefault(name,[]).append((probability,benchmark))
+    for name,pairs in paired.items():
+        losses=[forecast_losses(p,actual) for p,_ in pairs]
+        baseline=[forecast_losses(q,actual) for _,q in pairs]
+        metric=state["forecast_metrics"].setdefault(name,empty_forecast_metric())
+        metric["markets"]+=1
+        metric["forecasts"]+=len(pairs)
+        metric["brier_sum"]+=sum(x[0] for x in losses)/len(losses)
+        metric["logloss_sum"]+=sum(x[1] for x in losses)/len(losses)
+        metric["market_brier_sum"]+=sum(x[0] for x in baseline)/len(baseline)
+        metric["market_logloss_sum"]+=sum(x[1] for x in baseline)/len(baseline)
 
 def reconcile(state,now):
     due={slug:m for slug,m in state["markets"].items()
@@ -213,6 +254,7 @@ def reconcile(state,now):
             continue
         info["outcome"]=outcome
         info["resolved_at"]=now
+        score_market_forecasts(state,info,outcome)
         for account in state["accounts"].values():
             for order in account["orders"]:
                 if order["slug"]==slug and order["status"]=="open":
@@ -238,16 +280,32 @@ def render(state):
             (len(state.get("markets",{})),settled_markets,settled_positions), "",
             "Polls: **%s attempts / %s recorded / %s skipped**. Last error: %s." %
             (stats.get("attempts",0),stats.get("observed",0),stats.get("skipped",0),stats.get("last_error") or "None"),"",
-            "| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |",
-            "|---|---:|---:|---:|---:|---:|"]
+            "| Strategy | Paper cash | Realized P&L | Win rate | Brier (markets) | ΔBrier vs market | Settled | Open | Pending limits |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for name,account in state["accounts"].items():
         settled=[t for t in account["trades"] if t["status"]=="settled"]
         pending=[o for o in account["orders"] if o["status"]=="open"]
         opening=[t for t in account["trades"] if t["status"]=="open"]
+        wins=sum(bool(t.get("won")) for t in settled)
         pnl=sum(t["pnl"] for t in settled)
-        header.append("| %s | $%.2f | $%+.2f | %d | %d | %d |" %
-                      (name,account["cash"],pnl,len(settled),len(opening),len(pending)))
-    header += ["", "Realized profit is **not** total equity: active positions are not marked to market.",
+        metric=state.get("forecast_metrics",{}).get(name,empty_forecast_metric())
+        n=metric["markets"]
+        brier=metric["brier_sum"]/n if n else None
+        gain=(metric["market_brier_sum"]-metric["brier_sum"])/n if n else None
+        winrate="%d/%d (%.1f%%)" % (wins,len(settled),100*wins/len(settled)) if settled else "—"
+        brier_text="%.3f (n=%d)" % (brier,n) if brier is not None else "— (n=0)"
+        gain_text="%+.3f" % gain if gain is not None else "—"
+        header.append("| %s | $%.2f | $%+.2f | %s | %s | %s | %d | %d | %d |" %
+                      (name,account["cash"],pnl,winrate,brier_text,gain_text,
+                       len(settled),len(opening),len(pending)))
+    baseline=state.get("forecast_metrics",{}).get("market_implied",empty_forecast_metric())
+    if baseline["markets"]:
+        header += ["", "Market-midpoint benchmark: Brier %.3f / log loss %.3f across %d settled markets." %
+                   (baseline["brier_sum"]/baseline["markets"],
+                    baseline["logloss_sum"]/baseline["markets"],baseline["markets"])]
+    header += ["", "Win rate is settled simulated fills only. Forecasts estimate Up probability; Brier and log loss use the official outcome.",
+                "Forecast losses average snapshots within each market, then average markets. Positive ΔBrier means improvement over the paired market midpoint; lower Brier/log loss is better.",
+                "Realized profit is **not** total equity: active positions are not marked to market.",
                 "US YES book is the market source; NO quotes are complement-derived.",
                 "Limit fills require a **later** observed ask crossing the resting bid and displayed size covering the order. This is an optimistic uncertainty bound, **not proof a resting order actually filled**.",
                 "Entry cost uses an assumed 2% fee buffer; marketable buys additionally add $0.005/share slippage. No actual fee or rebate schedule is inferred.",
@@ -270,6 +328,8 @@ def write_outputs(state):
     table_start=report_lines.index("| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |")
     table_end=next(i for i in range(table_start+2,len(report_lines)) if not report_lines[i].startswith("|"))
     status=[README_START,"## Current research status","",*report_lines[2:table_end],"",
+            "Win rate uses settled simulated fills. Forecast Brier averages snapshots within each market, then averages markets; n is the number of settled markets. Positive ΔBrier means better than the paired market-midpoint forecast; lower Brier is better.",
+            "",
             "Full caveats and the audit trail are in [REPORT.md](REPORT.md).",README_END]
     start=readme.index(README_START)
     end=readme.index(README_END)+len(README_END)
