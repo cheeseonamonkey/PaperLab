@@ -12,25 +12,27 @@
 
 Venue: **Polymarket US**, BTC 15m BRTI Up/Down. All orders **simulated**.
 Accounts: **12 independent $100 bankrolls**, not a shared pool. Latest successful observation: **2026-11-14T07:39:31+00:00**.
-
 Research sample: **1 markets tracked / 0 officially settled / 0 settled strategy positions**.
+
 
 Polls: **1 attempts / 1 recorded / 0 skipped**. Last error: None.
 
-| Strategy | Paper cash | Realized P&L | Settled | Open | Pending limits |
-|---|---:|---:|---:|---:|---:|
-| book_imbalance | $100.00 | $+0.00 | 0 | 0 | 0 |
-| brti_distance | $100.00 | $+0.00 | 0 | 0 | 0 |
-| brti_distance_limit | $100.00 | $+0.00 | 0 | 0 | 0 |
-| btc_momentum | $100.00 | $+0.00 | 0 | 0 | 0 |
-| btc_reversion | $100.00 | $+0.00 | 0 | 0 | 0 |
-| conv_gru | $100.00 | $+0.00 | 0 | 0 | 0 |
-| cross_asset_momentum | $100.00 | $+0.00 | 0 | 0 | 0 |
-| depthwise_tcn | $100.00 | $+0.00 | 0 | 0 | 0 |
-| lstm | $100.00 | $+0.00 | 0 | 0 | 0 |
-| market_implied | $100.00 | $+0.00 | 0 | 0 | 0 |
-| skip_gru_2 | $100.00 | $+0.00 | 0 | 0 | 0 |
-| stacked_rnn | $100.00 | $+0.00 | 0 | 0 | 0 |
+| Strategy | Paper cash | Realized P&L | Win rate | Brier (markets) | ΔBrier vs market | Settled | Open | Pending limits |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| book_imbalance | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| brti_distance | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| brti_distance_limit | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| btc_momentum | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| btc_reversion | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| conv_gru | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| cross_asset_momentum | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| depthwise_tcn | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| lstm | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| market_implied | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| skip_gru_2 | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+| stacked_rnn | $100.00 | $+0.00 | — | — (n=0) | — | 0 | 0 | 0 |
+
+Win rate uses settled simulated fills. Forecast Brier averages snapshots within each market, then averages markets; n is the number of settled markets. Positive ΔBrier means better than the paired market-midpoint forecast; lower Brier is better.
 
 Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 <!-- YENO_STATUS_END -->
