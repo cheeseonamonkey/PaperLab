@@ -103,7 +103,7 @@ def _sp500_context(now):
             available = int(dt.datetime.combine(day + dt.timedelta(days=1), dt.time(5), dt.timezone.utc).timestamp())
             if available <= retrieved_at:
                 rows.append((day, close, retrieved_at))
-    if len(rows) < 2 or (now - rows[-1][2]) > 4 * 86400:
+    if len(rows) < 2 or (today - rows[-1][0]) > dt.timedelta(days=4):
         return None
     return {"r1": math.log(rows[-1][1] / rows[-2][1]), "available_at": rows[-1][2]}
 
