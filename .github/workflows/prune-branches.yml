@@ -1,0 +1,39 @@
+name: One-time branch consolidation
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/prune-branches.yml']
+permissions:
+  contents: write
+jobs:
+  verify-and-prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify repository tests
+        run: python -m unittest discover -s tests -v
+      - name: Delete already-merged branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for branch in \
+            codex/verify-shard-shared-state \
+            codex/verify-shard-shared-state-v2 \
+            docs/interlinked-guides \
+            research/candidate-forward-evaluation-v2 \
+            research/forward-candidate-paper-evaluation
+          do
+            ahead=$(gh api "repos/$GH_REPO/compare/main...$branch" --jq '.ahead_by')
+            if [[ "$ahead" != 0 ]]; then
+              echo "Refusing to delete unmerged branch: $branch ($ahead commits ahead)"
+              exit 1
+            fi
+            gh api -X DELETE "repos/$GH_REPO/git/refs/heads/$branch"
+            echo "Deleted: $branch"
+          done

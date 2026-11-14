@@ -128,6 +128,12 @@ def merge():
         if result["index"] != i or result["names"] != list(SHARDS[i]) or result["manifest"] != manifest:
             raise ValueError("Shard identity or batch mismatch")
         shard_state = result["state"]
+        owned = set(SHARDS[i])
+        for slug, market in shard_state["markets"].items():
+            previous = base["markets"].get(slug, {}).get("forecasts", [])
+            for forecast in market.get("forecasts", []):
+                if set(forecast.get("probabilities", {})) - owned and forecast not in previous:
+                    raise ValueError("Shard forecast contains a foreign strategy")
         if set(shard_state["markets"]) != set(state["markets"]):
             raise ValueError("Shard market mismatch")
         for slug, market in state["markets"].items():

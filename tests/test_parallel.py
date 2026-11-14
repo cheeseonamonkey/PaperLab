@@ -26,11 +26,19 @@ class ParallelTests(unittest.TestCase):
             os.chdir(directory)
             self.addCleanup(os.chdir, old)
             state = paper.initial()
-            parallel.write(parallel.BATCH / "base.json", state)
             obs = fixture.obs
+            state["markets"]["historical"] = {
+                "ends": obs["ends"] + 1200, "outcome": None, "checked_at": 0,
+                "forecasts": [{"at": obs["observed_at"] - 1, "market": .5,
+                               "probabilities": {"lstm": .6}}],
+            }
+            parallel.write(parallel.BATCH / "base.json", state)
+            active = {**obs, "slug": "active-market", "ends": obs["ends"] + 1200,
+                      "observed_at": obs["ends"] + 31}
             events = [
                 {"kind":"observation","observation":obs},
                 {"kind":"reconcile","at":obs["ends"]+31,"outcomes":{obs["slug"]:"Up"}},
+                {"kind":"observation","observation":active},
             ]
             with gzip.open(parallel.BATCH / "events.jsonl.gz","wt") as stream:
                 for event in events:
@@ -42,6 +50,7 @@ class ParallelTests(unittest.TestCase):
             paper.process_snapshot(state,obs,{})
             with patch.object(paper,"settlement",return_value="Up"):
                 paper.reconcile(state,obs["ends"]+31)
+            paper.process_snapshot(state,active,{})
             for index in range(len(parallel.SHARDS)-1):
                 parallel.shard(index)
             with self.assertRaises(FileNotFoundError):
@@ -49,6 +58,13 @@ class ParallelTests(unittest.TestCase):
             parallel.shard(len(parallel.SHARDS)-1)
             parallel.merge()
             self.assertEqual(json.loads(paper.STATE.read_text()),state)
+
+            result_path = Path("shard-results/0.json")
+            result = parallel.read(result_path)
+            result["state"]["markets"][active["slug"]]["forecasts"][0]["probabilities"]["lstm"] = .5
+            parallel.write(result_path, result)
+            with self.assertRaisesRegex(ValueError, "foreign strategy"):
+                parallel.merge()
 
 
 if __name__ == "__main__":
