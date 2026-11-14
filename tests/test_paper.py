@@ -106,7 +106,7 @@ class PaperTests(unittest.TestCase):
         yeno.process_snapshot(state,self.obs,{"lstm":.9,"conv_gru":.9})
         self.assertEqual(len(state["accounts"]["lstm"]["orders"]),1)
         self.assertEqual(original,state["accounts"]["lstm"]["orders"][0]["reserved"])
-        self.assertEqual(len(state["accounts"]["conv_gru"]["trades"]),1)
+        self.assertEqual(len(state["accounts"]["conv_gru"]["orders"]),1)
 
     def test_five_minute_limit_opportunities_and_size(self):
         acct=yeno.initial()["accounts"]["brti_distance"]
