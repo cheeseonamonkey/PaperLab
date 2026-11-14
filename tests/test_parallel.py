@@ -12,6 +12,11 @@ import test_paper
 
 
 class ParallelTests(unittest.TestCase):
+    def test_shard_rejects_missing_or_non_integer_index(self):
+        for index in (None, "0", True, -1, len(parallel.SHARDS)):
+            with self.subTest(index=index), self.assertRaisesRegex(ValueError, "Invalid shard"):
+                parallel.shard(index)
+
     def test_shards_match_single_engine_and_require_all_outputs(self):
         fixture = test_paper.PaperTests()
         fixture.setUp()

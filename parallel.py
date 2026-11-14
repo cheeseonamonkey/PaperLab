@@ -87,7 +87,7 @@ def collect(duration):
 
 
 def shard(index):
-    if not 0 <= index < len(SHARDS):
+    if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(SHARDS):
         raise ValueError("Invalid shard")
     state = read(BATCH / "base.json")
     manifest = read(BATCH / "collection.json")
