@@ -348,7 +348,8 @@ def cycle(state,feed,models,now=None):
     now=int(time.time() if now is None else now)
     reconcile(state,now)
     observation=feed.observe(now)
-    probabilities=models.all(observation) if observation["ends"]-observation["start"] == 900 else {}
+    # Fresh-start research: legacy checkpoints abstain on both horizons.
+    probabilities={}
     # The source quote must still be recent when the decision is made.
     if time.time()-observation["observed_at"] > 12:
         raise ValueError("Stale quote after model inference; no paper orders")
