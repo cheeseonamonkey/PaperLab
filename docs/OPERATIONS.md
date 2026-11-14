@@ -1,20 +1,28 @@
-# Operations and research
+# Operations
+
+- Venue: Polymarket US BTC 15-minute and 1-hour binary Up/Down markets.
+- Collection target: one observation every 15 seconds; one optional action per account and market per minute.
+- Accounts: twelve isolated $100 simulated bankrolls; maximum order stake $15.
+- Order execution: paper limit buys and sells only. See [execution policy](EXECUTION.md) for actual fill proxy and the proposed urgent-exit experiment.
+- Research: deterministic experiments on bootstrap plus settled live data; separate historical archive stays untouched by training. See [research plan](RESEARCH.md).
+- Persistence: GitHub repository state is canonical; CSV files and bot pages are generated views of JSON state.
+- Automation: hourly GitHub Actions runs can start late, queue, or fail. Uncommitted observations from a cancelled runner may be lost.
+
+The simulator has no authenticated trading path. Its crossing-based fills do not model queue position or guarantee real-world executions. The five legacy neural checkpoints currently abstain; `market_implied` is a no-trade benchmark. The distance pair uses the same signal; momentum and reversion are sign-reversed variants. Twelve accounts therefore do not represent twelve independent, active hypotheses.
+
+## Fees
+
+The current documented schedule uses zero standard maker fee and no maker rebate. Straight taker fees use coefficient 0.0695 times contracts × price × (1 − price), where confirmed applicable. These assumptions are specific to the cited US schedule; verify the current official schedule before evaluating results.
+
+- [US exchange notice, Oct. 23, 2026](https://polymarketexchange.com/files/notices/Exchange%20Notice%20-%20Amendment%20to%20Taker%20and%20Maker%20Rebate%20Tiers%20%282026.10.23%29.pdf)
+- [CFTC filing](https://www.cftc.gov/filings/orgrules/rules09292630356.pdf)
+
+## Flow
 
 ```mermaid
 flowchart TD
-    Live["Live observations"] --> Train["Training and experiments"]
-    Bootstrap["One-time bootstrap"] --> Train
-    Archive["Backward archive"] --> Stored["Stored for later"]
-    Train --> Reports["Research reports"]
+  Live["15-second live observations"] --> Train["Minute decisions and research"]
+  Seed["One-time 48-hour bootstrap"] --> Train
+  Archive["Ongoing historical archive"] --> Later["Reserved for future use"]
+  Train --> Docs["Reports and CSV views"]
 ```
-
-- Observe 15-minute and 1-hour US BTC markets on a 15-second target cadence.
-- Each bot has a decision opportunity every minute per market, including hold.
-- Entries and exits are simulated resting limits. A later displayed book crossing with sufficient size is used as a fill proxy; queue position is unknown.
-- Order sizing uses estimated edge and available cash, with a $15 maximum per order. The exchange's standard maker fee is zero; no rebate is assumed for these small accounts. Taker fees, when modeled, use the published straight-contract coefficient of 0.0695 per contract times p(1-p). [US exchange notice](https://polymarketexchange.com/files/notices/Exchange%20Notice%20-%20Amendment%20to%20Taker%20and%20Maker%20Rebate%20Tiers%20%282026.10.23%29.pdf), [CFTC filing](https://www.cftc.gov/filings/orgrules/rules09292630356.pdf).
-- A one-time 48-hour bootstrap is stored with normal observations and labelled by official US settlement. It is obtained independently of the separate backward archive.
-- Subsequent training consumes the fixed bootstrap and all usable settled live observations. The backward archive is never a trainer input.
-- The deterministic research loop compares baseline, stronger regularization, and a nonlinear transform of exogenous returns against the market benchmark. It saves results per run. These are experiments, not an independent sealed holdout or an automatic strategy deployment.
-- Optional Pi research uses OpenRouter's free router under the existing account limit, after its activation gate. A successful proposal is review-only.
-- All decisions and orders are simulated. The trained research model is not yet connected to a paper account. CSV ledgers are generated views of the JSON state.
-- Actions can start late and concurrent runs serialize. A cancelled job can lose uncommitted observations; failures attempt to preserve a temporary Actions artifact.

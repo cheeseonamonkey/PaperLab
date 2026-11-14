@@ -4,7 +4,7 @@
 
 - [Current results](REPORT.md) · [Persistent state](data/state.json) · [Raw, compressed observations](data/observations/) · [Workflows](../../actions)
 - **Hourly Actions** runs approximately one hour, polling US public order books at a **15-second target cadence** (when network calls fit). Runs can start late or be dropped by GitHub; **not an always-on service**.
-- Simulates **resting limit buys and sells**, with cash reservations, expiration and delayed observed crossing. Settles exclusively using the **official US 0/1 settlement endpoint**.
+- Simulates **limit buys and sells**, with cash reservations, expiration and a later-book-crossing fill proxy. Queue priority and urgent exits are not modeled. Settles using the **official US 0/1 settlement endpoint**.
 - Competing independent models all see a **single shared, timestamped data feed**. Inputs include official BRTI minute candles, current Polymarket US bid/ask/top-5 depth, US price-to-beat and display history, time to expiry, book imbalance, and additional BTC/ETH/SOL/XRP spot context. Coinbase context does not determine official settlement.
 
 <!-- PAPER_STATUS_START -->
@@ -56,7 +56,7 @@ Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 | cross_asset_momentum | BTC/ETH/SOL/XRP momentum | Limit |
 | book_imbalance | US YES depth imbalance vs implied odds | Limit |
 
-Each account starts at **$100**. Order size varies with estimated edge and available paper cash, capped at **$15** per order with fractional simulated shares; maker fills currently use zero exchange fee and no rebate. Each strategy gets an opportunity to place an order for each market every **one minute**. Pending orders reserve cash, and existing orders are monitored at every observation.
+Five legacy neural accounts currently abstain; `market_implied` is a hold-only benchmark. The distance pair shares one signal; momentum and reversion are sign-reversed variants. Twelve accounts are not twelve independent active hypotheses. See [execution limits](docs/EXECUTION.md) and [research plan](docs/RESEARCH.md).\n\nEach account starts at **$100**. Order size varies with estimated edge and available paper cash, capped at **$15** per order with fractional simulated shares; maker fills currently use zero exchange fee and no rebate. Each strategy gets an opportunity to place an order for each market every **one minute**. Pending orders reserve cash, and existing orders are monitored at every observation.
 
 **Resting buy assumption:** post at the displayed bid, reserve its cost, and credit a hypothetical fill *only* if a **later US snapshot** has best ask at or below the posted limit and offers adequate displayed size. Fills use the original limit price, zero maker exchange fee, and **no maker rebate**. Sell limits require a later observed bid crossing the offer with sufficient displayed size. This crossing is a proxy, **not evidence of queue priority or a real fill**. Otherwise orders remain pending and expire, returning reserved cash.
 
