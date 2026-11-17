@@ -4,33 +4,33 @@ Paper account · simulated orders
 
 | Metric | Value |
 |---|---:|
-| Cash | $103.79 |
-| Reserved | $0.00 |
-| Realized P&L | $+3.79 |
-| Settled wins / losses | 1 / 0 |
-| Open positions | 0 |
-| Pending orders | 0 |
-| Orders filled / placed | 1 / 1 |
-| Recorded exit fees | $0.0000 |
-| Calibration markets | 8 |
-| Calibration logit offset | +0.0157 |
-| Brier (markets) | 0.0891 (10) |
-| ΔBrier vs market | +0.0039 |
+| Cash | $100.34 |
+| Reserved | $3.79 |
+| Realized P&L | $+4.60 |
+| Settled wins / losses | 5 / 3 |
+| Open positions | 1 |
+| Pending orders | 1 |
+| Orders filled / placed | 15 / 16 |
+| Recorded exit fees | $0.6009 |
+| Calibration markets | 15 |
+| Calibration logit offset | -0.0072 |
+| Brier (markets) | 0.0895 (17) |
+| ΔBrier vs market | +0.0032 |
 
 [Order ledger](../../data/ledgers/btc_momentum-orders.csv) · [Trade ledger](../../data/ledgers/btc_momentum-trades.csv) · [Overview](../../REPORT.md)
 
 ```mermaid
 pie title Settled simulated trades
-    "Wins" : 1
-    "Losses" : 0
+    "Wins" : 5
+    "Losses" : 3
 ```
 
 ## Results by market horizon
 
 | Horizon | Closed trades | Realized P&L |
 |---|---:|---:|
-| 15m | 1 | $+3.79 |
-| 1h | 0 | $+0.00 |
+| 15m | 3 | $+4.68 |
+| 1h | 5 | $-0.08 |
 
 ## Research
 

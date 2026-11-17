@@ -4,33 +4,33 @@ Paper account · simulated orders
 
 | Metric | Value |
 |---|---:|
-| Cash | $88.14 |
+| Cash | $81.49 |
 | Reserved | $0.00 |
-| Realized P&L | $-7.12 |
-| Settled wins / losses | 0 / 4 |
-| Open positions | 3 |
+| Realized P&L | $-14.77 |
+| Settled wins / losses | 5 / 14 |
+| Open positions | 2 |
 | Pending orders | 0 |
-| Orders filled / placed | 10 / 13 |
-| Recorded exit fees | $0.2120 |
-| Calibration markets | 8 |
-| Calibration logit offset | +0.0118 |
-| Brier (markets) | 0.0943 (10) |
-| ΔBrier vs market | -0.0014 |
+| Orders filled / placed | 35 / 40 |
+| Recorded exit fees | $1.1617 |
+| Calibration markets | 15 |
+| Calibration logit offset | -0.0150 |
+| Brier (markets) | 0.0943 (17) |
+| ΔBrier vs market | -0.0016 |
 
 [Order ledger](../../data/ledgers/book_imbalance-orders.csv) · [Trade ledger](../../data/ledgers/book_imbalance-trades.csv) · [Overview](../../REPORT.md)
 
 ```mermaid
 pie title Settled simulated trades
-    "Wins" : 0
-    "Losses" : 4
+    "Wins" : 5
+    "Losses" : 14
 ```
 
 ## Results by market horizon
 
 | Horizon | Closed trades | Realized P&L |
 |---|---:|---:|
-| 15m | 2 | $-2.04 |
-| 1h | 2 | $-5.08 |
+| 15m | 8 | $-4.04 |
+| 1h | 11 | $-10.73 |
 
 ## Research
 
