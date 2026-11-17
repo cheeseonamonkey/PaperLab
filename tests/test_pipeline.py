@@ -14,6 +14,10 @@ import train_research
 
 
 class PipelineTests(unittest.TestCase):
+    def test_latest_closed_hour_boundaries(self):
+        self.assertEqual(backfill.latest_closed_hour(7200), (3600, 7200))
+        self.assertEqual(backfill.latest_closed_hour(7199), (0, 3600))
+
     def test_observation_persists_input_availability_timestamps(self):
         with tempfile.TemporaryDirectory() as directory:
             at = 1794632340

@@ -2,7 +2,7 @@
 
 - Venue: Polymarket US BTC 15-minute and 1-hour binary Up/Down markets.
 - Collection target: one observation every 15 seconds; one optional action per account and market per minute.
-- Accounts: thirteen isolated $100 simulated bankrolls. Order size uses one-quarter Kelly, capped at 5% of account equity per order and 20% total committed exposure; see [execution policy](EXECUTION.md#risk-and-lifecycle).
+- Accounts: thirteen isolated $100 simulated bankrolls. Order size uses one-quarter Kelly, capped at 10% of account equity per order and 30% total committed exposure; see [execution policy](EXECUTION.md#risk-and-lifecycle).
 - Order execution: paper limit buys and simulated marketable exits. See [execution policy](EXECUTION.md) for actual fill proxy and the proposed urgent-exit experiment.
 - Research: deterministic experiments on bootstrap plus settled live data; separate historical archive stays untouched by training. See [research plan](RESEARCH.md).
 - Persistence: GitHub repository state is canonical; CSV files and bot pages are generated views of JSON state.

@@ -23,6 +23,12 @@ HORIZONS = (("15m", 900), ("1h", HOUR))
 HOURS_PER_RUN = 3
 
 
+def latest_closed_hour(now=None):
+    """UTC boundaries of the last fully closed hour."""
+    end = int(time.time() if now is None else now) // HOUR * HOUR
+    return end - HOUR, end
+
+
 def write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -102,8 +108,7 @@ def main():
         "hours_saved": 0, "missing_markets": 0, "empty_hours": 0,
     }
     # Backfill the latest closed hour as well, covering live-run gaps.
-    recent_end = int(time.time()) // HOUR * HOUR
-    recent_start = recent_end - HOUR
+    recent_start, recent_end = latest_closed_hour()
     recent_at = datetime.fromtimestamp(recent_start, timezone.utc)
     recent_path = ROOT / "hours" / recent_at.strftime("%Y-%m-%d") / (recent_at.strftime("%H") + ".json.gz")
     if not recent_path.exists():

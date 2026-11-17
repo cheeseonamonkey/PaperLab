@@ -87,6 +87,24 @@ def collect(duration):
                                       "events_hash":digest(BATCH / "events.jsonl.gz")})
 
 
+def replay_events(state, events, names, candidate):
+    """Replay the canonical ordered event stream for the selected accounts."""
+    for event in events:
+        if event["kind"] == "reconcile":
+            original = paper.settlement
+            paper.settlement = lambda slug: event["outcomes"].get(slug)
+            try:
+                paper.reconcile(state, event["at"])
+            finally:
+                paper.settlement = original
+        elif event["kind"] == "observation":
+            obs = event["observation"]
+            probabilities = {"research_linear":predict(obs, candidate)} if candidate else {}
+            paper.process_snapshot(state, obs, probabilities, names=names)
+        else:
+            raise ValueError("Unknown event")
+
+
 def shard(index):
     if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(SHARDS):
         raise ValueError("Invalid shard")
@@ -96,21 +114,7 @@ def shard(index):
     if manifest["base_hash"] != digest(BATCH / "base.json") or manifest["events_hash"] != digest(BATCH / "events.jsonl.gz"):
         raise ValueError("Batch checksum mismatch")
     with gzip.open(BATCH / "events.jsonl.gz", "rt") as stream:
-        for line in stream:
-            event = json.loads(line)
-            if event["kind"] == "reconcile":
-                original = paper.settlement
-                paper.settlement = lambda slug: event["outcomes"].get(slug)
-                try:
-                    paper.reconcile(state, event["at"])
-                finally:
-                    paper.settlement = original
-            elif event["kind"] == "observation":
-                obs = event["observation"]
-                probabilities = {"research_linear":predict(obs,candidate)} if candidate else {}
-                paper.process_snapshot(state,obs,probabilities,names=SHARDS[index])
-            else:
-                raise ValueError("Unknown event")
+        replay_events(state, (json.loads(line) for line in stream), SHARDS[index], candidate)
     write(Path("shard-results") / (str(index) + ".json"),
           {"index":index,"names":list(SHARDS[index]),"manifest":manifest,"state":state})
 

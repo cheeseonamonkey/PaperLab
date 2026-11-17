@@ -124,6 +124,21 @@ class PaperTests(unittest.TestCase):
         self.assertEqual(original,state["accounts"]["lstm"]["orders"][0]["reserved"])
         self.assertEqual(len(state["accounts"]["conv_gru"]["orders"]),1)
 
+    def test_three_concurrent_markets_share_one_exposure_budget(self):
+        acct = paper.initial()["accounts"]["brti_distance"]
+        self.assertEqual(paper.MAX_ORDER_EQUITY_FRACTION, .10)
+        self.assertEqual(paper.MAX_EXPOSURE_EQUITY_FRACTION, .30)
+        for i in range(3):
+            obs = copy.deepcopy(self.obs)
+            obs["slug"] = "concurrent-" + str(i)
+            self.assertEqual(paper.maybe_order(acct, obs, .9, "limit", self.now), "LIMIT Up")
+        self.assertEqual(len([o for o in acct["orders"] if o["status"] == "open"]), 3)
+        self.assertGreater(paper.committed_exposure(acct), 29.9)
+        self.assertLessEqual(paper.committed_exposure(acct), 30)
+        extra = copy.deepcopy(self.obs)
+        extra["slug"] = "concurrent-overflow"
+        self.assertIsNone(paper.maybe_order(acct, extra, .9, "limit", self.now))
+
     def test_one_minute_limit_opportunities_and_size(self):
         acct=paper.initial()["accounts"]["brti_distance"]
         self.assertEqual(paper.maybe_order(acct,self.obs,.9,"limit",self.now),"LIMIT Up")
@@ -147,7 +162,7 @@ class PaperTests(unittest.TestCase):
         acct=paper.initial()["accounts"]["brti_distance"]
         acct["cash"]=40
         paper.maybe_order(acct,self.obs,.9,"limit",self.now)
-        self.assertLessEqual(acct["orders"][0]["cost"],2)
+        self.assertLessEqual(acct["orders"][0]["cost"],4)
 
     def test_committed_exposure_caps_open_positions_and_orders(self):
         acct=paper.initial()["accounts"]["brti_distance"]
@@ -156,8 +171,8 @@ class PaperTests(unittest.TestCase):
         self.assertEqual(paper.equity(acct),100)
         self.assertEqual(paper.committed_exposure(acct),16)
         paper.maybe_order(acct,self.obs,.9,"limit",self.now)
-        self.assertLessEqual(acct["orders"][0]["reserved"],4)
-        self.assertLessEqual(paper.committed_exposure(acct),20)
+        self.assertLessEqual(acct["orders"][0]["reserved"],10)
+        self.assertLessEqual(paper.committed_exposure(acct),30)
 
     def test_total_exposure_never_exceeds_equity_cap(self):
         acct=paper.initial()["accounts"]["brti_distance"]
