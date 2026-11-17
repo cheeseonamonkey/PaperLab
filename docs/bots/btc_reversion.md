@@ -12,10 +12,10 @@ Paper account · simulated orders
 | Pending orders | 0 |
 | Orders filled / placed | 2 / 2 |
 | Recorded exit fees | $0.0000 |
-| Calibration markets | 2 |
-| Calibration logit offset | -0.0205 |
-| Brier (markets) | 0.0822 (4) |
-| ΔBrier vs market | -0.0114 |
+| Calibration markets | 8 |
+| Calibration logit offset | +0.0115 |
+| Brier (markets) | 0.0983 (10) |
+| ΔBrier vs market | -0.0053 |
 
 [Order ledger](../../data/ledgers/btc_reversion-orders.csv) · [Trade ledger](../../data/ledgers/btc_reversion-trades.csv) · [Overview](../../REPORT.md)
 

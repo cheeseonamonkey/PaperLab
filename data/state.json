@@ -1,16 +1,22 @@
 {
   "accounts": {
     "book_imbalance": {
-      "cash": 95.0000008,
+      "cash": 88.14154341,
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "learning": {
-        "logit_offset": -0.02113051406116722,
-        "markets": 2
+        "logit_offset": 0.011774041158088645,
+        "markets": 8
       },
       "orders": [
         {
@@ -51,9 +57,139 @@
           "slug": "cpc-btc-updown-1h-2026-11-14-1500z",
           "status": "expired",
           "type": "limit"
+        },
+        {
+          "cost": 2.080443,
+          "edge": 0.072707,
+          "filled_at": 1794902746,
+          "placed_at": 1794902714,
+          "price": 0.17,
+          "reserved": 2.080443,
+          "shares": 12.2379,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.11431178,
+          "filled_at": 1794902774,
+          "placed_at": 1794902774,
+          "price": 0.16,
+          "reserved": 0,
+          "shares": 12.2379,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "filled",
+          "trade_placed_at": 1794902714,
+          "type": "ioc_sell"
+        },
+        {
+          "cancelled_at": 1794903315,
+          "cost": 5.773716,
+          "edge": 0.053617,
+          "placed_at": 1794902954,
+          "price": 0.78,
+          "reserved": 5.773716,
+          "shares": 7.4022,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "expired",
+          "type": "limit"
+        },
+        {
+          "cost": 6.072246,
+          "edge": 0.0487,
+          "filled_at": 1794903839,
+          "placed_at": 1794903809,
+          "price": 0.81,
+          "reserved": 6.072246,
+          "shares": 7.4966,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.08018401,
+          "filled_at": 1794904049,
+          "placed_at": 1794904049,
+          "price": 0.81,
+          "reserved": 0,
+          "shares": 7.4966,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "trade_placed_at": 1794903809,
+          "type": "ioc_sell"
+        },
+        {
+          "cost": 1.145732,
+          "edge": 0.045015,
+          "filled_at": 1794904289,
+          "placed_at": 1794904229,
+          "price": 0.07,
+          "reserved": 1.145732,
+          "shares": 16.3676,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 1.776828,
+          "edge": 0.07056,
+          "filled_at": 1794904499,
+          "placed_at": 1794904469,
+          "price": 0.06,
+          "reserved": 1.776828,
+          "shares": 29.6138,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 2.035968,
+          "edge": 0.079131,
+          "filled_at": 1794904546,
+          "placed_at": 1794904514,
+          "price": 0.08,
+          "reserved": 2.035968,
+          "shares": 25.4496,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0830z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 1.82004,
+          "edge": 0.073045,
+          "filled_at": 1794904634,
+          "placed_at": 1794904574,
+          "price": 0.05,
+          "reserved": 1.82004,
+          "shares": 36.4008,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0830z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.0175106,
+          "filled_at": 1794904754,
+          "placed_at": 1794904754,
+          "price": 0.01,
+          "reserved": 0,
+          "shares": 25.4496,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0830z",
+          "status": "filled",
+          "trade_placed_at": 1794904514,
+          "type": "ioc_sell"
         }
       ],
-      "signals": 3,
+      "signals": 10,
       "trades": [
         {
           "cost": 4.9999992,
@@ -70,20 +206,116 @@
           "status": "settled",
           "type": "limit_cross",
           "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 2.080443,
+          "edge": 0.072707,
+          "exit_price": 0.16,
+          "filled_at": 1794902746,
+          "payout": 1.84375222,
+          "placed_at": 1794902714,
+          "pnl": -0.23669078,
+          "price": 0.17,
+          "settled_at": 1794902774,
+          "shares": 12.2379,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 6.072246,
+          "edge": 0.0487,
+          "exit_price": 0.81,
+          "filled_at": 1794903839,
+          "payout": 5.99206199,
+          "placed_at": 1794903809,
+          "pnl": -0.08018401,
+          "price": 0.81,
+          "settled_at": 1794904049,
+          "shares": 7.4966,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "cost": 1.145732,
+          "edge": 0.045015,
+          "filled_at": 1794904289,
+          "placed_at": 1794904229,
+          "price": 0.07,
+          "shares": 16.3676,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "open",
+          "type": "limit_cross"
+        },
+        {
+          "cost": 1.776828,
+          "edge": 0.07056,
+          "filled_at": 1794904499,
+          "placed_at": 1794904469,
+          "price": 0.06,
+          "shares": 29.6138,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "open",
+          "type": "limit_cross"
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 2.035968,
+          "edge": 0.079131,
+          "exit_price": 0.01,
+          "filled_at": 1794904546,
+          "payout": 0.2369854,
+          "placed_at": 1794904514,
+          "pnl": -1.7989826,
+          "price": 0.08,
+          "settled_at": 1794904754,
+          "shares": 25.4496,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0830z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "cost": 1.82004,
+          "edge": 0.073045,
+          "filled_at": 1794904634,
+          "placed_at": 1794904574,
+          "price": 0.05,
+          "shares": 36.4008,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0830z",
+          "status": "open",
+          "type": "limit_cross"
         }
       ]
     },
     "brti_distance": {
-      "cash": 103.1597195,
+      "cash": 68.94739083,
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "learning": {
-        "logit_offset": -0.01054841843155388,
-        "markets": 2
+        "logit_offset": 0.0016673566551821117,
+        "markets": 8
       },
       "orders": [
         {
@@ -126,6 +358,7 @@
           "type": "limit"
         },
         {
+          "cancelled_at": 1794901544,
           "cost": 10.315954,
           "edge": 0.3538,
           "placed_at": 1794877516,
@@ -134,10 +367,11 @@
           "shares": 16.9114,
           "side": "Up",
           "slug": "cpc-btc-updown-15m-2026-11-17-0100z",
-          "status": "open",
+          "status": "expired",
           "type": "limit"
         },
         {
+          "cancelled_at": 1794901544,
           "cost": 10.315944,
           "edge": 0.199434,
           "placed_at": 1794877516,
@@ -146,11 +380,219 @@
           "shares": 19.1036,
           "side": "Up",
           "slug": "cpc-btc-updown-1h-2026-11-17-0100z",
-          "status": "open",
+          "status": "expired",
+          "type": "limit"
+        },
+        {
+          "cancelled_at": 1794902459,
+          "cost": 7.659008,
+          "edge": 0.201944,
+          "placed_at": 1794901574,
+          "price": 0.32,
+          "reserved": 7.659008,
+          "shares": 23.9344,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "expired",
+          "type": "limit"
+        },
+        {
+          "cost": 10.315956,
+          "edge": 0.539272,
+          "filled_at": 1794901725,
+          "placed_at": 1794901634,
+          "price": 0.42,
+          "reserved": 10.315956,
+          "shares": 24.5618,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 10.31594,
+          "edge": 0.081995,
+          "filled_at": 1794901667,
+          "placed_at": 1794901634,
+          "price": 0.85,
+          "reserved": 10.31594,
+          "shares": 12.1364,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0700z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.38835276,
+          "filled_at": 1794901754,
+          "placed_at": 1794901754,
+          "price": 0.35,
+          "reserved": 0,
+          "shares": 24.5618,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "filled",
+          "trade_placed_at": 1794901634,
+          "type": "ioc_sell"
+        },
+        {
+          "cancelled_at": 1794902459,
+          "cost": 10.105191,
+          "edge": 0.392891,
+          "placed_at": 1794901814,
+          "price": 0.51,
+          "reserved": 10.105191,
+          "shares": 19.8141,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "expired",
+          "type": "limit"
+        },
+        {
+          "cost": 2.235456,
+          "edge": 0.090032,
+          "filled_at": 1794901906,
+          "placed_at": 1794901874,
+          "price": 0.24,
+          "reserved": 2.235456,
+          "shares": 9.3144,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.09962729,
+          "filled_at": 1794901934,
+          "placed_at": 1794901934,
+          "price": 0.19,
+          "reserved": 0,
+          "shares": 9.3144,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "filled",
+          "trade_placed_at": 1794901874,
+          "type": "ioc_sell"
+        },
+        {
+          "cost": 6.86,
+          "edge": 0.160927,
+          "filled_at": 1794902506,
+          "placed_at": 1794902474,
+          "price": 0.4,
+          "reserved": 6.86,
+          "shares": 17.15,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 4.471011,
+          "edge": 0.09964,
+          "filled_at": 1794902549,
+          "placed_at": 1794902489,
+          "price": 0.43,
+          "reserved": 4.471011,
+          "shares": 10.3977,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 3.58542,
+          "edge": 0.089718,
+          "filled_at": 1794902639,
+          "placed_at": 1794902549,
+          "price": 0.36,
+          "reserved": 3.58542,
+          "shares": 9.9595,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.21740712,
+          "filled_at": 1794902594,
+          "placed_at": 1794902594,
+          "price": 0.24,
+          "reserved": 0,
+          "shares": 17.15,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "filled",
+          "trade_placed_at": 1794902474,
+          "type": "ioc_sell"
+        },
+        {
+          "fee": 0.17025402,
+          "filled_at": 1794902609,
+          "placed_at": 1794902609,
+          "price": 0.38,
+          "reserved": 0,
+          "shares": 10.3977,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "trade_placed_at": 1794902489,
+          "type": "ioc_sell"
+        },
+        {
+          "fee": 0.15947948,
+          "filled_at": 1794902669,
+          "placed_at": 1794902669,
+          "price": 0.36,
+          "reserved": 0,
+          "shares": 9.9595,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "trade_placed_at": 1794902549,
+          "type": "ioc_sell"
+        },
+        {
+          "cost": 9.849568,
+          "edge": 0.303941,
+          "filled_at": 1794902819,
+          "placed_at": 1794902729,
+          "price": 0.62,
+          "reserved": 9.849568,
+          "shares": 15.8864,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 9.849609,
+          "edge": 0.273742,
+          "filled_at": 1794902819,
+          "placed_at": 1794902789,
+          "price": 0.63,
+          "reserved": 9.849609,
+          "shares": 15.6343,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 9.84956,
+          "edge": 0.365891,
+          "filled_at": 1794902879,
+          "placed_at": 1794902849,
+          "price": 0.58,
+          "reserved": 9.84956,
+          "shares": 16.982,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
           "type": "limit"
         }
       ],
-      "signals": 6,
+      "signals": 17,
       "trades": [
         {
           "cost": 4.9999635,
@@ -199,20 +641,168 @@
           "status": "settled",
           "type": "limit_cross",
           "won": true
+        },
+        {
+          "cost": 10.31594,
+          "edge": 0.081995,
+          "filled_at": 1794901667,
+          "payout": 12.1364,
+          "placed_at": 1794901634,
+          "pnl": 1.82046,
+          "price": 0.85,
+          "settled_at": 1794902444,
+          "shares": 12.1364,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0700z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": true
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 10.315956,
+          "edge": 0.539272,
+          "exit_price": 0.35,
+          "filled_at": 1794901725,
+          "payout": 8.20827724,
+          "placed_at": 1794901634,
+          "pnl": -2.10767876,
+          "price": 0.42,
+          "settled_at": 1794901754,
+          "shares": 24.5618,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 2.235456,
+          "edge": 0.090032,
+          "exit_price": 0.19,
+          "filled_at": 1794901906,
+          "payout": 1.67010871,
+          "placed_at": 1794901874,
+          "pnl": -0.56534729,
+          "price": 0.24,
+          "settled_at": 1794901934,
+          "shares": 9.3144,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 6.86,
+          "edge": 0.160927,
+          "exit_price": 0.24,
+          "filled_at": 1794902506,
+          "payout": 3.89859288,
+          "placed_at": 1794902474,
+          "pnl": -2.96140712,
+          "price": 0.4,
+          "settled_at": 1794902594,
+          "shares": 17.15,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 4.471011,
+          "edge": 0.09964,
+          "exit_price": 0.38,
+          "filled_at": 1794902549,
+          "payout": 3.78087198,
+          "placed_at": 1794902489,
+          "pnl": -0.69013902,
+          "price": 0.43,
+          "settled_at": 1794902609,
+          "shares": 10.3977,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 3.58542,
+          "edge": 0.089718,
+          "exit_price": 0.36,
+          "filled_at": 1794902639,
+          "payout": 3.42594052,
+          "placed_at": 1794902549,
+          "pnl": -0.15947948,
+          "price": 0.36,
+          "settled_at": 1794902669,
+          "shares": 9.9595,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "cost": 9.849568,
+          "edge": 0.303941,
+          "filled_at": 1794902819,
+          "placed_at": 1794902729,
+          "price": 0.62,
+          "shares": 15.8864,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "open",
+          "type": "limit_cross"
+        },
+        {
+          "cost": 9.849609,
+          "edge": 0.273742,
+          "filled_at": 1794902819,
+          "placed_at": 1794902789,
+          "price": 0.63,
+          "shares": 15.6343,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "open",
+          "type": "limit_cross"
+        },
+        {
+          "cost": 9.84956,
+          "edge": 0.365891,
+          "filled_at": 1794902879,
+          "placed_at": 1794902849,
+          "price": 0.58,
+          "shares": 16.982,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "open",
+          "type": "limit_cross"
         }
       ]
     },
     "brti_distance_limit": {
-      "cash": 103.15972868,
+      "cash": 68.94740001,
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "learning": {
-        "logit_offset": -0.01054841843155388,
-        "markets": 2
+        "logit_offset": 0.0016673566551821117,
+        "markets": 8
       },
       "orders": [
         {
@@ -268,6 +858,7 @@
           "type": "limit"
         },
         {
+          "cancelled_at": 1794901544,
           "cost": 10.315954,
           "edge": 0.3538,
           "placed_at": 1794877516,
@@ -276,10 +867,11 @@
           "shares": 16.9114,
           "side": "Up",
           "slug": "cpc-btc-updown-15m-2026-11-17-0100z",
-          "status": "open",
+          "status": "expired",
           "type": "limit"
         },
         {
+          "cancelled_at": 1794901544,
           "cost": 10.315944,
           "edge": 0.199434,
           "placed_at": 1794877516,
@@ -288,11 +880,219 @@
           "shares": 19.1036,
           "side": "Up",
           "slug": "cpc-btc-updown-1h-2026-11-17-0100z",
-          "status": "open",
+          "status": "expired",
+          "type": "limit"
+        },
+        {
+          "cancelled_at": 1794902459,
+          "cost": 7.659008,
+          "edge": 0.201944,
+          "placed_at": 1794901574,
+          "price": 0.32,
+          "reserved": 7.659008,
+          "shares": 23.9344,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "expired",
+          "type": "limit"
+        },
+        {
+          "cost": 10.315956,
+          "edge": 0.539272,
+          "filled_at": 1794901725,
+          "placed_at": 1794901634,
+          "price": 0.42,
+          "reserved": 10.315956,
+          "shares": 24.5618,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 10.31594,
+          "edge": 0.081995,
+          "filled_at": 1794901667,
+          "placed_at": 1794901634,
+          "price": 0.85,
+          "reserved": 10.31594,
+          "shares": 12.1364,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0700z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.38835276,
+          "filled_at": 1794901754,
+          "placed_at": 1794901754,
+          "price": 0.35,
+          "reserved": 0,
+          "shares": 24.5618,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "filled",
+          "trade_placed_at": 1794901634,
+          "type": "ioc_sell"
+        },
+        {
+          "cancelled_at": 1794902459,
+          "cost": 10.105191,
+          "edge": 0.392891,
+          "placed_at": 1794901814,
+          "price": 0.51,
+          "reserved": 10.105191,
+          "shares": 19.8141,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "expired",
+          "type": "limit"
+        },
+        {
+          "cost": 2.235456,
+          "edge": 0.090032,
+          "filled_at": 1794901906,
+          "placed_at": 1794901874,
+          "price": 0.24,
+          "reserved": 2.235456,
+          "shares": 9.3144,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.09962729,
+          "filled_at": 1794901934,
+          "placed_at": 1794901934,
+          "price": 0.19,
+          "reserved": 0,
+          "shares": 9.3144,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "filled",
+          "trade_placed_at": 1794901874,
+          "type": "ioc_sell"
+        },
+        {
+          "cost": 6.86,
+          "edge": 0.160927,
+          "filled_at": 1794902506,
+          "placed_at": 1794902474,
+          "price": 0.4,
+          "reserved": 6.86,
+          "shares": 17.15,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 4.471011,
+          "edge": 0.09964,
+          "filled_at": 1794902549,
+          "placed_at": 1794902489,
+          "price": 0.43,
+          "reserved": 4.471011,
+          "shares": 10.3977,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 3.58542,
+          "edge": 0.089718,
+          "filled_at": 1794902639,
+          "placed_at": 1794902549,
+          "price": 0.36,
+          "reserved": 3.58542,
+          "shares": 9.9595,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "fee": 0.21740712,
+          "filled_at": 1794902594,
+          "placed_at": 1794902594,
+          "price": 0.24,
+          "reserved": 0,
+          "shares": 17.15,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "filled",
+          "trade_placed_at": 1794902474,
+          "type": "ioc_sell"
+        },
+        {
+          "fee": 0.17025402,
+          "filled_at": 1794902609,
+          "placed_at": 1794902609,
+          "price": 0.38,
+          "reserved": 0,
+          "shares": 10.3977,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "trade_placed_at": 1794902489,
+          "type": "ioc_sell"
+        },
+        {
+          "fee": 0.15947948,
+          "filled_at": 1794902669,
+          "placed_at": 1794902669,
+          "price": 0.36,
+          "reserved": 0,
+          "shares": 9.9595,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "trade_placed_at": 1794902549,
+          "type": "ioc_sell"
+        },
+        {
+          "cost": 9.849568,
+          "edge": 0.303941,
+          "filled_at": 1794902819,
+          "placed_at": 1794902729,
+          "price": 0.62,
+          "reserved": 9.849568,
+          "shares": 15.8864,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 9.849609,
+          "edge": 0.273742,
+          "filled_at": 1794902819,
+          "placed_at": 1794902789,
+          "price": 0.63,
+          "reserved": 9.849609,
+          "shares": 15.6343,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
+          "type": "limit"
+        },
+        {
+          "cost": 9.84956,
+          "edge": 0.365891,
+          "filled_at": 1794902879,
+          "placed_at": 1794902849,
+          "price": 0.58,
+          "reserved": 9.84956,
+          "shares": 16.982,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "filled",
           "type": "limit"
         }
       ],
-      "signals": 6,
+      "signals": 17,
       "trades": [
         {
           "cost": 4.99995432,
@@ -341,6 +1141,148 @@
           "status": "settled",
           "type": "limit_cross",
           "won": true
+        },
+        {
+          "cost": 10.31594,
+          "edge": 0.081995,
+          "filled_at": 1794901667,
+          "payout": 12.1364,
+          "placed_at": 1794901634,
+          "pnl": 1.82046,
+          "price": 0.85,
+          "settled_at": 1794902444,
+          "shares": 12.1364,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0700z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": true
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 10.315956,
+          "edge": 0.539272,
+          "exit_price": 0.35,
+          "filled_at": 1794901725,
+          "payout": 8.20827724,
+          "placed_at": 1794901634,
+          "pnl": -2.10767876,
+          "price": 0.42,
+          "settled_at": 1794901754,
+          "shares": 24.5618,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 2.235456,
+          "edge": 0.090032,
+          "exit_price": 0.19,
+          "filled_at": 1794901906,
+          "payout": 1.67010871,
+          "placed_at": 1794901874,
+          "pnl": -0.56534729,
+          "price": 0.24,
+          "settled_at": 1794901934,
+          "shares": 9.3144,
+          "side": "Down",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0745z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 6.86,
+          "edge": 0.160927,
+          "exit_price": 0.24,
+          "filled_at": 1794902506,
+          "payout": 3.89859288,
+          "placed_at": 1794902474,
+          "pnl": -2.96140712,
+          "price": 0.4,
+          "settled_at": 1794902594,
+          "shares": 17.15,
+          "side": "Up",
+          "slug": "cpc-btc-updown-15m-2026-11-17-0800z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 4.471011,
+          "edge": 0.09964,
+          "exit_price": 0.38,
+          "filled_at": 1794902549,
+          "payout": 3.78087198,
+          "placed_at": 1794902489,
+          "pnl": -0.69013902,
+          "price": 0.43,
+          "settled_at": 1794902609,
+          "shares": 10.3977,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "close_reason": "ioc_sell",
+          "cost": 3.58542,
+          "edge": 0.089718,
+          "exit_price": 0.36,
+          "filled_at": 1794902639,
+          "payout": 3.42594052,
+          "placed_at": 1794902549,
+          "pnl": -0.15947948,
+          "price": 0.36,
+          "settled_at": 1794902669,
+          "shares": 9.9595,
+          "side": "Up",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "settled",
+          "type": "limit_cross",
+          "won": false
+        },
+        {
+          "cost": 9.849568,
+          "edge": 0.303941,
+          "filled_at": 1794902819,
+          "placed_at": 1794902729,
+          "price": 0.62,
+          "shares": 15.8864,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "open",
+          "type": "limit_cross"
+        },
+        {
+          "cost": 9.849609,
+          "edge": 0.273742,
+          "filled_at": 1794902819,
+          "placed_at": 1794902789,
+          "price": 0.63,
+          "shares": 15.6343,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "open",
+          "type": "limit_cross"
+        },
+        {
+          "cost": 9.84956,
+          "edge": 0.365891,
+          "filled_at": 1794902879,
+          "placed_at": 1794902849,
+          "price": 0.58,
+          "shares": 16.982,
+          "side": "Down",
+          "slug": "cpc-btc-updown-1h-2026-11-17-0800z",
+          "status": "open",
+          "type": "limit_cross"
         }
       ]
     },
@@ -349,12 +1291,18 @@
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "learning": {
-        "logit_offset": -0.016364827992952365,
-        "markets": 2
+        "logit_offset": 0.015722987809491336,
+        "markets": 8
       },
       "orders": [
         {
@@ -396,12 +1344,18 @@
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "learning": {
-        "logit_offset": -0.020452527500200244,
-        "markets": 2
+        "logit_offset": 0.01152464424255593,
+        "markets": 8
       },
       "orders": [
         {
@@ -472,8 +1426,14 @@
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "orders": [],
       "signals": 1,
@@ -501,12 +1461,18 @@
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "learning": {
-        "logit_offset": -0.016477478150150063,
-        "markets": 2
+        "logit_offset": 0.016239017041600266,
+        "markets": 8
       },
       "orders": [
         {
@@ -561,8 +1527,14 @@
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "orders": [],
       "signals": 1,
@@ -590,8 +1562,14 @@
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "orders": [
         {
@@ -639,7 +1617,17 @@
       "cash": 100.0,
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
+      },
+      "learning": {
+        "logit_offset": -0.007167530810504651,
+        "markets": 4
       },
       "orders": [],
       "signals": 0,
@@ -650,8 +1638,14 @@
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "orders": [
         {
@@ -693,8 +1687,14 @@
       "last_decision": {
         "cpc-btc-updown-15m-2026-11-14-1545z": 29911196,
         "cpc-btc-updown-15m-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-15m-2026-11-17-0745z": 29915036,
+        "cpc-btc-updown-15m-2026-11-17-0800z": 29915051,
+        "cpc-btc-updown-15m-2026-11-17-0815z": 29915068,
+        "cpc-btc-updown-15m-2026-11-17-0830z": 29915080,
         "cpc-btc-updown-1h-2026-11-14-1500z": 29911196,
-        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625
+        "cpc-btc-updown-1h-2026-11-17-0100z": 29914625,
+        "cpc-btc-updown-1h-2026-11-17-0700z": 29915034,
+        "cpc-btc-updown-1h-2026-11-17-0800z": 29915085
       },
       "orders": [
         {
@@ -735,44 +1735,44 @@
   "cash_per_strategy": 100.0,
   "forecast_metrics": {
     "book_imbalance": {
-      "brier_sum": 0.2960378829105914,
-      "forecasts": 38,
-      "logloss_sum": 1.1144535496004917,
-      "market_brier_sum": 0.28338136904761907,
-      "market_logloss_sum": 1.0288366715135637,
-      "markets": 4
+      "brier_sum": 0.9430035693897327,
+      "forecasts": 130,
+      "logloss_sum": 3.3293662851419623,
+      "market_brier_sum": 0.9293252843915343,
+      "market_logloss_sum": 3.223574393323039,
+      "markets": 10
     },
     "brti_distance": {
-      "brier_sum": 0.22728120357084652,
-      "forecasts": 38,
-      "logloss_sum": 0.7538368946913138,
-      "market_brier_sum": 0.28338136904761907,
-      "market_logloss_sum": 1.0288366715135637,
-      "markets": 4
+      "brier_sum": 0.5285491224972392,
+      "forecasts": 130,
+      "logloss_sum": 1.8976358809743246,
+      "market_brier_sum": 0.9293252843915343,
+      "market_logloss_sum": 3.223574393323039,
+      "markets": 10
     },
     "brti_distance_limit": {
-      "brier_sum": 0.22728120357084652,
-      "forecasts": 38,
-      "logloss_sum": 0.7538368946913138,
-      "market_brier_sum": 0.28338136904761907,
-      "market_logloss_sum": 1.0288366715135637,
-      "markets": 4
+      "brier_sum": 0.5285491224972392,
+      "forecasts": 130,
+      "logloss_sum": 1.8976358809743246,
+      "market_brier_sum": 0.9293252843915343,
+      "market_logloss_sum": 3.223574393323039,
+      "markets": 10
     },
     "btc_momentum": {
-      "brier_sum": 0.2508881359696773,
-      "forecasts": 38,
-      "logloss_sum": 0.934591465009341,
-      "market_brier_sum": 0.28338136904761907,
-      "market_logloss_sum": 1.0288366715135637,
-      "markets": 4
+      "brier_sum": 0.8905780565901001,
+      "forecasts": 130,
+      "logloss_sum": 3.1131617828815683,
+      "market_brier_sum": 0.9293252843915343,
+      "market_logloss_sum": 3.223574393323039,
+      "markets": 10
     },
     "btc_reversion": {
-      "brier_sum": 0.32884054614854097,
-      "forecasts": 38,
-      "logloss_sum": 1.1473210055534504,
-      "market_brier_sum": 0.28338136904761907,
-      "market_logloss_sum": 1.0288366715135637,
-      "markets": 4
+      "brier_sum": 0.982573800685828,
+      "forecasts": 130,
+      "logloss_sum": 3.361047466066144,
+      "market_brier_sum": 0.9293252843915343,
+      "market_logloss_sum": 3.223574393323039,
+      "markets": 10
     },
     "conv_gru": {
       "brier_sum": 0.21629225154901408,
@@ -783,12 +1783,12 @@
       "markets": 1
     },
     "cross_asset_momentum": {
-      "brier_sum": 0.2430850794367661,
-      "forecasts": 38,
-      "logloss_sum": 0.9188531234579179,
-      "market_brier_sum": 0.28338136904761907,
-      "market_logloss_sum": 1.0288366715135637,
-      "markets": 4
+      "brier_sum": 0.8946760737386544,
+      "forecasts": 130,
+      "logloss_sum": 3.123520408306007,
+      "market_brier_sum": 0.9293252843915343,
+      "market_logloss_sum": 3.223574393323039,
+      "markets": 10
     },
     "depthwise_tcn": {
       "brier_sum": 0.24396253509224347,
@@ -807,20 +1807,20 @@
       "markets": 1
     },
     "market_implied": {
-      "brier_sum": 0.28338136904761907,
-      "forecasts": 38,
-      "logloss_sum": 1.0288366715135637,
-      "market_brier_sum": 0.28338136904761907,
-      "market_logloss_sum": 1.0288366715135637,
-      "markets": 4
+      "brier_sum": 0.9293252843915343,
+      "forecasts": 130,
+      "logloss_sum": 3.223574393323039,
+      "market_brier_sum": 0.9293252843915343,
+      "market_logloss_sum": 3.223574393323039,
+      "markets": 10
     },
     "research_linear": {
-      "brier_sum": 0.0,
-      "forecasts": 0,
-      "logloss_sum": 0.0,
-      "market_brier_sum": 0.0,
-      "market_logloss_sum": 0.0,
-      "markets": 0
+      "brier_sum": 0.3157855530882832,
+      "forecasts": 88,
+      "logloss_sum": 1.1567315487459775,
+      "market_brier_sum": 0.31610641534391537,
+      "market_logloss_sum": 1.155210283587238,
+      "markets": 4
     },
     "skip_gru_2": {
       "brier_sum": 0.25595815952488044,
@@ -839,7 +1839,7 @@
       "markets": 1
     }
   },
-  "last_run": 1794877546,
+  "last_run": 1794905129,
   "markets": {
     "cpc-btc-updown-15m-2026-11-14-0730z": {
       "checked_at": 1794666596,
@@ -858,37 +1858,344 @@
     "cpc-btc-updown-15m-2026-11-14-1545z": {
       "checked_at": 1794877501,
       "ends": 1794672000,
+      "forecasts": [],
       "outcome": "Down",
       "resolved_at": 1794877501
     },
     "cpc-btc-updown-15m-2026-11-17-0100z": {
-      "checked_at": 0,
+      "checked_at": 1794901544,
       "ends": 1794878100,
+      "outcome": "Up",
+      "resolved_at": 1794901544
+    },
+    "cpc-btc-updown-15m-2026-11-17-0745z": {
+      "checked_at": 1794902744,
+      "ends": 1794902400,
+      "outcome": "Up",
+      "resolved_at": 1794902744
+    },
+    "cpc-btc-updown-15m-2026-11-17-0800z": {
+      "checked_at": 1794903644,
+      "ends": 1794903300,
+      "outcome": "Down",
+      "resolved_at": 1794903644
+    },
+    "cpc-btc-updown-15m-2026-11-17-0815z": {
+      "checked_at": 1794904544,
+      "ends": 1794904200,
+      "outcome": "Down",
+      "resolved_at": 1794904544
+    },
+    "cpc-btc-updown-15m-2026-11-17-0830z": {
+      "checked_at": 1794905144,
+      "ends": 1794905100,
       "forecasts": [
         {
-          "at": 1794877516,
-          "market": 0.62,
+          "at": 1794904215,
+          "market": 0.485,
           "probabilities": {
-            "book_imbalance": 0.6377376872983471,
-            "brti_distance": 0.9638002844221841,
-            "brti_distance_limit": 0.9638002844221841,
-            "btc_momentum": 0.6090864722605179,
-            "btc_reversion": 0.6307935323089953,
-            "cross_asset_momentum": 0.6022895830199062,
-            "market_implied": 0.62
+            "book_imbalance": 0.46337393513675085,
+            "brti_distance": 0.3921822519061704,
+            "brti_distance_limit": 0.3921822519061704,
+            "btc_momentum": 0.4593704519095004,
+            "btc_reversion": 0.5107086875613269,
+            "cross_asset_momentum": 0.4723402397652472,
+            "market_implied": 0.485,
+            "research_linear": 0.47795096539928317
           }
         },
         {
-          "at": 1794877546,
-          "market": 0.655,
+          "at": 1794904245,
+          "market": 0.335,
           "probabilities": {
-            "book_imbalance": 0.6414762082449063,
-            "brti_distance": 0.9674522179831649,
-            "brti_distance_limit": 0.9674522179831649,
-            "btc_momentum": 0.644515325558502,
-            "btc_reversion": 0.6653360093028978,
-            "cross_asset_momentum": 0.6379682987024967,
-            "market_implied": 0.655
+            "book_imbalance": 0.3347163027963167,
+            "brti_distance": 0.3769315950028965,
+            "brti_distance_limit": 0.3769315950028965,
+            "btc_momentum": 0.312487440429829,
+            "btc_reversion": 0.35828921283524856,
+            "cross_asset_momentum": 0.32379392194139534,
+            "market_implied": 0.335,
+            "research_linear": 0.3288024753578003
+          }
+        },
+        {
+          "at": 1794904274,
+          "market": 0.235,
+          "probabilities": {
+            "book_imbalance": 0.23960597315169505,
+            "brti_distance": 0.3748608843572169,
+            "brti_distance_limit": 0.3748608843572169,
+            "btc_momentum": 0.21701456368051308,
+            "btc_reversion": 0.253992482251597,
+            "cross_asset_momentum": 0.2260021786370526,
+            "market_implied": 0.235,
+            "research_linear": 0.23005258797053182
+          }
+        },
+        {
+          "at": 1794904305,
+          "market": 0.165,
+          "probabilities": {
+            "book_imbalance": 0.1670759191778306,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.14166673083706213,
+            "btc_reversion": 0.19131976552359223,
+            "cross_asset_momentum": 0.14628687382609268,
+            "market_implied": 0.165,
+            "research_linear": 0.16506791021633554
+          }
+        },
+        {
+          "at": 1794904334,
+          "market": 0.135,
+          "probabilities": {
+            "book_imbalance": 0.16034448447579885,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.11532321686671182,
+            "btc_reversion": 0.1574366279997115,
+            "cross_asset_momentum": 0.11920354001456163,
+            "market_implied": 0.135,
+            "research_linear": 0.13507014377022236
+          }
+        },
+        {
+          "at": 1794904365,
+          "market": 0.125,
+          "probabilities": {
+            "book_imbalance": 0.15780155099371967,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.10660113166532045,
+            "btc_reversion": 0.14605527965951573,
+            "cross_asset_momentum": 0.11022454453438636,
+            "market_implied": 0.125,
+            "research_linear": 0.1250701176985354
+          }
+        },
+        {
+          "at": 1794904394,
+          "market": 0.19,
+          "probabilities": {
+            "book_imbalance": 0.21445686265004313,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.16382501306796093,
+            "btc_reversion": 0.21926045152241863,
+            "cross_asset_momentum": 0.1690254938656685,
+            "market_implied": 0.19,
+            "research_linear": 0.19006380712640275
+          }
+        },
+        {
+          "at": 1794904426,
+          "market": 0.275,
+          "probabilities": {
+            "book_imbalance": 0.29509854160085963,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.239436371078624,
+            "btc_reversion": 0.3136674246517704,
+            "cross_asset_momentum": 0.2374491099637526,
+            "market_implied": 0.275,
+            "research_linear": 0.27063994804059105
+          }
+        },
+        {
+          "at": 1794904454,
+          "market": 0.175,
+          "probabilities": {
+            "book_imbalance": 0.16826408972008497,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.14969834700586543,
+            "btc_reversion": 0.2035543408983889,
+            "cross_asset_momentum": 0.14831065143733344,
+            "market_implied": 0.175,
+            "research_linear": 0.17188737215149133
+          }
+        },
+        {
+          "at": 1794904485,
+          "market": 0.155,
+          "probabilities": {
+            "book_imbalance": 0.16923282751432525,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.13212686104648996,
+            "btc_reversion": 0.18100697516786196,
+            "cross_asset_momentum": 0.13087698095431088,
+            "market_implied": 0.155,
+            "research_linear": 0.15218604282545078
+          }
+        },
+        {
+          "at": 1794904514,
+          "market": 0.08499999999999999,
+          "probabilities": {
+            "book_imbalance": 0.1591309985649657,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.0715816077150555,
+            "btc_reversion": 0.10066102853440959,
+            "cross_asset_momentum": 0.07085770591178704,
+            "market_implied": 0.08499999999999999,
+            "research_linear": 0.08335526494134814
+          }
+        },
+        {
+          "at": 1794904546,
+          "market": 0.07500000000000001,
+          "probabilities": {
+            "book_imbalance": 0.11739307685514969,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.06336113231917548,
+            "btc_reversion": 0.08857464367028582,
+            "cross_asset_momentum": 0.0640703843620786,
+            "market_implied": 0.07500000000000001,
+            "research_linear": 0.07373939345868964
+          }
+        },
+        {
+          "at": 1794904574,
+          "market": 0.055,
+          "probabilities": {
+            "book_imbalance": 0.12304530627499294,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.046309446002883684,
+            "btc_reversion": 0.0652099319426811,
+            "cross_asset_momentum": 0.046837369592475794,
+            "market_implied": 0.055,
+            "research_linear": 0.05406364983650256
+          }
+        },
+        {
+          "at": 1794904605,
+          "market": 0.055,
+          "probabilities": {
+            "book_imbalance": 0.11243125025844097,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.046309446002883684,
+            "btc_reversion": 0.0652099319426811,
+            "cross_asset_momentum": 0.046837369592475794,
+            "market_implied": 0.055,
+            "research_linear": 0.05406364983650256
+          }
+        },
+        {
+          "at": 1794904634,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.07031011136363408,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.029371425634179042,
+            "btc_reversion": 0.0416609061922471,
+            "cross_asset_momentum": 0.02971227307738671,
+            "market_implied": 0.035,
+            "research_linear": 0.034398919313079375
+          }
+        },
+        {
+          "at": 1794904665,
+          "market": 0.015,
+          "probabilities": {
+            "book_imbalance": 0.014292225955174081,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.013940776997453067,
+            "btc_reversion": 0.01613838579709111,
+            "cross_asset_momentum": 0.014242800808631693,
+            "market_implied": 0.015,
+            "research_linear": 0.014716983615281754
+          }
+        },
+        {
+          "at": 1794904694,
+          "market": 0.025,
+          "probabilities": {
+            "book_imbalance": 0.04609760002720479,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.023251297235261478,
+            "btc_reversion": 0.026876601748651165,
+            "cross_asset_momentum": 0.023750172996983898,
+            "market_implied": 0.025,
+            "research_linear": 0.024527314070254852
+          }
+        },
+        {
+          "at": 1794904725,
+          "market": 0.015,
+          "probabilities": {
+            "book_imbalance": 0.01,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.013940776997453067,
+            "btc_reversion": 0.01613838579709111,
+            "cross_asset_momentum": 0.014242800808631693,
+            "market_implied": 0.015,
+            "research_linear": 0.014716983615281754
+          }
+        },
+        {
+          "at": 1794904754,
+          "market": 0.015,
+          "probabilities": {
+            "book_imbalance": 0.01,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.013940776997453067,
+            "btc_reversion": 0.01613838579709111,
+            "cross_asset_momentum": 0.014242800808631693,
+            "market_implied": 0.015,
+            "research_linear": 0.014716983615281754
+          }
+        },
+        {
+          "at": 1794904786,
+          "market": 0.015,
+          "probabilities": {
+            "book_imbalance": 0.01,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.013663757896411513,
+            "btc_reversion": 0.016464738028137145,
+            "cross_asset_momentum": 0.013646442414647955,
+            "market_implied": 0.015,
+            "research_linear": 0.0147016980414954
+          }
+        },
+        {
+          "at": 1794904814,
+          "market": 0.02,
+          "probabilities": {
+            "book_imbalance": 0.03234337276591776,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.018226585869138542,
+            "btc_reversion": 0.02194210774660791,
+            "cross_asset_momentum": 0.018203594831667693,
+            "market_implied": 0.02,
+            "research_linear": 0.01960167453911598
+          }
+        },
+        {
+          "at": 1794904845,
+          "market": 0.015,
+          "probabilities": {
+            "book_imbalance": 0.01,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.013663757896411513,
+            "btc_reversion": 0.016464738028137145,
+            "cross_asset_momentum": 0.013646442414647955,
+            "market_implied": 0.015,
+            "research_linear": 0.0147016980414954
           }
         }
       ],
@@ -904,37 +2211,1284 @@
     "cpc-btc-updown-1h-2026-11-14-1500z": {
       "checked_at": 1794877501,
       "ends": 1794672000,
+      "forecasts": [],
       "outcome": "Down",
       "resolved_at": 1794877501
     },
     "cpc-btc-updown-1h-2026-11-17-0100z": {
-      "checked_at": 0,
+      "checked_at": 1794901544,
       "ends": 1794880800,
+      "outcome": "Up",
+      "resolved_at": 1794901544
+    },
+    "cpc-btc-updown-1h-2026-11-17-0700z": {
+      "checked_at": 1794902444,
+      "ends": 1794902400,
+      "outcome": "Up",
+      "resolved_at": 1794902444
+    },
+    "cpc-btc-updown-1h-2026-11-17-0800z": {
+      "checked_at": 0,
+      "ends": 1794906000,
       "forecasts": [
         {
-          "at": 1794877516,
-          "market": 0.545,
+          "at": 1794902459,
+          "market": 0.505,
           "probabilities": {
-            "book_imbalance": 0.5323497504123972,
-            "brti_distance": 0.7394336105569373,
-            "brti_distance_limit": 0.7394336105569373,
-            "btc_momentum": 0.5563605726661953,
-            "btc_reversion": 0.5335923914352494,
-            "cross_asset_momentum": 0.5513568811787747,
-            "market_implied": 0.545
+            "book_imbalance": 0.47621050561345146,
+            "brti_distance": 0.5295148314767787,
+            "brti_distance_limit": 0.5295148314767787,
+            "btc_momentum": 0.5073447104327853,
+            "btc_reversion": 0.5026550696179105,
+            "cross_asset_momentum": 0.5069940115272978,
+            "market_implied": 0.505,
+            "research_linear": 0.4889345480286493
           }
         },
         {
-          "at": 1794877546,
-          "market": 0.565,
+          "at": 1794902489,
+          "market": 0.435,
           "probabilities": {
-            "book_imbalance": 0.5779035398337774,
-            "brti_distance": 0.7403909153276951,
-            "brti_distance_limit": 0.7403909153276951,
-            "btc_momentum": 0.5762494757024322,
-            "btc_reversion": 0.5536831860038836,
-            "cross_asset_momentum": 0.5712972551815887,
-            "market_implied": 0.565
+            "book_imbalance": 0.40610122250571346,
+            "brti_distance": 0.529640427804453,
+            "brti_distance_limit": 0.529640427804453,
+            "btc_momentum": 0.4373068299870045,
+            "btc_reversion": 0.43269598131325665,
+            "cross_asset_momentum": 0.4369616041020303,
+            "market_implied": 0.435,
+            "research_linear": 0.4193065032428941
+          }
+        },
+        {
+          "at": 1794902519,
+          "market": 0.445,
+          "probabilities": {
+            "book_imbalance": 0.4198202146165715,
+            "brti_distance": 0.4499335483927733,
+            "brti_distance_limit": 0.4499335483927733,
+            "btc_momentum": 0.4471311152612308,
+            "btc_reversion": 0.4428709056235027,
+            "cross_asset_momentum": 0.4426541693866839,
+            "market_implied": 0.445,
+            "research_linear": 0.4302327327719308
+          }
+        },
+        {
+          "at": 1794902549,
+          "market": 0.365,
+          "probabilities": {
+            "book_imbalance": 0.3341587229675379,
+            "brti_distance": 0.44971755317975276,
+            "brti_distance_limit": 0.44971755317975276,
+            "btc_momentum": 0.36700133797438506,
+            "btc_reversion": 0.36300331710089645,
+            "cross_asset_momentum": 0.362800214335714,
+            "market_implied": 0.365,
+            "research_linear": 0.35124217551132386
+          }
+        },
+        {
+          "at": 1794902579,
+          "market": 0.375,
+          "probabilities": {
+            "book_imbalance": 0.3807330827067669,
+            "brti_distance": 0.2520856485447282,
+            "brti_distance_limit": 0.2520856485447282,
+            "btc_momentum": 0.37702361379956884,
+            "btc_reversion": 0.37298074480595167,
+            "cross_asset_momentum": 0.3727753264885513,
+            "market_implied": 0.375,
+            "research_linear": 0.3610750622304844
+          }
+        },
+        {
+          "at": 1794902609,
+          "market": 0.385,
+          "probabilities": {
+            "book_imbalance": 0.4044333230674469,
+            "brti_distance": 0.25114560734677666,
+            "brti_distance_limit": 0.25114560734677666,
+            "btc_momentum": 0.3870441591104302,
+            "btc_reversion": 0.3829598918674764,
+            "cross_asset_momentum": 0.382752332484535,
+            "market_implied": 0.385,
+            "research_linear": 0.3709195866464805
+          }
+        },
+        {
+          "at": 1794902639,
+          "market": 0.355,
+          "probabilities": {
+            "book_imbalance": 0.3462797265591055,
+            "brti_distance": 0.06124321622195866,
+            "brti_distance_limit": 0.06124321622195866,
+            "btc_momentum": 0.34152199899224683,
+            "btc_reversion": 0.3687120670122193,
+            "cross_asset_momentum": 0.34446123689294694,
+            "market_implied": 0.355,
+            "research_linear": 0.34607128873431153
+          }
+        },
+        {
+          "at": 1794902669,
+          "market": 0.365,
+          "probabilities": {
+            "book_imbalance": 0.3739860678342466,
+            "brti_distance": 0.06040772500274744,
+            "brti_distance_limit": 0.06040772500274744,
+            "btc_momentum": 0.3513491492723196,
+            "btc_reversion": 0.3788714369299257,
+            "cross_asset_momentum": 0.35432745245707936,
+            "market_implied": 0.365,
+            "research_linear": 0.35595403678585513
+          }
+        },
+        {
+          "at": 1794902699,
+          "market": 0.385,
+          "probabilities": {
+            "book_imbalance": 0.3833499849680834,
+            "brti_distance": 0.07699677288348195,
+            "brti_distance_limit": 0.07699677288348195,
+            "btc_momentum": 0.37103821816398985,
+            "btc_reversion": 0.3991537388638279,
+            "cross_asset_momentum": 0.3740871673002206,
+            "market_implied": 0.385,
+            "research_linear": 0.37574253362190546
+          }
+        },
+        {
+          "at": 1794902729,
+          "market": 0.375,
+          "probabilities": {
+            "book_imbalance": 0.3913946061036196,
+            "brti_distance": 0.07605921068836657,
+            "brti_distance_limit": 0.07605921068836657,
+            "btc_momentum": 0.36118788216637726,
+            "btc_reversion": 0.389018653615604,
+            "cross_asset_momentum": 0.364202758403129,
+            "market_implied": 0.375,
+            "research_linear": 0.36584444600454374
+          }
+        },
+        {
+          "at": 1794902759,
+          "market": 0.365,
+          "probabilities": {
+            "book_imbalance": 0.36034318309332336,
+            "brti_distance": 0.09729406097284443,
+            "brti_distance_limit": 0.09729406097284443,
+            "btc_momentum": 0.34468091709907733,
+            "btc_reversion": 0.3858116992461662,
+            "cross_asset_momentum": 0.3518899538322823,
+            "market_implied": 0.365,
+            "research_linear": 0.3495010689867704
+          }
+        },
+        {
+          "at": 1794902789,
+          "market": 0.365,
+          "probabilities": {
+            "book_imbalance": 0.36542589437819417,
+            "brti_distance": 0.09625827460154818,
+            "brti_distance_limit": 0.09625827460154818,
+            "btc_momentum": 0.34468091709907733,
+            "btc_reversion": 0.3858116992461662,
+            "cross_asset_momentum": 0.3518899538322823,
+            "market_implied": 0.365,
+            "research_linear": 0.3495010689867704
+          }
+        },
+        {
+          "at": 1794902819,
+          "market": 0.385,
+          "probabilities": {
+            "book_imbalance": 0.3900963331261653,
+            "brti_distance": 0.05494742824766391,
+            "brti_distance_limit": 0.05494742824766391,
+            "btc_momentum": 0.3642061218658667,
+            "btc_reversion": 0.40622255006978847,
+            "cross_asset_momentum": 0.37159196729622834,
+            "market_implied": 0.385,
+            "research_linear": 0.3691364389882346
+          }
+        },
+        {
+          "at": 1794902849,
+          "market": 0.415,
+          "probabilities": {
+            "book_imbalance": 0.42355457227138643,
+            "brti_distance": 0.05410859973073978,
+            "brti_distance_limit": 0.05410859973073978,
+            "btc_momentum": 0.39362287333961254,
+            "btc_reversion": 0.4367019847932688,
+            "cross_asset_momentum": 0.40122880592006777,
+            "market_implied": 0.415,
+            "research_linear": 0.39868800461604625
+          }
+        },
+        {
+          "at": 1794902879,
+          "market": 0.425,
+          "probabilities": {
+            "book_imbalance": 0.4768948729414293,
+            "brti_distance": 0.11996205514854041,
+            "brti_distance_limit": 0.11996205514854041,
+            "btc_momentum": 0.41954594503995574,
+            "btc_reversion": 0.43047237514508985,
+            "cross_asset_momentum": 0.41880506873488355,
+            "market_implied": 0.425,
+            "research_linear": 0.4060382720303303
+          }
+        },
+        {
+          "at": 1794902909,
+          "market": 0.415,
+          "probabilities": {
+            "book_imbalance": 0.4103626972414576,
+            "brti_distance": 0.11882805487062159,
+            "brti_distance_limit": 0.11882805487062159,
+            "btc_momentum": 0.4095828634708084,
+            "btc_reversion": 0.4204377634809877,
+            "cross_asset_momentum": 0.40884718864264274,
+            "market_implied": 0.415,
+            "research_linear": 0.39618150872060676
+          }
+        },
+        {
+          "at": 1794902939,
+          "market": 0.405,
+          "probabilities": {
+            "book_imbalance": 0.3838409296709931,
+            "brti_distance": 0.18515024892467852,
+            "brti_distance_limit": 0.18515024892467852,
+            "btc_momentum": 0.3996242271149613,
+            "btc_reversion": 0.4103986556315741,
+            "cross_asset_momentum": 0.3988943546576084,
+            "market_implied": 0.405,
+            "research_linear": 0.38633997591231944
+          }
+        },
+        {
+          "at": 1794902969,
+          "market": 0.415,
+          "probabilities": {
+            "book_imbalance": 0.398505289277785,
+            "brti_distance": 0.18397141305460235,
+            "brti_distance_limit": 0.18397141305460235,
+            "btc_momentum": 0.4095828634708084,
+            "btc_reversion": 0.4204377634809877,
+            "cross_asset_momentum": 0.40884718864264274,
+            "market_implied": 0.415,
+            "research_linear": 0.39618150872060676
+          }
+        },
+        {
+          "at": 1794902999,
+          "market": 0.405,
+          "probabilities": {
+            "book_imbalance": 0.342893042965188,
+            "brti_distance": 0.14038947007951041,
+            "brti_distance_limit": 0.14038947007951041,
+            "btc_momentum": 0.4119046186836062,
+            "btc_reversion": 0.39813276680888565,
+            "cross_asset_momentum": 0.4122665530505248,
+            "market_implied": 0.405,
+            "research_linear": 0.3892993836551335
+          }
+        },
+        {
+          "at": 1794903029,
+          "market": 0.345,
+          "probabilities": {
+            "book_imbalance": 0.33771020571200316,
+            "brti_distance": 0.13918173752018348,
+            "brti_distance_limit": 0.13918173752018348,
+            "btc_momentum": 0.35148597654826985,
+            "btc_reversion": 0.33857122462337014,
+            "cross_asset_momentum": 0.35182658229665775,
+            "market_implied": 0.345,
+            "research_linear": 0.3303599290552384
+          }
+        },
+        {
+          "at": 1794903059,
+          "market": 0.315,
+          "probabilities": {
+            "book_imbalance": 0.305469365818703,
+            "brti_distance": 0.046098615463067594,
+            "brti_distance_limit": 0.046098615463067594,
+            "btc_momentum": 0.3211985516075394,
+            "btc_reversion": 0.30886663964150524,
+            "cross_asset_momentum": 0.32152435874418994,
+            "market_implied": 0.315,
+            "research_linear": 0.3010609059234408
+          }
+        },
+        {
+          "at": 1794903089,
+          "market": 0.245,
+          "probabilities": {
+            "book_imbalance": 0.2142669112799357,
+            "brti_distance": 0.04526826747166862,
+            "brti_distance_limit": 0.04526826747166862,
+            "btc_momentum": 0.250324469301109,
+            "btc_reversion": 0.23975256436864972,
+            "cross_asset_momentum": 0.2506049266939198,
+            "market_implied": 0.245,
+            "research_linear": 0.23313283213931257
+          }
+        },
+        {
+          "at": 1794903119,
+          "market": 0.215,
+          "probabilities": {
+            "book_imbalance": 0.16338709677419355,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.21281477301830692,
+            "btc_reversion": 0.21720147412000448,
+            "cross_asset_momentum": 0.21274291542096718,
+            "market_implied": 0.215,
+            "research_linear": 0.20657888271611777
+          }
+        },
+        {
+          "at": 1794903149,
+          "market": 0.215,
+          "probabilities": {
+            "book_imbalance": 0.20470740837721724,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.21281477301830692,
+            "btc_reversion": 0.21720147412000448,
+            "cross_asset_momentum": 0.21274291542096718,
+            "market_implied": 0.215,
+            "research_linear": 0.20657888271611777
+          }
+        },
+        {
+          "at": 1794903179,
+          "market": 0.235,
+          "probabilities": {
+            "book_imbalance": 0.24317565155301676,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.23267174678792085,
+            "btc_reversion": 0.23734434477639896,
+            "cross_asset_momentum": 0.23259516552515602,
+            "market_implied": 0.235,
+            "research_linear": 0.22601190793055964
+          }
+        },
+        {
+          "at": 1794903209,
+          "market": 0.255,
+          "probabilities": {
+            "book_imbalance": 0.28035319557904853,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.2525390098727404,
+            "btc_reversion": 0.25747671129796984,
+            "cross_asset_momentum": 0.2524580409446593,
+            "market_implied": 0.255,
+            "research_linear": 0.24548329232823418
+          }
+        },
+        {
+          "at": 1794903239,
+          "market": 0.255,
+          "probabilities": {
+            "book_imbalance": 0.2748130355751753,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.23489198280650828,
+            "btc_reversion": 0.2762079537667264,
+            "cross_asset_momentum": 0.2408501339519411,
+            "market_implied": 0.255,
+            "research_linear": 0.24027351438501973
+          }
+        },
+        {
+          "at": 1794903269,
+          "market": 0.275,
+          "probabilities": {
+            "book_imbalance": 0.3058940394384368,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.25385226630974944,
+            "btc_reversion": 0.2972077439983234,
+            "cross_asset_momentum": 0.26012784142985124,
+            "market_implied": 0.275,
+            "research_linear": 0.2595118358389711
+          }
+        },
+        {
+          "at": 1794903299,
+          "market": 0.265,
+          "probabilities": {
+            "book_imbalance": 0.28546325999514505,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.24436207961341191,
+            "btc_reversion": 0.2867195574218595,
+            "cross_asset_momentum": 0.2504818030533954,
+            "market_implied": 0.265,
+            "research_linear": 0.2498852669563308
+          }
+        },
+        {
+          "at": 1794903329,
+          "market": 0.275,
+          "probabilities": {
+            "book_imbalance": 0.3085613081689773,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.25385226630974944,
+            "btc_reversion": 0.2972077439983234,
+            "cross_asset_momentum": 0.26012784142985124,
+            "market_implied": 0.275,
+            "research_linear": 0.2595118358389711
+          }
+        },
+        {
+          "at": 1794903359,
+          "market": 0.275,
+          "probabilities": {
+            "book_imbalance": 0.27454339666447397,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.2633061536952528,
+            "btc_reversion": 0.28701085645763397,
+            "cross_asset_momentum": 0.26662950268541036,
+            "market_implied": 0.275,
+            "research_linear": 0.2616052906783656
+          }
+        },
+        {
+          "at": 1794903389,
+          "market": 0.255,
+          "probabilities": {
+            "book_imbalance": 0.22751011538521215,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.24387054280373074,
+            "btc_reversion": 0.266458382220543,
+            "cross_asset_momentum": 0.24703084082342602,
+            "market_implied": 0.255,
+            "research_linear": 0.2422625497425416
+          }
+        },
+        {
+          "at": 1794903419,
+          "market": 0.255,
+          "probabilities": {
+            "book_imbalance": 0.27707487225450456,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.24387054280373074,
+            "btc_reversion": 0.266458382220543,
+            "cross_asset_momentum": 0.24703084082342602,
+            "market_implied": 0.255,
+            "research_linear": 0.2422625497425416
+          }
+        },
+        {
+          "at": 1794903449,
+          "market": 0.255,
+          "probabilities": {
+            "book_imbalance": 0.26224504009336297,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.24387054280373074,
+            "btc_reversion": 0.266458382220543,
+            "cross_asset_momentum": 0.24703084082342602,
+            "market_implied": 0.255,
+            "research_linear": 0.2422625497425416
+          }
+        },
+        {
+          "at": 1794903479,
+          "market": 0.215,
+          "probabilities": {
+            "book_imbalance": 0.21092554291623578,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.22258922635084455,
+            "btc_reversion": 0.20760043142122167,
+            "cross_asset_momentum": 0.22405958870376994,
+            "market_implied": 0.215,
+            "research_linear": 0.20450324967392072
+          }
+        },
+        {
+          "at": 1794903509,
+          "market": 0.245,
+          "probabilities": {
+            "book_imbalance": 0.27000818652171066,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.25330647875469725,
+            "btc_reversion": 0.23687949729308405,
+            "cross_asset_momentum": 0.2549132165932623,
+            "market_implied": 0.245,
+            "research_linear": 0.23346035179043564
+          }
+        },
+        {
+          "at": 1794903539,
+          "market": 0.215,
+          "probabilities": {
+            "book_imbalance": 0.20145364799345755,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.22258922635084455,
+            "btc_reversion": 0.20760043142122167,
+            "cross_asset_momentum": 0.22405958870376994,
+            "market_implied": 0.215,
+            "research_linear": 0.20450324967392072
+          }
+        },
+        {
+          "at": 1794903569,
+          "market": 0.195,
+          "probabilities": {
+            "book_imbalance": 0.17821128288581503,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.20206497502779924,
+            "btc_reversion": 0.18812380589390168,
+            "cross_asset_momentum": 0.2034352382316945,
+            "market_implied": 0.195,
+            "research_linear": 0.18525772539318974
+          }
+        },
+        {
+          "at": 1794903599,
+          "market": 0.165,
+          "probabilities": {
+            "book_imbalance": 0.1763157257087473,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.1586933651947383,
+            "btc_reversion": 0.17150617377477462,
+            "cross_asset_momentum": 0.16199246674460993,
+            "market_implied": 0.165,
+            "research_linear": 0.15577525372187626
+          }
+        },
+        {
+          "at": 1794903629,
+          "market": 0.165,
+          "probabilities": {
+            "book_imbalance": 0.17265674660502744,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.1586933651947383,
+            "btc_reversion": 0.17150617377477462,
+            "cross_asset_momentum": 0.16199246674460993,
+            "market_implied": 0.165,
+            "research_linear": 0.15577525372187626
+          }
+        },
+        {
+          "at": 1794903659,
+          "market": 0.185,
+          "probabilities": {
+            "book_imbalance": 0.21528077900212245,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.17809196739945551,
+            "btc_reversion": 0.19211335682220648,
+            "cross_asset_momentum": 0.18170724813793523,
+            "market_implied": 0.185,
+            "research_linear": 0.17488216667376189
+          }
+        },
+        {
+          "at": 1794903689,
+          "market": 0.235,
+          "probabilities": {
+            "book_imbalance": 0.2734029448210511,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.2267443669715282,
+            "btc_reversion": 0.24346157660109474,
+            "cross_asset_momentum": 0.2310696298943664,
+            "market_implied": 0.235,
+            "research_linear": 0.22287157174848174
+          }
+        },
+        {
+          "at": 1794903719,
+          "market": 0.275,
+          "probabilities": {
+            "book_imbalance": 0.2866426704853811,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.26560402840256037,
+            "btc_reversion": 0.2845995512841933,
+            "cross_asset_momentum": 0.26855622762177467,
+            "market_implied": 0.275,
+            "research_linear": 0.26020249192963196
+          }
+        },
+        {
+          "at": 1794903749,
+          "market": 0.215,
+          "probabilities": {
+            "book_imbalance": 0.1832906163948316,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.20706854578934922,
+            "btc_reversion": 0.2231497595489623,
+            "cross_asset_momentum": 0.20955577278255993,
+            "market_implied": 0.215,
+            "research_linear": 0.20255315309880073
+          }
+        },
+        {
+          "at": 1794903779,
+          "market": 0.215,
+          "probabilities": {
+            "book_imbalance": 0.1771380846325167,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.20706854578934922,
+            "btc_reversion": 0.2231497595489623,
+            "cross_asset_momentum": 0.20955577278255993,
+            "market_implied": 0.215,
+            "research_linear": 0.20255315309880073
+          }
+        },
+        {
+          "at": 1794903809,
+          "market": 0.185,
+          "probabilities": {
+            "book_imbalance": 0.14130038745929183,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.17792441760404534,
+            "btc_reversion": 0.1922911428103513,
+            "cross_asset_momentum": 0.18014110637782618,
+            "market_implied": 0.185,
+            "research_linear": 0.17391748230749865
+          }
+        },
+        {
+          "at": 1794903839,
+          "market": 0.20500000000000002,
+          "probabilities": {
+            "book_imbalance": 0.20372697943997167,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.21004572990809722,
+            "btc_reversion": 0.20004478446974738,
+            "cross_asset_momentum": 0.20680981140771526,
+            "market_implied": 0.20500000000000002,
+            "research_linear": 0.19552553217538873
+          }
+        },
+        {
+          "at": 1794903869,
+          "market": 0.195,
+          "probabilities": {
+            "book_imbalance": 0.17264626310449782,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.1998614741474373,
+            "btc_reversion": 0.19022866373452507,
+            "cross_asset_momentum": 0.1967433759628358,
+            "market_implied": 0.195,
+            "research_linear": 0.1858839594414637
+          }
+        },
+        {
+          "at": 1794903899,
+          "market": 0.175,
+          "probabilities": {
+            "book_imbalance": 0.15585080524809788,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.17947402667518128,
+            "btc_reversion": 0.17061431335172564,
+            "cross_asset_momentum": 0.17660379566816853,
+            "market_implied": 0.175,
+            "research_linear": 0.16663382390905318
+          }
+        },
+        {
+          "at": 1794903929,
+          "market": 0.155,
+          "probabilities": {
+            "book_imbalance": 0.12064909693888577,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.15906129212375977,
+            "btc_reversion": 0.15102378154255416,
+            "cross_asset_momentum": 0.15645526453040604,
+            "market_implied": 0.155,
+            "research_linear": 0.14742744440620975
+          }
+        },
+        {
+          "at": 1794903959,
+          "market": 0.14500000000000002,
+          "probabilities": {
+            "book_imbalance": 0.1294854658955996,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.15384567780595462,
+            "btc_reversion": 0.13658082779708539,
+            "cross_asset_momentum": 0.15069665663103995,
+            "market_implied": 0.14500000000000002,
+            "research_linear": 0.1380900410023639
+          }
+        },
+        {
+          "at": 1794903989,
+          "market": 0.195,
+          "probabilities": {
+            "book_imbalance": 0.19309938466976206,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.2061604290832619,
+            "btc_reversion": 0.1843034696260365,
+            "cross_asset_momentum": 0.20219647414840589,
+            "market_implied": 0.195,
+            "research_linear": 0.18620161559781453
+          }
+        },
+        {
+          "at": 1794904019,
+          "market": 0.185,
+          "probabilities": {
+            "book_imbalance": 0.18141951837769327,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.19572725531295168,
+            "btc_reversion": 0.17473294379137772,
+            "cross_asset_momentum": 0.19191540726371642,
+            "market_implied": 0.185,
+            "research_linear": 0.17655817021825093
+          }
+        },
+        {
+          "at": 1794904049,
+          "market": 0.185,
+          "probabilities": {
+            "book_imbalance": 0.19771075062896623,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.19572725531295168,
+            "btc_reversion": 0.17473294379137772,
+            "cross_asset_momentum": 0.19191540726371642,
+            "market_implied": 0.185,
+            "research_linear": 0.17655817021825093
+          }
+        },
+        {
+          "at": 1794904079,
+          "market": 0.185,
+          "probabilities": {
+            "book_imbalance": 0.17627815367503938,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.18141021341874294,
+            "btc_reversion": 0.18864445192301696,
+            "cross_asset_momentum": 0.18356880760479993,
+            "market_implied": 0.185,
+            "research_linear": 0.17507680531345177
+          }
+        },
+        {
+          "at": 1794904109,
+          "market": 0.11499999999999999,
+          "probabilities": {
+            "book_imbalance": 0.10543439849881521,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.11258088117468673,
+            "btc_reversion": 0.11746421983495398,
+            "cross_asset_momentum": 0.11403456882256113,
+            "market_implied": 0.11499999999999999,
+            "research_linear": 0.10835703772547048
+          }
+        },
+        {
+          "at": 1794904139,
+          "market": 0.125,
+          "probabilities": {
+            "book_imbalance": 0.11487897430953292,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.12239961652778436,
+            "btc_reversion": 0.12764759323930572,
+            "cross_asset_momentum": 0.12396237727766501,
+            "market_implied": 0.125,
+            "research_linear": 0.11785181838872888
+          }
+        },
+        {
+          "at": 1794904169,
+          "market": 0.125,
+          "probabilities": {
+            "book_imbalance": 0.12821466863544376,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.12239961652778436,
+            "btc_reversion": 0.12764759323930572,
+            "cross_asset_momentum": 0.12396237727766501,
+            "market_implied": 0.125,
+            "research_linear": 0.11785181838872888
+          }
+        },
+        {
+          "at": 1794904199,
+          "market": 0.135,
+          "probabilities": {
+            "book_imbalance": 0.14177956935248354,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.12343306527923853,
+            "btc_reversion": 0.14746851857434534,
+            "cross_asset_momentum": 0.12918446460964567,
+            "market_implied": 0.135,
+            "research_linear": 0.1279949213763891
+          }
+        },
+        {
+          "at": 1794904229,
+          "market": 0.07500000000000001,
+          "probabilities": {
+            "book_imbalance": 0.11501482685693212,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.06816878507193626,
+            "btc_reversion": 0.08245519839757609,
+            "cross_asset_momentum": 0.07155533450430364,
+            "market_implied": 0.07500000000000001,
+            "research_linear": 0.07087295188985462
+          }
+        },
+        {
+          "at": 1794904259,
+          "market": 0.07500000000000001,
+          "probabilities": {
+            "book_imbalance": 0.10800676938688317,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.06816878507193626,
+            "btc_reversion": 0.08245519839757609,
+            "cross_asset_momentum": 0.07155533450430364,
+            "market_implied": 0.07500000000000001,
+            "research_linear": 0.07087295188985462
+          }
+        },
+        {
+          "at": 1794904289,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.11705778643850276,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.04078080296532602,
+            "btc_reversion": 0.04963312977565708,
+            "cross_asset_momentum": 0.04286934316864221,
+            "market_implied": 0.045,
+            "research_linear": 0.042458087001517764
+          }
+        },
+        {
+          "at": 1794904319,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.0928026038608972,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03786681631011231,
+            "btc_reversion": 0.05340231952789548,
+            "cross_asset_momentum": 0.03925658267354924,
+            "market_implied": 0.045,
+            "research_linear": 0.043611776769790424
+          }
+        },
+        {
+          "at": 1794904349,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.08833538811702783,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03786681631011231,
+            "btc_reversion": 0.05340231952789548,
+            "cross_asset_momentum": 0.03925658267354924,
+            "market_implied": 0.045,
+            "research_linear": 0.043611776769790424
+          }
+        },
+        {
+          "at": 1794904379,
+          "market": 0.04,
+          "probabilities": {
+            "book_imbalance": 0.07759063510089981,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.0336314807538427,
+            "btc_reversion": 0.047515178464806025,
+            "cross_asset_momentum": 0.03487143809240001,
+            "market_implied": 0.04,
+            "research_linear": 0.038761855590659436
+          }
+        },
+        {
+          "at": 1794904409,
+          "market": 0.07500000000000001,
+          "probabilities": {
+            "book_imbalance": 0.10463626746640238,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.06342719846280157,
+            "btc_reversion": 0.08848485851186952,
+            "cross_asset_momentum": 0.0656910171442634,
+            "market_implied": 0.07500000000000001,
+            "research_linear": 0.07274008983056393
+          }
+        },
+        {
+          "at": 1794904439,
+          "market": 0.065,
+          "probabilities": {
+            "book_imbalance": 0.10972909005952503,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.05455064583156061,
+            "btc_reversion": 0.07728733726737211,
+            "cross_asset_momentum": 0.05398896179490987,
+            "market_implied": 0.065,
+            "research_linear": 0.06172828057048816
+          }
+        },
+        {
+          "at": 1794904469,
+          "market": 0.065,
+          "probabilities": {
+            "book_imbalance": 0.1305604450839707,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.05455064583156061,
+            "btc_reversion": 0.07728733726737211,
+            "cross_asset_momentum": 0.05398896179490987,
+            "market_implied": 0.065,
+            "research_linear": 0.06172828057048816
+          }
+        },
+        {
+          "at": 1794904499,
+          "market": 0.055,
+          "probabilities": {
+            "book_imbalance": 0.11468259904966721,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.04607901279545351,
+            "btc_reversion": 0.06552946351569369,
+            "cross_asset_momentum": 0.04560035028074328,
+            "market_implied": 0.055,
+            "research_linear": 0.05220753272286081
+          }
+        },
+        {
+          "at": 1794904529,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.07675816271862707,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.037636411345575216,
+            "btc_reversion": 0.05372385318952747,
+            "cross_asset_momentum": 0.03724202550731245,
+            "market_implied": 0.045,
+            "research_linear": 0.042696257098662
+          }
+        },
+        {
+          "at": 1794904559,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.07755198521494767,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03782629872739998,
+            "btc_reversion": 0.05345859436198918,
+            "cross_asset_momentum": 0.03826139501022772,
+            "market_implied": 0.045,
+            "research_linear": 0.04281742476412729
+          }
+        },
+        {
+          "at": 1794904589,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.07682901996016595,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03782629872739998,
+            "btc_reversion": 0.05345859436198918,
+            "cross_asset_momentum": 0.03826139501022772,
+            "market_implied": 0.045,
+            "research_linear": 0.04281742476412729
+          }
+        },
+        {
+          "at": 1794904619,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.06601939301218501,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03782629872739998,
+            "btc_reversion": 0.05345859436198918,
+            "cross_asset_momentum": 0.03826139501022772,
+            "market_implied": 0.045,
+            "research_linear": 0.04281742476412729
+          }
+        },
+        {
+          "at": 1794904649,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.06597176898615528,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03782629872739998,
+            "btc_reversion": 0.05345859436198918,
+            "cross_asset_momentum": 0.03826139501022772,
+            "market_implied": 0.045,
+            "research_linear": 0.04281742476412729
+          }
+        },
+        {
+          "at": 1794904679,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.06845987334372292,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.04191247242359716,
+            "btc_reversion": 0.048303506577390264,
+            "cross_asset_momentum": 0.042794196803997084,
+            "market_implied": 0.045,
+            "research_linear": 0.042744292674079115
+          }
+        },
+        {
+          "at": 1794904709,
+          "market": 0.045,
+          "probabilities": {
+            "book_imbalance": 0.05184266394326684,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.04191247242359716,
+            "btc_reversion": 0.048303506577390264,
+            "cross_asset_momentum": 0.042794196803997084,
+            "market_implied": 0.045,
+            "research_linear": 0.042744292674079115
+          }
+        },
+        {
+          "at": 1794904739,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.04679456980237319,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.032575186105983665,
+            "btc_reversion": 0.03759829597509699,
+            "cross_asset_momentum": 0.0332672999885336,
+            "market_implied": 0.035,
+            "research_linear": 0.03323195824696255
+          }
+        },
+        {
+          "at": 1794904769,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.04749033311467372,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.032575186105983665,
+            "btc_reversion": 0.03759829597509699,
+            "cross_asset_momentum": 0.0332672999885336,
+            "market_implied": 0.035,
+            "research_linear": 0.03323195824696255
+          }
+        },
+        {
+          "at": 1794904799,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.07037440870048739,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03193987421814275,
+            "btc_reversion": 0.03834170101990399,
+            "cross_asset_momentum": 0.03190014727386234,
+            "market_implied": 0.035,
+            "research_linear": 0.03319809031815187
+          }
+        },
+        {
+          "at": 1794904829,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.06705691895497534,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03193987421814275,
+            "btc_reversion": 0.03834170101990399,
+            "cross_asset_momentum": 0.03190014727386234,
+            "market_implied": 0.035,
+            "research_linear": 0.03319809031815187
+          }
+        },
+        {
+          "at": 1794904859,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.05952855696896063,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03193987421814275,
+            "btc_reversion": 0.03834170101990399,
+            "cross_asset_momentum": 0.03190014727386234,
+            "market_implied": 0.035,
+            "research_linear": 0.03319809031815187
+          }
+        },
+        {
+          "at": 1794904889,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.05279546092840999,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03193987421814275,
+            "btc_reversion": 0.03834170101990399,
+            "cross_asset_momentum": 0.03190014727386234,
+            "market_implied": 0.035,
+            "research_linear": 0.03319809031815187
+          }
+        },
+        {
+          "at": 1794904919,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.053172371883055305,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03537937919415285,
+            "btc_reversion": 0.0346245429304497,
+            "cross_asset_momentum": 0.03402043407929574,
+            "market_implied": 0.035,
+            "research_linear": 0.03287846313012607
+          }
+        },
+        {
+          "at": 1794904949,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.053262263974449775,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03537937919415285,
+            "btc_reversion": 0.0346245429304497,
+            "cross_asset_momentum": 0.03402043407929574,
+            "market_implied": 0.035,
+            "research_linear": 0.03287846313012607
+          }
+        },
+        {
+          "at": 1794904979,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.0525643165160274,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03537937919415285,
+            "btc_reversion": 0.0346245429304497,
+            "cross_asset_momentum": 0.03402043407929574,
+            "market_implied": 0.035,
+            "research_linear": 0.03287846313012607
+          }
+        },
+        {
+          "at": 1794905009,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.053606938217086814,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03537937919415285,
+            "btc_reversion": 0.0346245429304497,
+            "cross_asset_momentum": 0.03402043407929574,
+            "market_implied": 0.035,
+            "research_linear": 0.03287846313012607
+          }
+        },
+        {
+          "at": 1794905039,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.053338510604710655,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03639307300871093,
+            "btc_reversion": 0.03365838915349108,
+            "cross_asset_momentum": 0.03535367425626523,
+            "market_implied": 0.035,
+            "research_linear": 0.03274541916094058
+          }
+        },
+        {
+          "at": 1794905069,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.054647225302683275,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03639307300871093,
+            "btc_reversion": 0.03365838915349108,
+            "cross_asset_momentum": 0.03535367425626523,
+            "market_implied": 0.035,
+            "research_linear": 0.03274541916094058
+          }
+        },
+        {
+          "at": 1794905099,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.040514937795689515,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03639307300871093,
+            "btc_reversion": 0.03365838915349108,
+            "cross_asset_momentum": 0.03535367425626523,
+            "market_implied": 0.035,
+            "research_linear": 0.03274541916094058
+          }
+        },
+        {
+          "at": 1794905129,
+          "market": 0.035,
+          "probabilities": {
+            "book_imbalance": 0.049634589776474,
+            "brti_distance": 0.01,
+            "brti_distance_limit": 0.01,
+            "btc_momentum": 0.03639307300871093,
+            "btc_reversion": 0.03365838915349108,
+            "cross_asset_momentum": 0.03535367425626523,
+            "market_implied": 0.035,
+            "research_linear": 0.03274541916094058
           }
         }
       ],
@@ -943,11 +3497,11 @@
   },
   "mode": "paper",
   "polling": {
-    "attempts": 61,
-    "last_attempt": 1794877561,
+    "attempts": 543,
+    "last_attempt": 1794905148,
     "last_error": "ValueError: US book timestamp stale/in future",
-    "observed": 43,
-    "skipped": 18
+    "observed": 243,
+    "skipped": 300
   },
   "venue": "polymarket_us",
   "version": 3

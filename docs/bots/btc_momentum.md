@@ -12,10 +12,10 @@ Paper account · simulated orders
 | Pending orders | 0 |
 | Orders filled / placed | 1 / 1 |
 | Recorded exit fees | $0.0000 |
-| Calibration markets | 2 |
-| Calibration logit offset | -0.0164 |
-| Brier (markets) | 0.0627 (4) |
-| ΔBrier vs market | +0.0081 |
+| Calibration markets | 8 |
+| Calibration logit offset | +0.0157 |
+| Brier (markets) | 0.0891 (10) |
+| ΔBrier vs market | +0.0039 |
 
 [Order ledger](../../data/ledgers/btc_momentum-orders.csv) · [Trade ledger](../../data/ledgers/btc_momentum-trades.csv) · [Overview](../../REPORT.md)
 

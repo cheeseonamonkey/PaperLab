@@ -12,10 +12,10 @@ Paper account · simulated orders
 | Pending orders | 0 |
 | Orders filled / placed | 1 / 2 |
 | Recorded exit fees | $0.0000 |
-| Calibration markets | 2 |
-| Calibration logit offset | -0.0165 |
-| Brier (markets) | 0.0608 (4) |
-| ΔBrier vs market | +0.0101 |
+| Calibration markets | 8 |
+| Calibration logit offset | +0.0162 |
+| Brier (markets) | 0.0895 (10) |
+| ΔBrier vs market | +0.0035 |
 
 [Order ledger](../../data/ledgers/cross_asset_momentum-orders.csv) · [Trade ledger](../../data/ledgers/cross_asset_momentum-trades.csv) · [Overview](../../REPORT.md)
 

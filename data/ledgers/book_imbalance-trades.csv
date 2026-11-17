@@ -1,2 +1,8 @@
 slug,side,type,status,placed_at,filled_at,cancelled_at,settled_at,price,shares,cost,reserved,edge,won,payout,pnl,trade_placed_at,exit_price,close_reason,fee
 cpc-btc-updown-1h-2026-11-14-1400z,Up,limit_cross,settled,1794666832,1794667021,,1794671525,0.05,98.0392,4.9999992,,0.05588,False,0.0,-4.9999992,,,,
+cpc-btc-updown-15m-2026-11-17-0800z,Up,limit_cross,settled,1794902714,1794902746,,1794902774,0.17,12.2379,2.080443,,0.072707,False,1.84375222,-0.23669078,,0.16,ioc_sell,
+cpc-btc-updown-1h-2026-11-17-0800z,Down,limit_cross,settled,1794903809,1794903839,,1794904049,0.81,7.4966,6.072246,,0.0487,False,5.99206199,-0.08018401,,0.81,ioc_sell,
+cpc-btc-updown-1h-2026-11-17-0800z,Up,limit_cross,open,1794904229,1794904289,,,0.07,16.3676,1.145732,,0.045015,,,,,,,
+cpc-btc-updown-1h-2026-11-17-0800z,Up,limit_cross,open,1794904469,1794904499,,,0.06,29.6138,1.776828,,0.07056,,,,,,,
+cpc-btc-updown-15m-2026-11-17-0830z,Up,limit_cross,settled,1794904514,1794904546,,1794904754,0.08,25.4496,2.035968,,0.079131,False,0.2369854,-1.7989826,,0.01,ioc_sell,
+cpc-btc-updown-15m-2026-11-17-0830z,Up,limit_cross,open,1794904574,1794904634,,,0.05,36.4008,1.82004,,0.073045,,,,,,,

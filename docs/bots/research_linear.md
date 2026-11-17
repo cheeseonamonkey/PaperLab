@@ -12,10 +12,10 @@ Paper account · simulated orders
 | Pending orders | 0 |
 | Orders filled / placed | 0 / 0 |
 | Recorded exit fees | $0.0000 |
-| Calibration markets | 0 |
-| Calibration logit offset | +0.0000 |
-| Brier (markets) | — (0) |
-| ΔBrier vs market | — |
+| Calibration markets | 4 |
+| Calibration logit offset | -0.0072 |
+| Brier (markets) | 0.0789 (4) |
+| ΔBrier vs market | +0.0001 |
 
 [Order ledger](../../data/ledgers/research_linear-orders.csv) · [Trade ledger](../../data/ledgers/research_linear-trades.csv) · [Overview](../../REPORT.md)
 
