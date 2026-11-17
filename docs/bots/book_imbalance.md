@@ -5,15 +5,17 @@ Paper account · simulated orders
 | Metric | Value |
 |---|---:|
 | Cash | $95.00 |
-| Reserved | $12.20 |
+| Reserved | $0.00 |
 | Realized P&L | $-5.00 |
 | Settled wins / losses | 0 / 1 |
 | Open positions | 0 |
-| Pending orders | 2 |
+| Pending orders | 0 |
 | Orders filled / placed | 1 / 3 |
 | Recorded exit fees | $0.0000 |
-| Brier (markets) | 0.0920 (2) |
-| ΔBrier vs market | -0.0000 |
+| Calibration markets | 2 |
+| Calibration logit offset | -0.0211 |
+| Brier (markets) | 0.0740 (4) |
+| ΔBrier vs market | -0.0032 |
 
 [Order ledger](../../data/ledgers/book_imbalance-orders.csv) · [Trade ledger](../../data/ledgers/book_imbalance-trades.csv) · [Overview](../../REPORT.md)
 

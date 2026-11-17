@@ -12,6 +12,8 @@ Paper account · simulated orders
 | Pending orders | 0 |
 | Orders filled / placed | 1 / 1 |
 | Recorded exit fees | $0.0000 |
+| Calibration markets | 0 |
+| Calibration logit offset | +0.0000 |
 | Brier (markets) | 0.2838 (1) |
 | ΔBrier vs market | -0.0992 |
 

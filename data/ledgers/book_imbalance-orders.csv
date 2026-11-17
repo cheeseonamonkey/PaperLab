@@ -1,4 +1,4 @@
 slug,side,type,status,placed_at,filled_at,cancelled_at,settled_at,price,shares,cost,reserved,edge,won,payout,pnl,trade_placed_at,exit_price,close_reason,fee
 cpc-btc-updown-1h-2026-11-14-1400z,Up,limit,filled,1794666832,1794667021,,,0.05,98.0392,4.9999992,4.9999992,0.05588,,,,,,,
-cpc-btc-updown-1h-2026-11-14-1500z,Up,limit,open,1794671724,,,,0.06,87.6296,5.257776,5.257776,0.055345,,,,,,,
-cpc-btc-updown-1h-2026-11-14-1500z,Up,limit,open,1794671783,,,,0.05,138.8182,6.94091,6.94091,0.077343,,,,,,,
+cpc-btc-updown-1h-2026-11-14-1500z,Up,limit,expired,1794671724,,1794877501,,0.06,87.6296,5.257776,5.257776,0.055345,,,,,,,
+cpc-btc-updown-1h-2026-11-14-1500z,Up,limit,expired,1794671783,,1794877501,,0.05,138.8182,6.94091,6.94091,0.077343,,,,,,,
