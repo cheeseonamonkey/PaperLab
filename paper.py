@@ -135,6 +135,8 @@ def fair_probability(strategy,obs,models):
         z=distance/max(volatility*math.sqrt(remaining/15),.0002)
         return cap(.5*(1+math.erf(z/math.sqrt(2))))
     if strategy=="book_imbalance":
+        if obs.get("source") == "historical_price_proxy":
+            return None
         imbalance = f.get("yes_book_imbalance")
         return cap(implied + .10*imbalance) if imbalance is not None else None
     btc=f.get("btc_r5")
