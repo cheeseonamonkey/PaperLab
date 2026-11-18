@@ -216,6 +216,48 @@ class PaperTests(unittest.TestCase):
         paper.maybe_exit(acct,obs,.1,self.now)
         self.assertEqual(trade["status"],"open")
 
+    def test_historical_entry_fills_only_on_later_price_and_never_exceeds_reservation(self):
+        acct = paper.initial()["accounts"]["brti_distance"]
+        obs = copy.deepcopy(self.obs)
+        obs.update(source="historical_price_proxy", display_up=.47, quotes={})
+        self.assertEqual(paper.maybe_order(acct, obs, .9, "limit", self.now), "PROXY BUY Up")
+        reserved = acct["orders"][0]["reserved"]
+        paper.evaluate_limits(acct, obs, self.now)
+        self.assertEqual(len(acct["trades"]), 0)
+        later = copy.deepcopy(obs)
+        later["observed_at"] = self.now+60
+        later["display_up"] = .46
+        paper.evaluate_limits(acct, later, self.now+60)
+        self.assertEqual(len(acct["trades"]), 1)
+        self.assertEqual(acct["trades"][0]["type"], "historical_price_proxy")
+        self.assertLessEqual(acct["trades"][0]["cost"], reserved)
+
+    def test_historical_book_imbalance_abstains_without_book(self):
+        obs = copy.deepcopy(self.obs)
+        obs.update(source="historical_price_proxy", display_up=.5, quotes={})
+        self.assertIsNone(paper.fair_probability("book_imbalance", obs, {}))
+        self.assertIsNotNone(paper.fair_probability("btc_momentum", obs, {}))
+
+    def test_multiple_urgent_exits_respect_shared_book_depth(self):
+        acct = paper.initial()["accounts"]["brti_distance"]
+        for minute in (60, 120):
+            acct["trades"].append({"slug":self.slug,"side":"Up","status":"open",
+                                   "placed_at":self.now-minute,"shares":5,"cost":2.5})
+        obs = copy.deepcopy(self.obs)
+        obs["quotes"]["Up"]["bid_size"] = 6
+        self.assertEqual(paper.maybe_exit(acct, obs, .1, self.now), "IOC SELL Up")
+        self.assertEqual(sum(t["status"]=="settled" for t in acct["trades"]), 1)
+        self.assertEqual(sum(t["status"]=="open" for t in acct["trades"]), 1)
+
+    def test_two_limit_entries_do_not_double_claim_one_book_level(self):
+        acct = paper.initial()["accounts"]["brti_distance"]
+        paper.maybe_order(acct, self.obs, .9, "limit", self.now)
+        paper.maybe_order(acct, self.obs, .9, "limit", self.now+60)
+        later = copy.deepcopy(self.obs)
+        later["quotes"]["Up"].update(ask=.47, ask_size=acct["orders"][0]["shares"]*1.5)
+        paper.evaluate_limits(acct, later, self.now+120)
+        self.assertEqual(sum(o["status"]=="filled" for o in acct["orders"]), 1)
+
     def test_maker_fee_is_zero(self):
         acct=paper.initial()["accounts"]["brti_distance"]
         paper.maybe_order(acct,self.obs,.9,"limit",self.now)

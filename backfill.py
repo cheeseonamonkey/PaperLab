@@ -7,14 +7,16 @@ from __future__ import annotations
 
 import gzip
 import json
+import math
 import os
+import statistics
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-from feeds import get, window_slug
+from feeds import _momentum, get, value, window_slug
 
 ROOT = Path(__file__).resolve().parent / "data" / "backfill"
 STATE = ROOT / "state.json"
@@ -41,7 +43,7 @@ def slug(start, horizon):
     return window_slug(start, horizon)
 
 
-def market(start, horizon, period):
+def market(start, horizon, period, require_settlement=True):
     symbol = slug(start, horizon)
     meta = get("/v1/market/slug/" + symbol, missing_ok=True)
     if meta is None:
@@ -54,14 +56,26 @@ def market(start, horizon, period):
         "symbol": symbol, "fidelity": 1,
         "timestamp.startTimestamp": start,
         "timestamp.endTimestamp": start + period,
-    })
+    }, missing_ok=not require_settlement)
+    if history is None and not require_settlement:
+        return {"slug": symbol, "horizon": horizon, "status": "history_unavailable"}
     if not isinstance(history.get("history"), list):
         raise ValueError("Invalid price history for " + symbol)
-    result = get("/v1/markets/" + symbol + "/settlement", missing_ok=True)
-    if result is None or result.get("slug") != symbol or result.get("settlement") not in (0, 1):
+    try:
+        result = get("/v1/markets/" + symbol + "/settlement", missing_ok=True)
+    except OSError:
+        if require_settlement:
+            raise
+        result = None
+    if result is not None and (result.get("slug") != symbol or result.get("settlement") not in (0, 1)):
+        if require_settlement:
+            raise ValueError("Invalid official settlement for " + symbol)
+        result = None
+    if require_settlement and result is None:
         raise ValueError("Official settlement unavailable for " + symbol)
-    return {"slug": symbol, "horizon": horizon, "status": "collected",
-            "metadata": meta, "display_history": history, "settlement": result}
+    return {"slug": symbol, "horizon": horizon, "start": start, "ends": start + period,
+            "status": "collected", "metadata": meta, "display_history": history,
+            "settlement": result}
 
 
 def exogenous(start, end):
@@ -72,32 +86,86 @@ def exogenous(start, end):
                             "start": datetime.fromtimestamp(start, timezone.utc).isoformat(),
                             "end": datetime.fromtimestamp(end, timezone.utc).isoformat()})
         url = "https://api.exchange.coinbase.com/products/" + asset + "-USD/candles?" + params
-        with urlopen(Request(url, headers={"User-Agent": "PaperLab/1.0"}), timeout=15) as response:
-            rows = json.load(response)
-        if not isinstance(rows, list):
-            raise ValueError("Invalid exogenous candle response for " + asset)
-        candles[asset] = sorted((row for row in rows if len(row) >= 6 and start <= int(row[0]) < end),
-                                key=lambda row: row[0])
+        try:
+            with urlopen(Request(url, headers={"User-Agent": "PaperLab/1.0"}), timeout=15) as response:
+                rows = json.load(response)
+            if not isinstance(rows, list):
+                raise ValueError("Invalid exogenous candle response for " + asset)
+            candles[asset] = sorted((row for row in rows if len(row) >= 6 and start <= int(row[0]) < end),
+                                    key=lambda row: row[0])
+        except (OSError, ValueError, KeyError) as error:
+            print("Optional", asset, "history unavailable:", error, flush=True)
+            candles[asset] = []
     return candles
 
 
-def collect_hour(start, end):
+def collect_hour(start, end, require_settlement=True):
     at = datetime.fromtimestamp(start, timezone.utc)
     path = ROOT / "hours" / at.strftime("%Y-%m-%d") / (at.strftime("%H") + ".json.gz")
-    markets = [market(t, horizon, period)
+    markets = [market(t, horizon, period, require_settlement=require_settlement)
                for horizon, period in HORIZONS
                for t in range(start, end, period)]
     item = {"venue": "polymarket_us", "start": start, "end": end,
             "kind": "historical_display_not_order_book", "markets": markets,
-            "exogenous_coinbase_1m": exogenous(start, end)}
+            "exogenous_coinbase_1m": exogenous(start - 20 * 60, end)}
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     with tmp.open("wb") as raw:
         with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as out:
             out.write((json.dumps(item, sort_keys=True, separators=(",", ":")) + "\n").encode())
     os.replace(tmp, path)
-    missing = sum(m["status"] == "not_found" for m in markets)
+    missing = sum(m["status"] != "collected" for m in markets)
     return path, missing, len(markets)
+
+
+def observations(hour, reference):
+    """Causal historical display-price observations; no synthetic order-book depth."""
+    candles = hour["exogenous_coinbase_1m"]
+    reference = sorted((c for c in reference if value(c.get("close")) is not None),
+                       key=lambda c: int(c["timestamp"]))
+    records = []
+    for contract in hour["markets"]:
+        if contract["status"] != "collected":
+            continue
+        terms = (contract["metadata"].get("market") or {}).get("assetPriceTerms") or {}
+        strike = value(terms.get("priceToBeat"))
+        if strike is None or strike <= 0:
+            continue
+        start, end = contract["start"], contract["ends"]
+        for row in contract["display_history"]["history"]:
+            at, price = int(row["timestamp"]), value(row.get("longPrice"))
+            if not start <= at < end or price is None or not .01 < price < .99:
+                continue
+            features, available_at = {}, {}
+            for asset, series in candles.items():
+                momentum = _momentum([c for c in series if int(c[0]) + 63 <= at], at)
+                if momentum:
+                    for key in ("r1", "r5", "r15", "vol15", "volume15"):
+                        name = asset.lower() + "_" + key
+                        features[name] = momentum[key]
+                        available_at[name] = momentum["available_at"]
+            known = [c for c in reference if int(c["timestamp"]) + 60 <= at]
+            close = value(known[-1]["close"]) if known else None
+            recent = known[-16:]
+            continuous = len(recent) == 16 and all(
+                int(b["timestamp"])-int(a["timestamp"]) == 60
+                for a,b in zip(recent, recent[1:]))
+            returns = ([math.log(value(b["close"])/value(a["close"]))
+                        for a,b in zip(recent, recent[1:])] if continuous else [])
+            if known:
+                available_at["brti_close"] = int(known[-1]["timestamp"]) + 60
+            features.update(price_to_beat=strike, brti_close=close,
+                            strike_distance=close / strike - 1 if close else None,
+                            btc_vol15=statistics.pstdev(returns) if len(returns) == 15 else None,
+                            time_left=(end - at) / (end - start))
+            records.append({"venue": "polymarket_us", "source": "historical_price_proxy",
+                            "slug": contract["slug"], "start": start, "ends": end,
+                            "observed_at": at, "display_up": price, "features": features,
+                            "feature_available_at": available_at, "quotes": {},
+                            "display_history": [{"timestamp": at, "up": price, "down": 1 - price}],
+                            "brti_history": []})
+    unique = {(row["slug"], row["observed_at"]): row for row in records}
+    return sorted(unique.values(), key=lambda row: (row["observed_at"], row["slug"]))
 
 
 def main():

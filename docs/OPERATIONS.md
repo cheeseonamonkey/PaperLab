@@ -1,14 +1,14 @@
 # Operations
 
 - Venue: Polymarket US BTC 15-minute and 1-hour binary Up/Down markets.
-- Collection target: one observation every 15 seconds; one optional action per account and market per minute.
+- Collection: one CI run per hour fetches the previous fully closed UTC hour, then exits. Decisions follow the available historical price timestamps (at most once per account/market/minute).
 - Accounts: thirteen isolated $100 simulated bankrolls. Order size uses one-quarter Kelly, capped at 10% of account equity per order and 30% total committed exposure; see [execution policy](EXECUTION.md#risk-and-lifecycle).
-- Order execution: paper limit buys and simulated marketable exits. See [execution policy](EXECUTION.md) for actual fill proxy and the proposed urgent-exit experiment.
-- Research: deterministic experiments on bootstrap plus settled live data; separate historical archive stays untouched by training. See [research plan](RESEARCH.md).
+- Execution: delayed historical display-price paper proxy with slippage/taker fees, not executable book quotes; see [execution policy](EXECUTION.md).
+- Research: chronological experiments on bootstrap plus officially settled observations; the separate backward archive stays untouched by training. See [research plan](RESEARCH.md).
 - Persistence: GitHub repository state is canonical; CSV files and bot pages are generated views of JSON state.
-- Automation: hourly GitHub Actions runs can start late, queue, or fail. Uncommitted observations from a cancelled runner may be lost.
+- Automation: hourly GitHub Actions starts can be delayed or skipped. Each completed UTC hour is checkpointed to prevent duplicate paper trades.
 
-The simulator has no authenticated trading path. Its crossing-based fills do not model queue position or guarantee real-world executions. The five legacy neural checkpoints currently abstain; `market_implied` is a no-trade benchmark. The distance pair uses the same signal; momentum and reversion are sign-reversed variants. Thirteen accounts therefore do not represent thirteen independent, active hypotheses.
+The simulator has no authenticated trading path. New historical price-proxy fills cannot establish executable liquidity or real-world execution; old crossing-based trades retain their original assumptions. The five legacy neural checkpoints currently abstain; `market_implied` is a no-trade benchmark. The distance pair uses the same signal; momentum and reversion are sign-reversed variants. Thirteen accounts therefore do not represent thirteen independent, active hypotheses.
 
 ## Fees
 
@@ -21,16 +21,16 @@ The current documented schedule uses zero standard maker fee and no maker rebate
 
 ```mermaid
 flowchart TD
-  Live["15-second live observations"] --> Train["Minute decisions and research"]
-  Seed["One-time 48-hour bootstrap"] --> Train
-  Archive["Ongoing historical archive"] --> Later["Reserved for future use"]
-  Train --> Docs["Reports and CSV views"]
+  Hour["Previous completed UTC hour"] --> Replay["Timestamp-ordered paper replay"]
+  Seed["One-time 48-hour bootstrap"] --> Train["Research and calibration"]
+  Replay --> Train
+  Replay --> Docs["Reports and CSV views"]
 ```
 
 ## Parallel pipeline
 
-The collector records one shared sequence of observations and settlement checks. Six Actions jobs replay two accounts each using that sequence. One publish job verifies batch checksums, merges all six account results, updates research and reports, and commits state once. A missing or inconsistent shard stops publication. New descendants are not implemented yet.
+The collector fetches one historical hour, records a shared sequence and settlement checks, then exits. Six Actions shards replay the existing accounts, and one publish job verifies hashes, merges states, updates reports and commits once. Missing/inconsistent shards block publication. No new descendants are created.
 
-Decisions are replayed after the collection hour, in observation order; no orders are sent to an exchange. Actions scheduling, artifact transfer and post-processing introduce collection gaps between runs.
+Decisions are simulated in chronological observation order; no orders are sent to an exchange. Missing historical source data is reported rather than fabricated.
 
 For a directory of generated account views and the relationships between related strategies, see the [strategy index](bots/README.md). The index does not duplicate live metrics. The roster is fixed; [new strategy descendants are disabled](RESEARCH.md#strategy-descendants-and-forks) pending offline evaluation and review.

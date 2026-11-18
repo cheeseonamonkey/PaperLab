@@ -67,5 +67,5 @@ def export(state):
         page += ["", "## Research", "",
                  "The shared research candidate is evaluated separately; it is not deployed to this account. "
                  "[Latest experiments](../research/latest.md) · [Research plan](../RESEARCH.md)", "",
-                 "Limit fills are estimates based on later observed book crossings; queue priority is unknown.", ""]
+                 "Historical fills use later displayed prices with modeled fees/slippage; prior live-book crossing fills did not establish queue priority.", ""]
         (PAGES / (name + ".md")).write_text("\n".join(page), encoding="utf-8")

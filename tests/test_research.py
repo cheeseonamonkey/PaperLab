@@ -41,6 +41,28 @@ class ResearchChecks(unittest.TestCase):
             self.assertEqual(len(result),1)
             self.assertEqual(result[0][3:],(1,"bootstrap"))
 
+    def test_historical_price_proxy_is_trained_only_after_official_settlement(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            slug = "cpc-btc-updown-15m-2026-11-14-1000z"
+            at = ts("2026-11-14 10:05")
+            path = root / "data" / "observations" / "hour.jsonl.gz"
+            path.parent.mkdir(parents=True)
+            with gzip.open(path, "wt") as stream:
+                stream.write(json.dumps({
+                    "source":"historical_price_proxy","slug":slug,"observed_at":at,
+                    "display_up":.65,"features":{"btc_r1":.001},
+                    "feature_available_at":{"btc_r1":at}}) + "\n")
+            state = root / "data" / "state.json"
+            state.write_text(json.dumps({"markets":{slug:{"outcome":None}}}))
+            with patch.object(train_research,"ROOT",root):
+                self.assertEqual(train_research.examples(), [])
+                state.write_text(json.dumps({"markets":{slug:{"outcome":"Up"}}}))
+                result = train_research.examples()
+            self.assertEqual(len(result),1)
+            self.assertEqual(result[0][4],"historical_price_proxy")
+            self.assertEqual(result[0][3],1)
+
     def test_grouped_scores_and_market_only_ablation(self):
         import math
         m15 = "cpc-btc-updown-15m-2026-11-14-1000z"

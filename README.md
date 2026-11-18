@@ -3,9 +3,9 @@
 **13 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute and 1-hour Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
 
 - [Current results](REPORT.md) · [Persistent state](data/state.json) · [Raw, compressed observations](data/observations/) · [Workflows](../../actions) · [Documentation index](docs/README.md) · [Strategy pages](docs/bots/README.md)
-- **Hourly Actions** runs approximately one hour, polling US public order books at a **15-second target cadence** (when network calls fit). Runs can start late or be dropped by GitHub; **not an always-on service**.
-- Simulates **resting limit buys and simulated urgent sells**, with cash reservations, expiration and a later-book-crossing fill proxy. Queue priority and execution latency are not modeled. Settles using the **official US 0/1 settlement endpoint**.
-- Competing independent models all see a **single shared, timestamped data feed**. Inputs include official BRTI minute candles, current Polymarket US bid/ask/top-5 depth, US price-to-beat and display history, time to expiry, book imbalance, and additional BTC/ETH/SOL/XRP spot context. Coinbase context does not determine official settlement.
+- **Hourly Actions** fetches the preceding completed UTC hour once, replays available historical observations, then exits. GitHub schedules may run late or be skipped.
+- Historical batches simulate **delayed price-based entries and exits**, including modeled taker fees and slippage. These are paper proxies, not executable quotes. Settles using the **official US 0/1 settlement endpoint**.
+- Strategies share historical US price displays, the market's price-to-beat, timestamp-available BRTI candles, and BTC/ETH/SOL/XRP context. Historical book depth is unavailable; book-dependent strategies abstain. Coinbase context never substitutes for official settlement.
 
 <!-- PAPER_STATUS_START -->
 ## Current research status
@@ -60,15 +60,15 @@ Full caveats and the audit trail are in [REPORT.md](REPORT.md).
 
 Five legacy neural accounts currently abstain; `market_implied` is a hold-only benchmark. The distance pair shares one signal; momentum and reversion are sign-reversed variants. Thirteen accounts are not thirteen independent active hypotheses. See [execution limits](docs/EXECUTION.md) and [research plan](docs/RESEARCH.md).
 
-Each account starts at **$100**. Order size uses one-quarter Kelly, capped at **10% of current account equity per order** and **30% committed exposure** across open positions and pending entries. Fractional simulated shares are allowed; maker fills assume zero exchange fee and no rebate. Each strategy gets an opportunity to place an order for each market every **one minute**. Pending orders reserve cash, and existing orders are monitored at every observation.
+Each account starts at **$100**. Order size uses one-quarter Kelly, capped at **10% of current account equity per order** and **30% committed exposure** across open positions and pending entries. Fractional simulated shares are allowed. Each strategy can act once per market per **minute** of historical observations; simultaneous positions share the account's exposure budget. Entry intents reserve cash until a later observed price permits a fee-adjusted paper fill or the order is cancelled.
 
-**Resting buy assumption:** post at the displayed bid, reserve its cost, and credit a hypothetical fill *only* if a **later US snapshot** has best ask at or below the posted limit and offers adequate displayed size. Fills use the original limit price, zero maker exchange fee, and **no maker rebate**. Sell limits require a later observed bid crossing the offer with sufficient displayed size. This crossing is a proxy, **not evidence of queue priority or a real fill**. Otherwise orders remain pending and expire, returning reserved cash.
+**Historical execution:** an entry is only eligible on the next observation, using the later displayed price plus modeled slippage and taker fee. It cancels if the reserved budget is insufficient. Exits use the observed price minus slippage and taker fee. There are no historical depth or queue-priority guarantees.
 
-The maker fee is zero with no rebate assumed; the separately implemented taker formula follows the published straight-contract coefficient. An order-book crossing cannot establish actual queue priority. Results are speculative paper P&L, not live-executable returns.
+Legacy live-book trades retain their original zero-maker-fee crossing assumptions and historical accounting. Results from either mode are speculative paper P&L, not live-executable returns.
 
 ## Training and evaluation
 
-The research candidate trains on a fixed two-day historical bootstrap plus settled **live observations** collected by this repo. BTC, ETH, SOL, XRP, and timestamped SP500 context are included where available. Validation uses a chronological split and compares forecast error against the market-implied price. It runs only in its isolated `research_linear` paper account and does not change legacy strategies.
+The research candidate trains on a fixed two-day historical bootstrap plus settled **historical-hour and earlier live observations** collected by this repo. BTC, ETH, SOL, XRP, and timestamped SP500 context are included where available. Validation uses a chronological split and compares forecast error against the market-implied price. It runs only in its isolated `research_linear` paper account and does not change legacy strategies.
 
 The bootstrap is fetched once and placed in the normal observation directory, with separate settlement labels. The backward historical archive is stored separately and is **not** read by the trainer. Historical display prices do not represent executable order books.
 
@@ -77,27 +77,27 @@ Five legacy checkpoint accounts are inactive. Their earlier files remain in Git 
 ## Persistence and cost
 
 - [data/state.json](data/state.json): independent cash, open orders, filled trades, official settled outcomes, and audit timestamps.
-- [data/observations](data/observations/): **compressed daily JSONL**, one shared US book/feature snapshot per successful polling decision. Git commit history remains auditable.
+- [data/observations](data/observations/): **compressed daily JSONL**, one timestamped source observation shared across strategies. Git commit history remains auditable.
 - [models/checkpoints](models/checkpoints/): inactive legacy checkpoints, retained for provenance.
-- [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The target is three prior market hours per hourly workflow run; historical display prices are not historical order books.
+- [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The scheduled workflow fetches the previous completed hour only; older archival backfill remains available manually. Display prices are not order books.
 - [data/training](data/training/): candidate model, chronological validation, and research run history.
 - [data/ledgers](data/ledgers/): per-bot orders and trades in CSV.
 - [docs](docs/): research notes and generated per-bot pages. The candidate is not automatically promoted to a paper strategy.
 - [REPORT.md](REPORT.md): auto-generated account comparison; the **Current research status** block above updates from the same saved state after paper runs.
 - [research/proposals](research/proposals/): **review-only** Pi experiment suggestions, never deployed.
 
-The hourly process persists files locally on every successful tick; Actions commits state and new observations at job completion. A cancelled runner can lose its **uncommitted** session. Keeping all 15-second snapshots in Git indefinitely will enlarge repo history; storage can be moved to archive releases if growth becomes an issue.
+Each short-lived hourly run commits its batch and state once. Failed publications retain short-lived artifacts; uncommitted results are not canonical.
 
 ## GitHub Actions
 
-The hourly job needs **no secret**. It installs CPU-only PyTorch and calls `python paper.py run --duration 3600` (one hour, targeting four observations per minute per horizon). GitHub Actions is not a 24/7 low-latency execution engine; network and runner timings will vary. A one-off `workflow_dispatch` run can request **60–3600 seconds** for verification.
+The scheduled workflow runs `python parallel.py collect` once per hour, fetches the previous completed UTC hour, replays it through the existing isolated accounts, reconciles official settlements, publishes reports, and exits. GitHub may delay or skip cron runs; a manual dispatch is also available.
 
-Each cycle experiments with simple regularization and exogenous-return transforms, records their results without automatically promoting a candidate, and stores up to three earlier hours of market history and exogenous candles. This archive is not used for training. The research model trains on the fixed bootstrap and all usable settled live observations and uses the market midpoint, horizon, and completed prior-minute crypto returns.
+Research continues using the fixed bootstrap and timestamp-valid settled observations; the separate backward archive is not scanned by the trainer. Candidates are evaluated chronologically and never automatically promoted.
 
 A separate **optional daily** Pi/OpenRouter research workflow needs only the Actions secret `OPENROUTER_API_KEY`:
 
 1. Get an OpenRouter key with zero/low allowed spend.
-2. Add [OPENROUTER_API_KEY](https://github.com/cheeseonamonkey/YeNoPaperLab/settings/secrets/actions) under repository Actions secrets.
+2. Add [OPENROUTER_API_KEY](https://github.com/cheeseonamonkey/PaperLab/settings/secrets/actions) under repository Actions secrets.
 3. After 40 officially settled US markets, Pi can read **aggregate paper performance** and submit one bounded experiment hypothesis daily. It cannot modify any strategy, model or paper account. OpenRouter's free router may enforce availability or request limits; there is no paid-model fallback configured.
 
 ## Local

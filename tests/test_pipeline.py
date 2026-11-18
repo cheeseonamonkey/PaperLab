@@ -18,6 +18,27 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(backfill.latest_closed_hour(7200), (3600, 7200))
         self.assertEqual(backfill.latest_closed_hour(7199), (0, 3600))
 
+    def test_historical_observations_use_only_closed_input_candles(self):
+        start = 1794636000
+        slug = backfill.slug(start, "15m")
+        hour = {"start":start,"end":start+3600,
+                "markets":[{"slug":slug,"horizon":"15m","start":start,"ends":start+900,
+                            "status":"collected",
+                            "metadata":{"market":{"assetPriceTerms":{"priceToBeat":100}}},
+                            "display_history":{"history":[
+                                {"timestamp":start+120,"longPrice":.55},
+                                {"timestamp":start+180,"longPrice":.56}]}}],
+                "exogenous_coinbase_1m":{"BTC":[
+                    [t,0,0,0,100+i,1] for i,t in enumerate(range(start-1200,start+180,60))]}}
+        reference = [{"timestamp":t,"close":100+i}
+                     for i,t in enumerate(range(start-1200,start+180,60))]
+        rows = backfill.observations(hour, reference)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual([r["observed_at"] for r in rows], [start+120,start+180])
+        self.assertTrue(all(r["source"]=="historical_price_proxy" and not r["quotes"] for r in rows))
+        self.assertTrue(all(all(t <= r["observed_at"]
+                                for t in r["feature_available_at"].values()) for r in rows))
+
     def test_observation_persists_input_availability_timestamps(self):
         with tempfile.TemporaryDirectory() as directory:
             at = 1794632340

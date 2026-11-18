@@ -1,26 +1,26 @@
 # Execution policy
 
-Paper simulation only. The runner has no authenticated order path.
+Paper simulation only; no authenticated order path, wallet, or real funds.
 
-| Action | Current simulation | Research direction |
-|---|---|---|
-| Entry | Resting limit buy; cash reserved; expires if unfilled | Post-only intent, short TTL, cancel on stale or adverse cross-asset move |
-| Take profit | No new passive take-profit order; existing resting sells may fill | Add passive take-profit policy |
-| Stop or urgent exit | Simulated IOC at observed best bid with taker fee; no fill if displayed top-level depth is insufficient | Add explicit floor, partial fills, and latency |
-| Expiry | Official binary settlement | Compare hold-to-settlement with a defined exit cutoff |
+## Current historical-hour replay
 
-A limit price caps the execution price only if an order fills. It does not guarantee a fill, maker status, queue priority, or protection from adverse selection. “Post-only” is an exchange instruction; this paper simulator cannot certify that status.
+The hourly workflow fetches the previous completed UTC hour and processes available price observations chronologically. **Historical display prices are not executable bid/ask quotes or order-book depth.**
 
-## Current fill proxy
+- **Entry:** compare modeled probability against the displayed price plus $0.005/share slippage and the modeled taker fee. Reserve cash; a paper buy can fill only on a later historical observation, at that later price. If the required cost exceeds the reservation, cancel it.
+- **Exit:** sell eligible open positions at the later displayed price minus $0.005/share slippage and the modeled taker fee. Without a later observation, positions can remain open until official settlement.
+- **Expiry and settlement:** unfilled entry reservations expire; binary contract payout is determined only by the Polymarket US settlement endpoint (0/1).
+- **Unavailable inputs:** strategies requiring missing historical order-book depth abstain; no synthetic spread, liquidity, queue position, or maker rebate is fabricated.
 
-A resting entry is credited only on a later observation when the displayed opposing best price crosses the limit and displayed size is sufficient. A sell uses a later bid crossing the offer. This is a book-crossing proxy, not queue simulation: trade prints, queue ahead, hidden liquidity, event ordering, and network latency are not modeled. It can miss fills and can also misstate their quality. Do not call it a validated backtest.
-
-Urgent exits are simulated at the observed best bid, only when displayed top-level depth covers the entire position. They charge the modeled taker fee; otherwise the position remains open. This is an immediate, all-or-none approximation: it has no latency, partial fills, or deeper book sweep, and does not guarantee real execution.
+These are hypothetical price-proxy fills, not a validated backtest. An indicative display price does not establish actual executable liquidity or latency. Previously recorded live-book crossing fills retain their original accounting and remain labeled as legacy assumptions.
 
 ## Risk and lifecycle
 
-Entry size uses one-quarter Kelly on modeled binary-contract edge, capped at 10% of current account equity per order and 30% aggregate committed exposure. Equity is cash plus cost basis of open positions; pending entry reservations count toward exposure. This keeps limits proportional after simulated gains or losses. Cost basis is not a live mark, and this remains a paper experiment rather than a validated or live sizing rule.
+Every account starts with an independent $100 paper bankroll. One-quarter Kelly sizing is capped at **10% of current account equity per entry** and **30% aggregate committed exposure**, including pending entry reservations. Multiple simultaneous positions may coexist; repeated opportunities for the same market are limited to one decision per minute.
 
-Use explicit states: `FLAT → ENTERING → OPEN → EXITING → SETTLED`; unfilled entry expiry returns to `FLAT`. Before adding live or more detailed simulation, reject stale data, block new entries near expiry, cap exposure and order rate, and make cancel/fill races idempotent. A stale-data rule must use source event time where available; receive time alone hides feed age.
+A paper entry passes `PENDING → OPEN → EXITED / SETTLED`, or `PENDING → CANCELLED / EXPIRED`. State and market outcomes must be idempotent across hourly workflow retries. Do not reset or reinterpret historical account balances when changing execution modes.
 
-The roster and account boundaries are described in the [strategy index](bots/README.md). New child strategies are currently disabled; see [research progression](RESEARCH.md#strategy-descendants-and-forks).
+## Legacy live-book observations
+
+Older trades used a later bid/ask crossing with displayed size as an optimistic hypothetical maker fill (zero assumed maker fee/rebate). Urgent exits used immediate displayed best-bid depth and modeled taker fees. A crossing does not prove queue priority or actual fill. The previous live collector is no longer the scheduled workflow.
+
+The fee coefficient and source-specific details are documented in [Operations](OPERATIONS.md). No configuration here authorizes real orders.

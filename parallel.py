@@ -1,4 +1,4 @@
-"""Record one shared live batch, replay isolated accounts, then merge."""
+"""Collect one historical hour, replay isolated accounts, then merge."""
 import argparse
 import copy
 import gzip
@@ -7,8 +7,9 @@ import json
 import time
 from pathlib import Path
 
+import backfill
 import paper
-from feeds import USFeed
+from feeds import get, settlement
 from train_research import load_model, predict
 
 BATCH = Path("batch")
@@ -34,57 +35,70 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def collect(duration):
+def collect():
+    """Fetch the previous closed UTC hour once; no live polling."""
     BATCH.mkdir(exist_ok=True)
     state = paper.load()
     write(BATCH / "base.json", state)
-    collector = copy.deepcopy(state)
-    feeds = [USFeed("15m"), USFeed("1h")]
-    deadline = time.monotonic() + duration
-    with gzip.open(BATCH / "events.jsonl.gz", "wt") as events:
-        while True:
-            started = time.monotonic()
-            for feed in feeds:
-                now = int(time.time())
-                polling = collector["polling"]
-                polling["attempts"] += 1
-                polling["last_attempt"] = now
-                outcomes = {}
-                original = paper.settlement
-                def record(slug):
-                    try:
-                        result = original(slug)
-                    except Exception as exc:
-                        print('Settlement check failed:', slug, str(exc), flush=True)
-                        result = None
-                    outcomes[slug] = result
-                    return result
-                paper.settlement = record
-                try:
-                    paper.reconcile(collector, now)
-                    events.write(json.dumps({"kind":"reconcile","at":now,"outcomes":outcomes}) + "\n")
-                    obs = feed.observe(now)
-                    if time.time() - obs["observed_at"] > 12:
-                        raise ValueError("Stale observation")
-                    collector["markets"].setdefault(obs["slug"], {"ends":obs["ends"],"outcome":None,"checked_at":0})
-                    events.write(json.dumps({"kind":"observation","observation":obs}) + "\n")
-                    paper.append_observation(obs)
-                    collector["last_run"] = obs["observed_at"]
-                    polling["observed"] += 1
-                    polling["last_error"] = None
-                except Exception as exc:
-                    polling["skipped"] += 1
-                    polling["last_error"] = type(exc).__name__ + ": " + str(exc)[:160]
-                    print("Collection error:", polling["last_error"], flush=True)
-                finally:
-                    paper.settlement = original
-            remaining = deadline-time.monotonic()
-            if remaining <= 0:
-                break
-            time.sleep(min(remaining, max(0,15-(time.monotonic()-started))))
-    write(BATCH / "collection.json", {"polling":collector["polling"],"last_run":collector["last_run"],
-                                      "base_hash":digest(BATCH / "base.json"),
-                                      "events_hash":digest(BATCH / "events.jsonl.gz")})
+    start, end = backfill.latest_closed_hour()
+    already_processed = end <= state.get("last_processed_hour_end", 0)
+    observations, hour = [], None
+    if not already_processed:
+        path, missing, total = backfill.collect_hour(start, end, require_settlement=False)
+        with gzip.open(path, "rt", encoding="utf-8") as source:
+            hour = json.load(source)
+        try:
+            reference = get("/v1/asset-prices/history", {
+                "assets": "crypto:btc", "from": start-140*60, "to": end-60,
+                "bucket": "ASSET_PRICE_BUCKET_1M",
+            }).get("series", [])
+            if len(reference) != 1:
+                raise ValueError("Expected one official BTC reference series")
+            candles = reference[0].get("candles", [])
+        except (OSError, ValueError) as error:
+            print("Official BRTI reference unavailable:", error, flush=True)
+            candles = []
+        observations = backfill.observations(hour, candles)
+        if not observations:
+            raise ValueError("Closed hour has no usable historical price observations")
+        observations = [row for row in observations
+                        if row["observed_at"] > (state.get("last_run") or 0)]
+        for row in observations:
+            paper.append_observation(row)
+        batch = {"source": "historical_price_proxy", "start": start, "end": end,
+                 "observations": len(observations), "markets": total-missing,
+                 "missing_markets": missing}
+    else:
+        batch = state.get("last_batch")
+    outcomes = {}
+    for slug, market in state["markets"].items():
+        if market["outcome"] is None and market["ends"]+30 <= time.time():
+            try:
+                outcomes[slug] = settlement(slug)
+            except (OSError, ValueError) as error:
+                print("Settlement check failed:", slug, error, flush=True)
+                outcomes[slug] = None
+    if hour is not None:
+        for contract in hour["markets"]:
+            source = contract.get("settlement") or {}
+            if source.get("settlement") in (0, 1):
+                outcomes[contract["slug"]] = "Up" if source["settlement"] == 1 else "Down"
+    with gzip.open(BATCH / "events.jsonl.gz", "wt", encoding="utf-8") as events:
+        for row in observations:
+            events.write(json.dumps({"kind":"observation","observation":row}) + "\n")
+        events.write(json.dumps({"kind":"reconcile","at":int(time.time()),
+                                 "outcomes":outcomes}) + "\n")
+    write(BATCH / "collection.json", {
+        "polling":state["polling"],
+        "last_run":max(state.get("last_run") or 0,
+                       max((row["observed_at"] for row in observations), default=0)),
+        "hour_end":end if not already_processed else state.get("last_processed_hour_end",0),
+        "batch":batch,
+        "base_hash":digest(BATCH / "base.json"),
+        "events_hash":digest(BATCH / "events.jsonl.gz"),
+    })
+    print("Historical hour", start, end, "observations", len(observations),
+          "already processed", already_processed, flush=True)
 
 
 def replay_events(state, events, names, candidate):
@@ -156,19 +170,20 @@ def merge():
             state["forecast_metrics"][name] = shard_state["forecast_metrics"][name]
     state["polling"] = manifest["polling"]
     state["last_run"] = manifest["last_run"]
+    if manifest.get("hour_end"):
+        state["last_processed_hour_end"] = manifest["hour_end"]
+    if manifest.get("batch") is not None:
+        state["last_batch"] = manifest["batch"]
     paper.save(state)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=("collect","shard","merge"))
-    parser.add_argument("--duration", type=int, default=60)
     parser.add_argument("--index", type=int)
     args = parser.parse_args()
     if args.command == "collect":
-        if not 60 <= args.duration <= 3600:
-            raise ValueError("Duration must be 60 to 3600 seconds")
-        collect(args.duration)
+        collect()
     elif args.command == "shard":
         shard(args.index)
     else:

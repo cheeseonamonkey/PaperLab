@@ -94,7 +94,7 @@ def examples():
                 # market ended. Post-settlement snapshots are never examples.
                 if at >= market_window(name)[1]:
                     continue
-                if source == "bootstrap":
+                if source in ("bootstrap", "historical_price_proxy"):
                     p = float(obs["display_up"])
                 else:
                     quote = obs["quotes"]["Up"]
@@ -184,7 +184,9 @@ def predict(observation, model):
         return None
     quotes = observation.get("quotes", {}).get("Up", {})
     try:
-        probability = (float(quotes["bid"]) + float(quotes["ask"])) / 2
+        probability = (float(observation["display_up"])
+                       if observation.get("source") == "historical_price_proxy"
+                       else (float(quotes["bid"]) + float(quotes["ask"])) / 2)
     except (KeyError, TypeError, ValueError):
         return None
     if not 0 < probability < 1:
@@ -212,7 +214,7 @@ def load_model(path=None):
 def grouped_scores(rows, model):
     groups = {}
     for horizon in ("15m", "1h"):
-        for source in ("bootstrap", "live"):
+        for source in ("bootstrap", "live", "historical_price_proxy"):
             subset = [r for r in rows if ("-1h-" in r[1]) == (horizon == "1h") and r[4] == source]
             if subset:
                 groups[horizon + ":" + source] = score(subset, model)

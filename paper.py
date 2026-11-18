@@ -59,7 +59,8 @@ def empty_forecast_metric():
 
 def initial():
     return {"version":STATE_VERSION, "venue":"polymarket_us", "mode":"paper",
-            "cash_per_strategy":START, "last_run":None, "markets":{},
+            "cash_per_strategy":START, "last_run":None, "last_processed_hour_end":0,
+            "last_batch":None, "markets":{},
             "forecast_metrics":{name:empty_forecast_metric() for name in POLICIES},
             "polling":{"attempts":0,"observed":0,"skipped":0,"last_attempt":None,"last_error":None},
             "accounts":{name:{"cash":START,"orders":[],"trades":[],"signals":0} for name in POLICIES}}
@@ -76,6 +77,8 @@ def load():
         data["version"] = STATE_VERSION
     elif data.get("version") != STATE_VERSION or set(data.get("accounts",{})) != set(POLICIES):
         raise ValueError("Strategy account set mismatch")
+    data.setdefault("last_processed_hour_end", 0)
+    data.setdefault("last_batch", None)
     data.setdefault("forecast_metrics",{})
     for name in POLICIES:
         data["forecast_metrics"].setdefault(name,empty_forecast_metric())
@@ -96,6 +99,10 @@ def append_observation(obs):
     record={k:obs[k] for k in ("venue","slug","start","ends","observed_at","quotes","features")}
     if "feature_available_at" in obs:
         record["feature_available_at"] = obs["feature_available_at"]
+    if "source" in obs:
+        record["source"] = obs["source"]
+    if "display_up" in obs:
+        record["display_up"] = obs["display_up"]
     record["book_top5"] = obs.get("book_top5", {})
     record["latest_display"]=obs["display_history"][-1] if obs["display_history"] else None
     record["latest_reference"]=obs["brti_history"][-1] if obs["brti_history"] else None
@@ -105,12 +112,18 @@ def append_observation(obs):
 def cap(x,lo=.01,hi=.99):
     return max(lo,min(hi,x))
 
+def implied_probability(obs):
+    if obs.get("source") == "historical_price_proxy":
+        return cap(obs["display_up"])
+    book = obs["quotes"]["Up"]
+    return cap((book["bid"] + book["ask"]) / 2)
+
+
 def fair_probability(strategy,obs,models):
     if strategy in MODELS or strategy=="research_linear":
         return models.get(strategy)
     f=obs["features"]
-    quote=obs["quotes"]["Up"]
-    implied=(quote["bid"]+quote["ask"])/2
+    implied=implied_probability(obs)
     if strategy=="market_implied":
         return None # Explicit hold / do-nothing benchmark.
     if strategy.startswith("brti_distance"):
@@ -122,7 +135,8 @@ def fair_probability(strategy,obs,models):
         z=distance/max(volatility*math.sqrt(remaining/15),.0002)
         return cap(.5*(1+math.erf(z/math.sqrt(2))))
     if strategy=="book_imbalance":
-        return cap(implied+.10*f.get("yes_book_imbalance",0))
+        imbalance = f.get("yes_book_imbalance")
+        return cap(implied + .10*imbalance) if imbalance is not None else None
     btc=f.get("btc_r5")
     if btc is None:
         return None
@@ -163,23 +177,20 @@ def maybe_order(account,obs,probability,mode,now,min_edge=MIN_EDGE):
         return None
     if available(account)<=0:
         return None
+    historical = obs.get("source") == "historical_price_proxy"
     candidates=[]
     for side,prob in (("Up",probability),("Down",1-probability)):
-        book=obs["quotes"][side]
-        # Ask is executable for a marketable paper buy; resting bid for a limit.
-        if mode=="limit":
-            price=book["bid"]
-            if price<.05 or price>.95:
-                continue
-            # Even maker-style paper orders require positive modeled edge.
-            unit_fee=0 if mode=="limit" else TAKER_COEFFICIENT*price*(1-price)
-            modeled_edge=prob-price-unit_fee
+        book = None if historical else obs["quotes"][side]
+        if historical:
+            price = (obs["display_up"] if side == "Up" else 1-obs["display_up"]) + SLIPPAGE
+        elif mode=="limit":
+            price = book["bid"]
         else:
-            price=book["ask"]+SLIPPAGE
-            if price<.05 or price>.95:
-                continue
-            unit_fee=TAKER_COEFFICIENT*price*(1-price)
-            modeled_edge=prob-price-unit_fee
+            price = book["ask"]+SLIPPAGE
+        if not .05 <= price <= .95:
+            continue
+        unit_fee = 0 if mode=="limit" and not historical else TAKER_COEFFICIENT*price*(1-price)
+        modeled_edge = prob-price-unit_fee
         if modeled_edge>=min_edge:
             candidates.append((modeled_edge,side,price,book,unit_fee))
     if not candidates:
@@ -202,50 +213,65 @@ def maybe_order(account,obs,probability,mode,now,min_edge=MIN_EDGE):
     entry={"slug":slug,"side":side,"price":round(price,6),
            "shares":shares,"cost":cost,"edge":round(edge,6),"placed_at":now}
     account["signals"]+=1
-    if mode=="limit":
-        order={**entry,"reserved":cost,"status":"open","type":"limit"}
+    if historical or mode=="limit":
+        order={**entry,"reserved":cost,"status":"open",
+               "type":"historical_buy" if historical else "limit"}
         account["orders"].append(order)
-        return "LIMIT "+side
+        return ("PROXY BUY " if historical else "LIMIT ")+side
     if shares>book["ask_size"]:
         return "MARKET no-fill: insufficient displayed top-ask depth"
     account["cash"]=round(account["cash"]-cost,8)
     account["trades"].append({**entry,"status":"open","type":"market","filled_at":now})
     return "PAPER MARKET "+side
 
-def maybe_exit(account,obs,probability,now):
+def maybe_exit(account, obs, probability, now):
+    historical = obs.get("source") == "historical_price_proxy"
+    depth = ({side: obs["quotes"][side]["bid_size"] for side in ("Up", "Down")}
+             if not historical else None)
+    exited, insufficient = [], False
     for trade in account["trades"]:
-        if trade["status"]!="open" or trade["slug"]!=obs["slug"]:
+        if trade["status"] != "open" or trade["slug"] != obs["slug"]:
             continue
-        book=obs["quotes"][trade["side"]]
-        side_probability=(probability if trade["side"]=="Up" else 1-probability) if probability is not None else None
-        urgent=now>=obs["ends"]-60 or (side_probability is not None and side_probability<=book["bid"])
+        side = trade["side"]
+        price = ((obs["display_up"] if side == "Up" else 1-obs["display_up"]) - SLIPPAGE
+                 if historical else obs["quotes"][side]["bid"])
+        side_probability = (probability if side == "Up" else 1-probability) if probability is not None else None
+        urgent = now >= obs["ends"] - 60 or (side_probability is not None and side_probability <= price)
         if not urgent:
             continue
-        # Existing passive exit must be cancelled before an IOC is simulated.
+        if price <= 0 or (not historical and depth[side] < trade["shares"]):
+            insufficient = True
+            continue
         for order in account["orders"]:
-            if (order.get("type")=="limit_sell" and order["slug"]==trade["slug"] and
-                    order.get("trade_placed_at")==trade["placed_at"] and order["status"]=="open"):
-                order.update(status="cancelled",cancelled_at=now)
-        # Conservative top-of-book, all-or-none approximation. Insufficient depth
-        # leaves the position open; it may be retried or settle.
-        price=book["bid"]
-        if price<=0 or book["bid_size"]<trade["shares"]:
-            return "IOC SELL no-fill: insufficient displayed depth"
-        fee=TAKER_COEFFICIENT*trade["shares"]*price*(1-price)
-        proceeds=round(price*trade["shares"]-fee,8)
-        pnl=round(proceeds-trade["cost"],8)
-        account["orders"].append({"slug":trade["slug"],"side":trade["side"],"type":"ioc_sell",
+            if (order.get("type") == "limit_sell" and order["slug"] == trade["slug"]
+                    and order.get("trade_placed_at") == trade["placed_at"]
+                    and order["status"] == "open"):
+                order.update(status="cancelled", cancelled_at=now)
+        if not historical:
+            depth[side] -= trade["shares"]
+        fee = TAKER_COEFFICIENT*trade["shares"]*price*(1-price)
+        proceeds = round(price*trade["shares"]-fee,8)
+        pnl = round(proceeds-trade["cost"],8)
+        order_type = "historical_sell" if historical else "ioc_sell"
+        account["orders"].append({"slug":trade["slug"],"side":side,"type":order_type,
                                   "status":"filled","placed_at":now,"filled_at":now,"price":price,
                                   "shares":trade["shares"],"reserved":0,"fee":round(fee,8),
                                   "trade_placed_at":trade["placed_at"]})
-        trade.update(status="settled",settled_at=now,close_reason="ioc_sell",
+        trade.update(status="settled",settled_at=now,close_reason=order_type,
                      exit_price=price,payout=proceeds,pnl=pnl,won=pnl>0)
-        account["cash"]=round(account["cash"]+proceeds,8)
-        return "IOC SELL "+trade["side"]
-    return None
+        account["cash"] = round(account["cash"]+proceeds,8)
+        exited.append(side)
+    if exited:
+        return "IOC SELL "+exited[0] if len(exited)==1 else "IOC SELL %d positions" % len(exited)
+    return "IOC SELL no-fill: insufficient displayed depth" if insufficient else None
 
 def evaluate_limits(account,obs,now,markets=None):
     markets=markets if markets is not None else {obs["slug"]:{"ends":obs["ends"]}}
+    historical = obs.get("source") == "historical_price_proxy"
+    ask_left = ({side:obs["quotes"][side]["ask_size"] for side in ("Up", "Down")}
+                if not historical else None)
+    bid_left = ({side:obs["quotes"][side]["bid_size"] for side in ("Up", "Down")}
+                if not historical else None)
     for order in account["orders"]:
         if order["status"]!="open":
             continue
@@ -260,25 +286,46 @@ def evaluate_limits(account,obs,now,markets=None):
             continue
         if now<=order["placed_at"]:
             continue # Never fill against same snapshot used for placement.
+        if historical:
+            if order.get("type") != "historical_buy":
+                continue
+            price = (obs["display_up"] if order["side"] == "Up" else 1-obs["display_up"]) + SLIPPAGE
+            fee = TAKER_COEFFICIENT*price*(1-price) if 0 < price < 1 else 0
+            cost = round(order["shares"]*(price+fee),8)
+            if not 0 < price < 1 or cost > order["reserved"]+1e-8:
+                order.update(status="cancelled",cancelled_at=now)
+                continue
+            order.update(status="filled",filled_at=now,fill_price=round(price,6),
+                         fee=round(order["shares"]*fee,8))
+            account["cash"] = round(account["cash"]-cost,8)
+            account["trades"].append({k:v for k,v in order.items()
+                                     if k not in ("reserved","status","type")} |
+                                    {"status":"open","type":"historical_price_proxy",
+                                     "price":round(price,6),"cost":cost,"filled_at":now})
+            continue
+        if order.get("type") == "historical_buy":
+            continue
         book=obs["quotes"][order["side"]]
         if order.get("type")=="limit_sell":
             trade=next((t for t in account["trades"] if t["slug"]==order["slug"] and
                         t["placed_at"]==order["trade_placed_at"] and t["status"]=="open"),None)
             if trade is None:
                 order.update(status="cancelled",cancelled_at=now)
-            elif book["bid"]>=order["price"] and book["bid_size"]>=order["shares"]:
+            elif book["bid"]>=order["price"] and bid_left[order["side"]]>=order["shares"]:
                 proceeds=round(order["price"]*order["shares"],8)
                 pnl=round(proceeds-trade["cost"],8)
                 order.update(status="filled",filled_at=now)
+                bid_left[order["side"]] -= order["shares"]
                 trade.update(status="settled",settled_at=now,close_reason="limit_sell",
                              exit_price=order["price"],payout=proceeds,pnl=pnl,won=pnl>0)
                 account["cash"]=round(account["cash"]+proceeds,8)
             continue
-        if book["ask"] <= order["price"] and book["ask_size"] >= order["shares"]:
+        if book["ask"] <= order["price"] and ask_left[order["side"]] >= order["shares"]:
             # Cross observed on a later poll: *hypothetical* fill at original
             # limit price. No maker rebate claimed, no guarantee of actual fill.
             order["status"]="filled"
             order["filled_at"]=now
+            ask_left[order["side"]] -= order["shares"]
             account["cash"]=round(account["cash"]-order["cost"],8)
             account["trades"].append({k:v for k,v in order.items() if k not in ("reserved","status","type")} |
                                     {"status":"open","type":"limit_cross","filled_at":now})
@@ -297,8 +344,7 @@ def process_snapshot(state,obs,predictions,names=None):
     now=obs["observed_at"]
     market=state["markets"].setdefault(obs["slug"],{"ends":obs["ends"],"outcome":None,"checked_at":0})
     market.setdefault("forecasts",[])
-    up=obs["quotes"]["Up"]
-    market_probability=cap((up["bid"]+up["ask"])/2)
+    market_probability=implied_probability(obs)
     forecast={"at":now,"market":market_probability,"probabilities":{}}
     decisions=[]
     for name,mode in POLICIES.items():
@@ -315,9 +361,10 @@ def process_snapshot(state,obs,predictions,names=None):
         last=account.setdefault("last_decision",{})
         if mode!="hold" and last.get(obs["slug"])!=bucket:
             last[obs["slug"]]=bucket
-            message=maybe_exit(account,obs,p,now) or maybe_order(account,obs,p,mode,now,STRATEGY_MIN_EDGE.get(name,MIN_EDGE))
-            if message:
-                decisions.append(name+":"+message)
+            for message in (maybe_exit(account,obs,p,now),
+                            maybe_order(account,obs,p,mode,now,STRATEGY_MIN_EDGE.get(name,MIN_EDGE))):
+                if message:
+                    decisions.append(name+":"+message)
     market["forecasts"].append(forecast)
     return decisions
 
@@ -379,6 +426,8 @@ def reconcile(state,now):
 
 def render(state):
     stats = state.get("polling", {})
+    batch = state.get("last_batch")
+    poll_label = "Previous live polling" if batch else "Polls"
     settled_markets=sum(m.get("outcome") is not None for m in state.get("markets",{}).values())
     settled_positions=sum(t["status"]=="settled" for a in state["accounts"].values() for t in a["trades"])
     header=["# Paper Lab — Polymarket US", "", "Venue: **Polymarket US**, BTC 15m and 1h BRTI Up/Down. All orders **simulated**.",
@@ -386,10 +435,15 @@ def render(state):
             (len(state["accounts"]),START,stamp(state["last_run"]) if state["last_run"] else "Not yet run"), "",
             "Research sample: **%d markets tracked / %d officially settled / %d settled strategy positions**." %
             (len(state.get("markets",{})),settled_markets,settled_positions), "",
-            "Polls: **%s attempts / %s recorded / %s skipped**. Last error: %s." %
-            (stats.get("attempts",0),stats.get("observed",0),stats.get("skipped",0),stats.get("last_error") or "None"),"",
+            "%s: **%s attempts / %s recorded / %s skipped**. Last error: %s." %
+            (poll_label, stats.get("attempts",0),stats.get("observed",0),
+             stats.get("skipped",0),stats.get("last_error") or "None"),"",
             "| Strategy | Paper cash | Realized P&L | Win rate | Brier (markets) | ΔBrier vs market | Settled | Open | Pending limits |",
             "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    if batch:
+        header[-2:-2] = ["Last hourly replay: **%s–%s UTC**, %d historical price observations from %d markets (%d unavailable)." %
+                   (stamp(batch["start"]),stamp(batch["end"]),batch["observations"],
+                    batch["markets"],batch["missing_markets"]),""]
     for name,account in state["accounts"].items():
         settled=[t for t in account["trades"] if t["status"]=="settled"]
         pending=[o for o in account["orders"] if o["status"]=="open"]
@@ -416,9 +470,8 @@ def render(state):
     header += ["", "Win rate is settled simulated fills only. Forecasts estimate Up probability; Brier and log loss use the official outcome.",
                 "Forecast losses average snapshots within each market, then average markets. Positive ΔBrier means improvement over the paired market midpoint; lower Brier/log loss is better.",
                 "Realized profit is **not** total equity: active positions are not marked to market.",
-                "US YES book is the market source; NO quotes are complement-derived.",
-                "Limit fills require a **later** observed ask crossing the resting bid and displayed size covering the order. This is an optimistic uncertainty bound, **not proof a resting order actually filled**.",
-                "Resting maker fills assume zero exchange fee and no rebate; marketable test fills use the published straight-contract taker formula and $0.005/share slippage. Historical orders retain their original fee assumptions.",
+                "Historical batches use archived display prices, not executable order books. Buy and sell fills are delayed fee-adjusted price proxies; actual liquidity and slippage are unknown.",
+                "Legacy live-book limit fills used a later book crossing and displayed size, never proven queue priority. Historic orders retain their original fee assumptions.",
                 "Five legacy checkpoint accounts abstain in this fresh-start run; the repository-trained research candidate is evaluated separately.",
                 "The remaining seven strategies are explicit deterministic baselines, including a no-trade account.",
                 "No authentication, private APIs, real orders, funds or wallets.", ""]

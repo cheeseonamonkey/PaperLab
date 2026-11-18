@@ -2,7 +2,7 @@
 
 ## Current loop
 
-Each scheduled run evaluates small, deterministic feature and regularization variants against a market-implied baseline. It records chronological validation results; no candidate is automatically promoted. Inputs include completed-minute BTC, ETH, SOL, and XRP returns where available. The one-time two-day bootstrap shares the normal observation path; settled live observations are added over time. The separate historical archive is excluded from training.
+Each scheduled run evaluates small, deterministic feature and regularization variants against a market-implied baseline. It records chronological validation results; no candidate is automatically promoted. Inputs include completed-minute BTC, ETH, SOL, and XRP returns where available. The one-time two-day bootstrap shares the observation path; officially settled historical-hour and earlier live observations are added over time. The separate backward archive is excluded from training.
 
 The current research model is not connected to paper execution. The optional OpenRouter/Pi process can propose bounded experiments for review; it does not edit or deploy strategy code. Keep model use optional and cost-bounded. Free-model availability is not guaranteed.
 

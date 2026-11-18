@@ -1,16 +1,9 @@
-name: Paper Lab live research
+name: Paper Lab hourly research
 on:
-  push:
-    paths:
-      - '.github/workflows/paper.yml'
   schedule:
     - cron: '5 * * * *'
   workflow_dispatch:
     inputs:
-      duration_seconds:
-        description: 'Live collection duration (60-3600 seconds)'
-        type: number
-        default: 90
       run_research:
         description: 'Run the daily gated research proposal step'
         type: boolean
@@ -18,7 +11,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: yeno-us-persistent-state
+  group: paperlab-hourly-state
   cancel-in-progress: false
 
 jobs:
@@ -27,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       revision: ${{ steps.revision.outputs.sha }}
-    timeout-minutes: 70
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - name: Refresh serialized repository state
@@ -40,19 +33,8 @@ jobs:
           python-version: '3.12'
       - name: Verify paper engine
         run: python -m unittest discover -s tests -v
-      - name: Collect shared observations and settlement events
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          DISPATCH_DURATION: ${{ inputs.duration_seconds }}
-        run: |
-          if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
-            seconds="${DISPATCH_DURATION:-90}"
-          elif [[ "$EVENT_NAME" == push ]]; then
-            seconds=60
-          else
-            seconds=3600
-          fi
-          python parallel.py collect --duration "$seconds"
+      - name: Fetch previous closed hour and settlement events
+        run: python parallel.py collect
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -61,6 +43,7 @@ jobs:
           path: |
             batch/
             data/observations/
+            data/backfill/hours/
           retention-days: 7
           if-no-files-found: warn
 
@@ -112,13 +95,6 @@ jobs:
       - name: Merge isolated account states
         id: merge
         run: python parallel.py merge
-      - name: Import two-day bootstrap once
-        timeout-minutes: 15
-        run: python bootstrap.py
-      - name: Backfill history
-        if: always() && steps.merge.outcome == 'success'
-        timeout-minutes: 8
-        run: python backfill.py
       - name: Train research candidates
         if: always() && steps.merge.outcome == 'success'
         timeout-minutes: 6
