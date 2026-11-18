@@ -22,7 +22,8 @@ ROOT = Path(__file__).resolve().parent / "data" / "backfill"
 STATE = ROOT / "state.json"
 HOUR = 3600
 HORIZONS = (("15m", 900), ("1h", HOUR))
-HOURS_PER_RUN = 3
+HOURS_PER_RUN = 120
+FIRST_HOUR = int(datetime(2026, 9, 22, 16, tzinfo=timezone.utc).timestamp())
 
 
 def latest_closed_hour(now=None):
@@ -99,9 +100,13 @@ def exogenous(start, end):
     return candles
 
 
-def collect_hour(start, end, require_settlement=True):
+def hour_path(start):
     at = datetime.fromtimestamp(start, timezone.utc)
-    path = ROOT / "hours" / at.strftime("%Y-%m-%d") / (at.strftime("%H") + ".json.gz")
+    return ROOT / "hours" / at.strftime("%Y-%m-%d") / (at.strftime("%H") + ".json.gz")
+
+
+def collect_hour(start, end, require_settlement=True):
+    path = hour_path(start)
     markets = [market(t, horizon, period, require_settlement=require_settlement)
                for horizon, period in HORIZONS
                for t in range(start, end, period)]
@@ -169,40 +174,57 @@ def observations(hour, reference):
 
 
 def main():
+    """Archive all available Polymarket US BTC hours; resume without refetching."""
     ROOT.mkdir(parents=True, exist_ok=True)
-    # Leave the most recently closed hour for settlements to become available.
-    state = json.loads(STATE.read_text()) if STATE.exists() else {
-        "next_end": int(time.time()) // HOUR * HOUR - HOUR,
-        "hours_saved": 0, "missing_markets": 0, "empty_hours": 0,
-    }
-    # Backfill the latest closed hour as well, covering live-run gaps.
-    recent_start, recent_end = latest_closed_hour()
-    recent_at = datetime.fromtimestamp(recent_start, timezone.utc)
-    recent_path = ROOT / "hours" / recent_at.strftime("%Y-%m-%d") / (recent_at.strftime("%H") + ".json.gz")
-    if not recent_path.exists():
-        try:
-            collect_hour(recent_start, recent_end)
-            state["recent_hours_saved"] = state.get("recent_hours_saved", 0) + 1
-            state.pop("recent_error", None)
-        except (OSError, ValueError) as exc:
-            state["recent_error"] = str(exc)[:200]
-            print("Latest hour deferred:", exc, flush=True)
-        write_json(STATE, state)
+    state = json.loads(STATE.read_text()) if STATE.exists() else {}
+    if "target_start" not in state:
+        state = {"target_start": FIRST_HOUR,
+                 "target_end": latest_closed_hour()[1],
+                 "next_end": latest_closed_hour()[1],
+                 "processed_hours": 0, "downloaded_hours": 0,
+                 "reused_hours": 0, "missing_markets": 0,
+                 "done": False}
     for _ in range(HOURS_PER_RUN):
-        if state.get("done"):
-            break
         end = state["next_end"]
+        if end <= state["target_start"]:
+            state["done"] = True
+            break
         start = end - HOUR
-        path, missing, total = collect_hour(start, end)
+        path = hour_path(start)
+        if path.exists():
+            try:
+                with gzip.open(path, "rt", encoding="utf-8") as source:
+                    hour = json.load(source)
+                if hour.get("start") != start or hour.get("end") != end:
+                    raise ValueError("Existing archive has incorrect hour boundaries")
+                missing = sum(m["status"] != "collected" for m in hour["markets"])
+                reused = True
+            except (OSError, ValueError, KeyError) as error:
+                print("Refetching incomplete archive:", path, error, flush=True)
+                reused = False
+        else:
+            reused = False
+        if not reused:
+            try:
+                path, missing, _ = collect_hour(start, end, require_settlement=False)
+            except (OSError, ValueError, KeyError) as error:
+                state["last_error"] = {"hour_start": start, "reason": str(error)[:200]}
+                print("Archive paused at", start, error, flush=True)
+                break
         state["next_end"] = start
-        state["hours_saved"] += 1
+        state["processed_hours"] += 1
+        state["reused_hours" if reused else "downloaded_hours"] += 1
         state["missing_markets"] += missing
-        state["empty_hours"] = state.get("empty_hours", 0) + 1 if missing == total else 0
-        # Record the 404s; stop after a full day without either horizon.
-        state["done"] = state["empty_hours"] >= 24
+        state["done"] = start <= state["target_start"]
+        state.pop("last_error", None)
         state["updated_at"] = datetime.now(timezone.utc).isoformat()
         write_json(STATE, state)
-        print("Saved", path, "missing", missing, "next_end", start, flush=True)
+        print("Archive", state["processed_hours"], "of",
+              (state["target_end"]-state["target_start"])//HOUR,
+              "hours:", path, "unavailable markets:", missing, flush=True)
+        if not reused:
+            time.sleep(.2)
+    write_json(STATE, state)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 **13 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute and 1-hour Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
 
 - [Current results](REPORT.md) · [Persistent state](data/state.json) · [Raw, compressed observations](data/observations/) · [Workflows](../../actions) · [Documentation index](docs/README.md) · [Strategy pages](docs/bots/README.md)
-- **Hourly Actions** fetches the preceding completed UTC hour once, replays available historical observations, then exits. GitHub schedules may run late or be skipped.
+- **Archive mode:** the existing hourly Actions workflow is temporarily filling the full Polymarket US BTC archive (September 22 onward) in bounded, resumable batches. It stops when the target period is covered; no live polling.
 - Historical batches simulate **delayed price-based entries and exits**, including modeled taker fees and slippage. These are paper proxies, not executable quotes. Settles using the **official US 0/1 settlement endpoint**.
 - Strategies share historical US price displays, the market's price-to-beat, timestamp-available BRTI candles, and BTC/ETH/SOL/XRP context. Historical book depth is unavailable; book-dependent strategies abstain. Coinbase context never substitutes for official settlement.
 
@@ -79,7 +79,7 @@ Five legacy checkpoint accounts are inactive. Their earlier files remain in Git 
 - [data/state.json](data/state.json): independent cash, open orders, filled trades, official settled outcomes, and audit timestamps.
 - [data/observations](data/observations/): **compressed daily JSONL**, one timestamped source observation shared across strategies. Git commit history remains auditable.
 - [models/checkpoints](models/checkpoints/): inactive legacy checkpoints, retained for provenance.
-- [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The scheduled workflow fetches the previous completed hour only; older archival backfill remains available manually. Display prices are not order books.
+- [data/backfill](data/backfill/): resumable historical 15-minute and 1-hour market display history, official settlements, and Coinbase BTC/ETH/SOL/XRP minute candles. The scheduled workflow is currently building the full available US BTC archive; a prior-hour replay remains manually available. Historical display prices are not order books.
 - [data/training](data/training/): candidate model, chronological validation, and research run history.
 - [data/ledgers](data/ledgers/): per-bot orders and trades in CSV.
 - [docs](docs/): research notes and generated per-bot pages. The candidate is not automatically promoted to a paper strategy.
@@ -90,7 +90,7 @@ Each short-lived hourly run commits its batch and state once. Failed publication
 
 ## GitHub Actions
 
-The scheduled workflow runs `python parallel.py collect` once per hour, fetches the previous completed UTC hour, replays it through the existing isolated accounts, reconciles official settlements, publishes reports, and exits. GitHub may delay or skip cron runs; a manual dispatch is also available.
+The existing `paper.yml` schedule now runs `python backfill.py` to archive the complete Polymarket US BTC period from September 22, 2026 through the archived cutoff. Each run saves up to 120 UTC hours, reuses stored hours, and resumes from `data/backfill/state.json`. No new workflows or real-time polling. Manual dispatch with `archive_only=false` retains the previous-hour paper replay for comparison.
 
 Research continues using the fixed bootstrap and timestamp-valid settled observations; the separate backward archive is not scanned by the trainer. Candidates are evaluated chronologically and never automatically promoted.
 

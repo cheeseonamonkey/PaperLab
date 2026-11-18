@@ -1,9 +1,16 @@
-name: Paper Lab hourly research
+name: Paper Lab archive & research
 on:
+  push:
+    paths:
+      - '.github/workflows/paper.yml'
   schedule:
     - cron: '5 * * * *'
   workflow_dispatch:
     inputs:
+      archive_only:
+        description: 'Backfill Polymarket US market history instead of replay'
+        type: boolean
+        default: true
       run_research:
         description: 'Run the daily gated research proposal step'
         type: boolean
@@ -15,8 +22,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  archive:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (github.event_name != 'workflow_dispatch' || inputs.archive_only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh canonical archive state
+        run: git pull --ff-only origin "$GITHUB_REF_NAME"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate archive collector
+        run: python -m unittest discover -s tests -v
+      - name: Download available historical BTC market hours
+        run: python backfill.py
+      - name: Save archive checkpoint and historical source data
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/backfill
+          if ! git diff --cached --quiet; then
+            git commit -m 'data: Polymarket US historical market archive [skip ci]'
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+      - name: Preserve interrupted archive data
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-interrupted-${{ github.run_id }}
+          path: data/backfill/
+          retention-days: 7
+
   collect:
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.event_name == 'workflow_dispatch' && inputs.archive_only == false
     runs-on: ubuntu-latest
     outputs:
       revision: ${{ steps.revision.outputs.sha }}

@@ -18,6 +18,58 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(backfill.latest_closed_hour(7200), (3600, 7200))
         self.assertEqual(backfill.latest_closed_hour(7199), (0, 3600))
 
+    def test_full_archive_reuses_existing_hours_and_stops_at_launch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            existing = root / "hours" / "1970-01-01" / "01.json.gz"
+            existing.parent.mkdir(parents=True)
+            with gzip.open(existing, "wt") as stream:
+                json.dump({"start":3600,"end":7200,"markets":[
+                    {"status":"collected"}],"exogenous_coinbase_1m":{}},stream)
+
+            def download(start, end, require_settlement):
+                self.assertFalse(require_settlement)
+                target = backfill.hour_path(start)
+                target.parent.mkdir(parents=True,exist_ok=True)
+                with gzip.open(target,"wt") as stream:
+                    json.dump({"start":start,"end":end,"markets":[
+                        {"status":"collected"}],"exogenous_coinbase_1m":{}},stream)
+                return target,0,1
+
+            with patch.object(backfill,"ROOT",root), \
+                 patch.object(backfill,"STATE",root/"state.json"), \
+                 patch.object(backfill,"FIRST_HOUR",3600), \
+                 patch.object(backfill,"HOURS_PER_RUN",2), \
+                 patch.object(backfill,"latest_closed_hour",return_value=(7200,10800)), \
+                 patch.object(backfill,"collect_hour",side_effect=download) as fetch, \
+                 patch.object(backfill.time,"sleep"):
+                backfill.main()
+                state = json.loads((root/"state.json").read_text())
+                self.assertTrue(state["done"])
+                self.assertEqual(state["processed_hours"],2)
+                self.assertEqual(state["downloaded_hours"],1)
+                self.assertEqual(state["reused_hours"],1)
+                self.assertEqual(state["next_end"],3600)
+                fetch.assert_called_once_with(7200,10800,require_settlement=False)
+                backfill.main()
+                self.assertEqual(fetch.call_count,1)
+
+    def test_archive_pauses_without_advancing_past_source_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch.object(backfill,"ROOT",root), \
+                 patch.object(backfill,"STATE",root/"state.json"), \
+                 patch.object(backfill,"FIRST_HOUR",3600), \
+                 patch.object(backfill,"HOURS_PER_RUN",2), \
+                 patch.object(backfill,"latest_closed_hour",return_value=(7200,10800)), \
+                 patch.object(backfill,"collect_hour",side_effect=OSError("temporary outage")):
+                backfill.main()
+            state=json.loads((root/"state.json").read_text())
+            self.assertFalse(state["done"])
+            self.assertEqual(state["next_end"],10800)
+            self.assertEqual(state["processed_hours"],0)
+            self.assertIn("temporary outage",state["last_error"]["reason"])
+
     def test_historical_observations_use_only_closed_input_candles(self):
         start = 1794636000
         slug = backfill.slug(start, "15m")
