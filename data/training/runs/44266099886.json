@@ -1,0 +1,169 @@
+{
+  "days": [
+    "2026-11-12",
+    "2026-11-13",
+    "2026-11-14",
+    "2026-11-17",
+    "2026-11-18"
+  ],
+  "experiments": [
+    {
+      "name": "linear",
+      "regularization": 0.01,
+      "transform": "linear",
+      "validation": {
+        "brier": 0.12791068079581802,
+        "log_loss": 0.38500953386802245,
+        "market_brier": 0.1324469732583211,
+        "market_log_loss": 0.3961949946668618,
+        "markets": 11,
+        "rows": 317
+      },
+      "validation_groups": {
+        "15m:live": {
+          "brier": 0.16909903235599866,
+          "log_loss": 0.4847681720424491,
+          "market_brier": 0.17456253679455114,
+          "market_log_loss": 0.4972251992948467,
+          "markets": 8,
+          "rows": 137
+        },
+        "1h:live": {
+          "brier": 0.018075076635334454,
+          "log_loss": 0.1189864987362135,
+          "market_brier": 0.020138803828372506,
+          "market_log_loss": 0.12678111565889721,
+          "markets": 3,
+          "rows": 180
+        }
+      }
+    },
+    {
+      "name": "market_only",
+      "regularization": 0.01,
+      "transform": "market_only",
+      "validation": {
+        "brier": 0.12838288617734914,
+        "log_loss": 0.3861412350916722,
+        "market_brier": 0.1324469732583211,
+        "market_log_loss": 0.3961949946668618,
+        "markets": 11,
+        "rows": 317
+      },
+      "validation_groups": {
+        "15m:live": {
+          "brier": 0.16969815413617398,
+          "log_loss": 0.4861308057868818,
+          "market_brier": 0.17456253679455114,
+          "market_log_loss": 0.4972251992948467,
+          "markets": 8,
+          "rows": 137
+        },
+        "1h:live": {
+          "brier": 0.01820883828714808,
+          "log_loss": 0.11950237990444283,
+          "market_brier": 0.020138803828372506,
+          "market_log_loss": 0.12678111565889721,
+          "markets": 3,
+          "rows": 180
+        }
+      }
+    },
+    {
+      "name": "regularized",
+      "regularization": 0.1,
+      "transform": "linear",
+      "validation": {
+        "brier": 0.1279597072979491,
+        "log_loss": 0.3851513273272044,
+        "market_brier": 0.1324469732583211,
+        "market_log_loss": 0.3961949946668618,
+        "markets": 11,
+        "rows": 317
+      },
+      "validation_groups": {
+        "15m:live": {
+          "brier": 0.1691452826354212,
+          "log_loss": 0.48488018880604855,
+          "market_brier": 0.17456253679455114,
+          "market_log_loss": 0.4972251992948467,
+          "markets": 8,
+          "rows": 137
+        },
+        "1h:live": {
+          "brier": 0.018131506398022308,
+          "log_loss": 0.11920769671694886,
+          "market_brier": 0.020138803828372506,
+          "market_log_loss": 0.12678111565889721,
+          "markets": 3,
+          "rows": 180
+        }
+      }
+    },
+    {
+      "name": "tanh_returns",
+      "regularization": 0.01,
+      "transform": "tanh_returns",
+      "validation": {
+        "brier": 0.13456550182865581,
+        "log_loss": 0.4009488618399023,
+        "market_brier": 0.1324469732583211,
+        "market_log_loss": 0.3961949946668618,
+        "markets": 11,
+        "rows": 317
+      },
+      "validation_groups": {
+        "15m:live": {
+          "brier": 0.17743133750111778,
+          "log_loss": 0.503631033226166,
+          "market_brier": 0.17456253679455114,
+          "market_log_loss": 0.4972251992948467,
+          "markets": 8,
+          "rows": 137
+        },
+        "1h:live": {
+          "brier": 0.02025660670208907,
+          "log_loss": 0.12712973814319478,
+          "market_brier": 0.020138803828372506,
+          "market_log_loss": 0.12678111565889721,
+          "markets": 3,
+          "rows": 180
+        }
+      }
+    }
+  ],
+  "features": [
+    "market_logit",
+    "one_hour",
+    "btc_r1",
+    "eth_r1",
+    "sol_r1",
+    "xrp_r1",
+    "btc_missing",
+    "eth_missing",
+    "sol_missing",
+    "xrp_missing",
+    "sp500_r1",
+    "sp500_missing"
+  ],
+  "final_fit": "baseline refit on all available settled rows after validation; no automatic promotion",
+  "markets": 268,
+  "rows": 6473,
+  "sources": {
+    "bootstrap": 5700,
+    "live": 773
+  },
+  "status": "trained",
+  "training_markets": 257,
+  "updated_at": "2026-11-18T09:21:03.443400+00:00",
+  "validation": {
+    "brier": 0.12791068079581802,
+    "log_loss": 0.38500953386802245,
+    "market_brier": 0.1324469732583211,
+    "market_log_loss": 0.3961949946668618,
+    "markets": 11,
+    "rows": 317
+  },
+  "validation_cutoff_utc": 1794960000,
+  "validation_window": "latest UTC day"
+}

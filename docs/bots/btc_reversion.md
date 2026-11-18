@@ -4,33 +4,33 @@ Paper account · simulated orders
 
 | Metric | Value |
 |---|---:|
-| Cash | $90.86 |
-| Reserved | $0.00 |
-| Realized P&L | $-9.14 |
-| Settled wins / losses | 6 / 6 |
-| Open positions | 0 |
-| Pending orders | 0 |
-| Orders filled / placed | 19 / 21 |
-| Recorded exit fees | $0.5704 |
-| Calibration markets | 21 |
-| Calibration logit offset | -0.0477 |
-| Brier (markets) | 0.1001 (23) |
-| ΔBrier vs market | -0.0021 |
+| Cash | $97.49 |
+| Reserved | $1.92 |
+| Realized P&L | $+6.02 |
+| Settled wins / losses | 12 / 7 |
+| Open positions | 4 |
+| Pending orders | 1 |
+| Orders filled / placed | 31 / 34 |
+| Recorded exit fees | $0.6356 |
+| Calibration markets | 28 |
+| Calibration logit offset | -0.1444 |
+| Brier (markets) | 0.1137 (30) |
+| ΔBrier vs market | +0.0001 |
 
 [Order ledger](../../data/ledgers/btc_reversion-orders.csv) · [Trade ledger](../../data/ledgers/btc_reversion-trades.csv) · [Overview](../../REPORT.md)
 
 ```mermaid
 pie title Settled simulated trades
-    "Wins" : 6
-    "Losses" : 6
+    "Wins" : 12
+    "Losses" : 7
 ```
 
 ## Results by market horizon
 
 | Horizon | Closed trades | Realized P&L |
 |---|---:|---:|
-| 15m | 3 | $-14.96 |
-| 1h | 9 | $+5.82 |
+| 15m | 7 | $-4.19 |
+| 1h | 12 | $+10.21 |
 
 ## Research
 
