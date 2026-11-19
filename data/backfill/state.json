@@ -1,11 +1,11 @@
 {
   "done": false,
-  "downloaded_hours": 443,
+  "downloaded_hours": 563,
   "missing_markets": 10,
-  "next_end": 1793282400,
-  "processed_hours": 480,
+  "next_end": 1792850400,
+  "processed_hours": 600,
   "reused_hours": 37,
   "target_end": 1795010400,
   "target_start": 1790092800,
-  "updated_at": "2026-11-19T07:15:15.449450+00:00"
+  "updated_at": "2026-11-19T17:18:10.770361+00:00"
 }
