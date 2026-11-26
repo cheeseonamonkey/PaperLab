@@ -1,0 +1,18 @@
+{
+  "kind": "tcn_gru",
+  "fold": 3,
+  "train_rows": 117713,
+  "dev_rows": 0,
+  "parameters": 247762,
+  "epochs": 1,
+  "chosen_epoch": 1,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.45940792488801474,
+      "dev_market_equal_loss": null
+    }
+  ],
+  "baseline": null,
+  "dev": null
+}

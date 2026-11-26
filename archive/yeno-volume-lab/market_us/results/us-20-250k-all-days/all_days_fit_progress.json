@@ -1,0 +1,107 @@
+{
+  "stage": "all_days_fit",
+  "finished": 20,
+  "target": 20,
+  "rows": [
+    {
+      "kind": "kan_mixer",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "simple_rnn",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "stacked_rnn",
+      "selected_epoch": 2,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "lag_gated_mlp",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "lstm",
+      "selected_epoch": 2,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "skip_gru_2",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "diagonal_ssm",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "lowrank_mlp",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "tcn_gru",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "random_fourier",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "wavelet_mlp",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "crossnet",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "multidecay_ssm",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "regime_moe",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "multiscale_gru",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "projected_gru",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "conv_gru",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "depthwise_tcn",
+      "selected_epoch": 2,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "spectral_gate",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    },
+    {
+      "kind": "tsmixer",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": null
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "status": "ORIGINAL_PMData_TRAIN_ONLY_NO_DEV_OR_SEALED",
+  "generatedUtc": "2026-10-28T02:36:16.458099+00:00",
+  "planSha256": "404f713e8ab08a4a4085e014026f9c388eb582046a23e57ec31573bffe4c6ffe",
+  "days": [
+    {
+      "date": "2026-05-19",
+      "split": "TRAIN",
+      "markets": 288,
+      "coverage": "FULL_288",
+      "missingMarketIndices": [],
+      "sourcePath": "data/raw/polymarket/pmdata-independent-zips/2026-05-19.zip",
+      "sourceSha256": "d7c82298c3488c486de788d924c5fb234422b0e890921170057332dba909488b",
+      "archiveBytes": 421721099,
+      "provider": "PMData original per-market incremental BTC 5m L2",
+      "wasCached": true,
+      "quotaUnitsIfNew": 72
+    },
+    {
+      "date": "2026-06-17",
+      "split": "TRAIN",
+      "markets": 282,
+      "coverage": "PARTIAL_NOT_24H",
+      "missingMarketIndices": [
+        241,
+        242,
+        243,
+        244,
+        245,
+        247
+      ],
+      "sourcePath": "data/raw/polymarket/pmdata-independent-zips/2026-06-17.zip",
+      "sourceSha256": "fcfbe13987d2d3f00e3ecd874520cc6143cd50c66dd777d49a170e186971cb67",
+      "archiveBytes": 480307731,
+      "provider": "PMData original per-market incremental BTC 5m L2",
+      "wasCached": true,
+      "quotaUnitsIfNew": 72
+    },
+    {
+      "date": "2026-06-18",
+      "split": "TRAIN",
+      "markets": 288,
+      "coverage": "FULL_288",
+      "missingMarketIndices": [],
+      "sourcePath": "data/raw/polymarket/pmdata-independent-zips/2026-06-18.zip",
+      "sourceSha256": "5932860b72773dedd16dab2e1025cee334f8773a8c251452fbc602c9fb163828",
+      "archiveBytes": 548022368,
+      "provider": "PMData original per-market incremental BTC 5m L2",
+      "wasCached": false,
+      "quotaUnitsIfNew": 72
+    }
+  ],
+  "quotaUnitsNew": 72,
+  "notes": "Remaining quota unknown. New dates from preregistered TRAIN weeks. June18 replaces June17 for FULL_288 because free PMData market catalog reports June17 only 282; selection uses data coverage, not trading outcomes."
+}

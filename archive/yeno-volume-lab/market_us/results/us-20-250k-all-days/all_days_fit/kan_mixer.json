@@ -1,0 +1,18 @@
+{
+  "kind": "kan_mixer",
+  "fold": 3,
+  "train_rows": 117713,
+  "dev_rows": 0,
+  "parameters": 253043,
+  "epochs": 1,
+  "chosen_epoch": 1,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.45919520456468294,
+      "dev_market_equal_loss": null
+    }
+  ],
+  "baseline": null,
+  "dev": null
+}

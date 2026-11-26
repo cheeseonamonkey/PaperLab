@@ -1,0 +1,42 @@
+2026-11-05 21:03:35,264 INFO ready: samples=22531 splits={'train': 16694, 'dev': 2457, 'sealed': 2760} baseline_dev=0.4537
+2026-11-05 21:03:35,265 INFO START 1/20 gru
+2026-11-05 21:05:13,135 INFO DONE 1/20 gru dev_logloss=0.53316 secs=97.9
+2026-11-05 21:05:13,135 INFO START 2/20 stacked_gru
+2026-11-05 21:07:35,401 INFO DONE 2/20 stacked_gru dev_logloss=0.51442 secs=142.3
+2026-11-05 21:07:35,401 INFO START 3/20 lstm
+2026-11-05 21:08:36,280 INFO DONE 3/20 lstm dev_logloss=0.53649 secs=60.9
+2026-11-05 21:08:36,280 INFO START 4/20 attention_gru
+2026-11-05 21:10:12,391 INFO DONE 4/20 attention_gru dev_logloss=0.62285 secs=96.1
+2026-11-05 21:10:12,391 INFO START 5/20 tcn
+2026-11-05 21:11:27,364 INFO DONE 5/20 tcn dev_logloss=0.61442 secs=75.0
+2026-11-05 21:11:27,364 INFO START 6/20 depthwise_tcn
+2026-11-05 21:13:31,681 INFO DONE 6/20 depthwise_tcn dev_logloss=0.57451 secs=124.3
+2026-11-05 21:13:31,682 INFO START 7/20 wavenet
+2026-11-05 21:14:59,110 INFO DONE 7/20 wavenet dev_logloss=0.57811 secs=87.4
+2026-11-05 21:14:59,110 INFO START 8/20 conv_gru
+2026-11-05 21:16:41,478 INFO DONE 8/20 conv_gru dev_logloss=0.48970 secs=102.4
+2026-11-05 21:16:41,479 INFO START 9/20 transformer
+2026-11-05 21:19:05,818 INFO DONE 9/20 transformer dev_logloss=0.83709 secs=144.3
+2026-11-05 21:19:05,819 INFO START 10/20 patch_transformer
+2026-11-05 21:19:31,393 INFO DONE 10/20 patch_transformer dev_logloss=0.81673 secs=25.6
+2026-11-05 21:19:31,393 INFO START 11/20 itransformer
+2026-11-05 21:19:59,352 INFO DONE 11/20 itransformer dev_logloss=0.52453 secs=28.0
+2026-11-05 21:19:59,353 INFO START 12/20 tsmixer
+2026-11-05 21:21:13,020 INFO DONE 12/20 tsmixer dev_logloss=0.58411 secs=73.7
+2026-11-05 21:21:13,021 INFO START 13/20 multiscale_mixer
+2026-11-05 21:21:57,052 INFO DONE 13/20 multiscale_mixer dev_logloss=0.68953 secs=44.0
+2026-11-05 21:21:57,052 INFO START 14/20 tide
+2026-11-05 21:22:03,341 INFO DONE 14/20 tide dev_logloss=0.64269 secs=6.3
+2026-11-05 21:22:03,341 INFO START 15/20 fourier_mixer
+2026-11-05 21:23:11,414 INFO DONE 15/20 fourier_mixer dev_logloss=0.67638 secs=68.1
+2026-11-05 21:23:11,415 INFO START 16/20 diagonal_ssm
+2026-11-05 21:23:37,450 INFO DONE 16/20 diagonal_ssm dev_logloss=0.48326 secs=26.0
+2026-11-05 21:23:37,451 INFO START 17/20 cfc
+2026-11-05 21:25:41,894 INFO DONE 17/20 cfc dev_logloss=0.58983 secs=124.4
+2026-11-05 21:25:41,894 INFO START 18/20 kan_mixer
+2026-11-05 21:25:58,196 INFO DONE 18/20 kan_mixer dev_logloss=0.67777 secs=16.3
+2026-11-05 21:25:58,196 INFO START 19/20 regime_moe
+2026-11-05 21:26:19,462 INFO DONE 19/20 regime_moe dev_logloss=0.58059 secs=21.3
+2026-11-05 21:26:19,462 INFO START 20/20 dlinear_residual
+2026-11-05 21:26:29,090 INFO DONE 20/20 dlinear_residual dev_logloss=0.55250 secs=9.6
+2026-11-05 21:26:49,243 INFO COMPLETE 20/20 best=diagonal_ssm dev=0.48326 sealed=0.42396

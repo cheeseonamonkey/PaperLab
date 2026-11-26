@@ -1,0 +1,151 @@
+{
+  "calendar_days": 90,
+  "date_end": "2026-08-07",
+  "date_start": "2026-05-10",
+  "endpoint": "/v1/polymarket/l2/YYYY/MM/DD/btc-5m.zip",
+  "execution_requirement": "Full incremental L2; 5s decisions, 250ms latency",
+  "payload_sha256": "fb9473d8de366c5de9ccc9ba4c240394ea85d8fbcb8f065f7d2c91b3c33cd326",
+  "pilot": [
+    {
+      "date": "2026-05-14",
+      "group": "TRAIN",
+      "quota_units": 72,
+      "week": 0
+    },
+    {
+      "date": "2026-05-25",
+      "group": "TRAIN",
+      "quota_units": 72,
+      "week": 2
+    },
+    {
+      "date": "2026-06-12",
+      "group": "TRAIN",
+      "quota_units": 72,
+      "week": 4
+    },
+    {
+      "date": "2026-06-24",
+      "group": "TRAIN",
+      "quota_units": 72,
+      "week": 6
+    },
+    {
+      "date": "2026-07-04",
+      "group": "DEV",
+      "quota_units": 72,
+      "week": 7
+    },
+    {
+      "date": "2026-07-17",
+      "group": "DEV",
+      "quota_units": 72,
+      "week": 9
+    },
+    {
+      "date": "2026-07-19",
+      "group": "SEALED",
+      "quota_units": 72,
+      "week": 10
+    },
+    {
+      "date": "2026-08-03",
+      "group": "SEALED",
+      "quota_units": 72,
+      "week": 12
+    }
+  ],
+  "pilot_quota_units": 576,
+  "pilot_rule": "Preselected week indices and SHA256-derived weekdays, before seeing outcomes",
+  "pilot_scope": "8 representative days only; does NOT constitute 90 downloaded days",
+  "provider": "PMData authenticated historical Polymarket BTC UpDown 5m L2",
+  "regime_rule": "Use predeclared TRAIN-only volatility buckets for diagnostics; no outcome-driven day selection. Chronological blocks cannot guarantee balanced regimes.",
+  "sealed_rule": "SEALED dates may be acquired for checksum inventory, but never inspected, trained on, or scored until one frozen final evaluation. No tuning afterward.",
+  "seed": "yeno-independent-pmdata-v1-20261025",
+  "sensitivity_resolution_seconds": 10,
+  "source_requirement": "PMData only; no Chainlink; no substitutions",
+  "split_rule": "Whole calendar weeks, strictly chronological; no August 8-21 in any group",
+  "status": "PLANNED_NOT_DOWNLOADED",
+  "study_resolution_seconds": 30,
+  "version": "pmdata-independent-calendar-v1",
+  "weeks": [
+    {
+      "end": "2026-05-16",
+      "group": "TRAIN",
+      "start": "2026-05-10",
+      "week": 0
+    },
+    {
+      "end": "2026-05-23",
+      "group": "TRAIN",
+      "start": "2026-05-17",
+      "week": 1
+    },
+    {
+      "end": "2026-05-30",
+      "group": "TRAIN",
+      "start": "2026-05-24",
+      "week": 2
+    },
+    {
+      "end": "2026-06-06",
+      "group": "TRAIN",
+      "start": "2026-05-31",
+      "week": 3
+    },
+    {
+      "end": "2026-06-13",
+      "group": "TRAIN",
+      "start": "2026-06-07",
+      "week": 4
+    },
+    {
+      "end": "2026-06-20",
+      "group": "TRAIN",
+      "start": "2026-06-14",
+      "week": 5
+    },
+    {
+      "end": "2026-06-27",
+      "group": "TRAIN",
+      "start": "2026-06-21",
+      "week": 6
+    },
+    {
+      "end": "2026-07-04",
+      "group": "DEV",
+      "start": "2026-06-28",
+      "week": 7
+    },
+    {
+      "end": "2026-07-11",
+      "group": "DEV",
+      "start": "2026-07-05",
+      "week": 8
+    },
+    {
+      "end": "2026-07-18",
+      "group": "DEV",
+      "start": "2026-07-12",
+      "week": 9
+    },
+    {
+      "end": "2026-07-25",
+      "group": "SEALED",
+      "start": "2026-07-19",
+      "week": 10
+    },
+    {
+      "end": "2026-08-01",
+      "group": "SEALED",
+      "start": "2026-07-26",
+      "week": 11
+    },
+    {
+      "end": "2026-08-07",
+      "group": "SEALED",
+      "start": "2026-08-02",
+      "week": 12
+    }
+  ]
+}

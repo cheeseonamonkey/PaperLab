@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv*/
+*.egg-info/
+.pmdata.env
+
+# Large local data (kept on disk, not in git)
+data/raw/**
+data/normalized/**
+data/cache/**
+data/archive/
+data/markets/**
+data/research/**
+!data/**/.gitkeep
+
+# Vendored third-party source trees
+external/*
+!external/README.md
+
+# Training artifacts: keep small JSON reports, drop weights and DB snapshots
+market_us/results/**/*.pt
+market_us/results/**/*.sqlite3
+market_us/results/**/*.sqlite3-wal
+market_us/results/**/*.sqlite3-shm
+
+market_us/results/**/*.parquet

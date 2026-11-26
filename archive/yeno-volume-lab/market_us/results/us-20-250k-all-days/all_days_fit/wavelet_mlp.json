@@ -1,0 +1,18 @@
+{
+  "kind": "wavelet_mlp",
+  "fold": 3,
+  "train_rows": 117713,
+  "dev_rows": 0,
+  "parameters": 246554,
+  "epochs": 1,
+  "chosen_epoch": 1,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.4591258093617874,
+      "dev_market_equal_loss": null
+    }
+  ],
+  "baseline": null,
+  "dev": null
+}

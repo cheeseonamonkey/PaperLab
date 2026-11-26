@@ -1,0 +1,18 @@
+{
+  "kind": "conv_gru",
+  "fold": 3,
+  "train_rows": 117713,
+  "dev_rows": 0,
+  "parameters": 247394,
+  "epochs": 1,
+  "chosen_epoch": 1,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.4595234276031853,
+      "dev_market_equal_loss": null
+    }
+  ],
+  "baseline": null,
+  "dev": null
+}
