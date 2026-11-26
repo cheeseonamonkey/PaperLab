@@ -1,0 +1,23 @@
+{
+  "sol_spot.parquet": "05e69b52c18cde2bc6c41e5c270e4ff0df4cd2638383f22e0f1f7623f1463312",
+  "vix.parquet": "3c2ccf4c84fa25042c96f66381b6bb7ea1921a7949aae819a8a124c2d4e1c848",
+  "real_gdp.parquet": "342511b9d599f9a23a5718670a58b6a372d0ea10f6aefb30d07c4e6dbfb35ced",
+  "xrp_spot.parquet": "86db54878a102ac0c5a9e43f0dae5941fcfd1eb5654ece14ca713320e17d90df",
+  "nasdaq_qqq.parquet": "41a8352221e489361fe150b8c9b6b7aef4663483373306a3f082256ce39e5146",
+  "usd_uup.parquet": "e72ce2dd6e587ba9cc3c4f4b88f19f17b695b7109277ac78a448e6694a55241b",
+  "usd_trade_weighted.parquet": "d118d7441a1880a64fe16698434f9397a55c1f2ceb205deb880d79c8559c2f62",
+  "btc_spot.parquet": "ab5bb00ae97b6fe55762e305152825d102aedc7ba20c7fc979d329f4ec2d1ad5",
+  "cpi.parquet": "317c57c01a59af0a0c36b7d2d66bfd608f2098664df45609a8bdb16d4473beb2",
+  "yield_10y.parquet": "9bbcefb1bdbc7983614f5406128d3e84771551dc0e7b241d54e6b3a7cab0408c",
+  "fed_target_upper.parquet": "2f213b08a0dcedcb101887c9fec27da25391075adecc3fab22a06d4994fd42ad",
+  "eth_spot.parquet": "a645049736afe1c0d614c3f7672262bcf5a957263771bb430ae6b7d81cbbb032",
+  "wti_oil.parquet": "20aa91e75b5838043947deb7b0959d63611202b60ee3653611edb0591e0cf25f",
+  "payrolls.parquet": "88d5acf34a6b93c03ee1cd7d05515a0ac89a76d65bac90d090284a6642cb944e",
+  "yield_2y.parquet": "0380aa7405e5c56caf9ed6d8276dbdf981d8c161eb788bc2b42a0dd39962799b",
+  "fed_effective.parquet": "9bc0947b85338bae957c381fcf59272e3a90bb4fa2d5e7b91986cfaac7c250c1",
+  "sp500_spy.parquet": "19fef9b018caf5f24a99c7469b9fef5539e1f92765a3dc61514952052f462337",
+  "initial_claims.parquet": "e92085ddb16fafe2d33b7e3c4231a197bdc2ee6c1fa75c79efa2ff5fcd14f5fe",
+  "gold_gld.parquet": "18268740b7997ce8ab2f08e7ad4c49cabb5dd29a93a98b362a4a794dd809848a",
+  "oil_uso.parquet": "2f27e200fc0c4d0ee8c263caa8c86bd5a43d9cfc8de3f6e29c27e82d958f57ac",
+  "unemployment.parquet": "518b8ea129d168ce6fc8be97914be8e98328e170713757b926adc2156f6f8ff9"
+}

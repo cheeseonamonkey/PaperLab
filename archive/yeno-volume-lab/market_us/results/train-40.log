@@ -1,0 +1,4 @@
+2026-11-13 12:32:14,817 INFO ready: samples=139602 dates=52 splits={'train': 133791, 'dev': 2457, 'sealed': 2748} market_dev=0.46544
+2026-11-13 12:32:14,825 INFO START 1/40 gru
+2026-11-13 12:36:33,500 INFO DONE 1/40 gru dev_logloss=0.46107 baseline=0.46544 seconds=253.0
+2026-11-13 12:36:33,500 INFO START 2/40 stacked_gru

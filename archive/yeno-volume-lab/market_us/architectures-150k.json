@@ -1,0 +1,162 @@
+[
+  {
+    "name": "gru",
+    "width": 132,
+    "parameters": 149606,
+    "target": 150000,
+    "deviation_pct": -0.263,
+    "smoke_loss": 0.08336
+  },
+  {
+    "name": "stacked_gru",
+    "width": 100,
+    "parameters": 148350,
+    "target": 150000,
+    "deviation_pct": -1.1,
+    "smoke_loss": 0.16604
+  },
+  {
+    "name": "lstm",
+    "width": 120,
+    "parameters": 153530,
+    "target": 150000,
+    "deviation_pct": 2.353,
+    "smoke_loss": 0.10204
+  },
+  {
+    "name": "attention_gru",
+    "width": 132,
+    "parameters": 149739,
+    "target": 150000,
+    "deviation_pct": -0.174,
+    "smoke_loss": 0.0392
+  },
+  {
+    "name": "tcn",
+    "width": 88,
+    "parameters": 147098,
+    "target": 150000,
+    "deviation_pct": -1.935,
+    "smoke_loss": 0.04461
+  },
+  {
+    "name": "depthwise_tcn",
+    "width": 152,
+    "parameters": 153722,
+    "target": 150000,
+    "deviation_pct": 2.481,
+    "smoke_loss": 0.07909
+  },
+  {
+    "name": "wavenet",
+    "width": 68,
+    "parameters": 144958,
+    "target": 150000,
+    "deviation_pct": -3.361,
+    "smoke_loss": 0.17384
+  },
+  {
+    "name": "conv_gru",
+    "width": 108,
+    "parameters": 147146,
+    "target": 150000,
+    "deviation_pct": -1.903,
+    "smoke_loss": 0.04105
+  },
+  {
+    "name": "transformer",
+    "width": 84,
+    "parameters": 144950,
+    "target": 150000,
+    "deviation_pct": -3.367,
+    "smoke_loss": 0.08645
+  },
+  {
+    "name": "patch_transformer",
+    "width": 84,
+    "parameters": 150242,
+    "target": 150000,
+    "deviation_pct": 0.161,
+    "smoke_loss": 0.12765
+  },
+  {
+    "name": "itransformer",
+    "width": 84,
+    "parameters": 144950,
+    "target": 150000,
+    "deviation_pct": -3.367,
+    "smoke_loss": 0.05654
+  },
+  {
+    "name": "tsmixer",
+    "width": 84,
+    "parameters": 150122,
+    "target": 150000,
+    "deviation_pct": 0.081,
+    "smoke_loss": 0.06822
+  },
+  {
+    "name": "multiscale_mixer",
+    "width": 92,
+    "parameters": 147963,
+    "target": 150000,
+    "deviation_pct": -1.358,
+    "smoke_loss": 0.08605
+  },
+  {
+    "name": "tide",
+    "width": 84,
+    "parameters": 152258,
+    "target": 150000,
+    "deviation_pct": 1.505,
+    "smoke_loss": 0.09059
+  },
+  {
+    "name": "fourier_mixer",
+    "width": 104,
+    "parameters": 149018,
+    "target": 150000,
+    "deviation_pct": -0.655,
+    "smoke_loss": 0.07886
+  },
+  {
+    "name": "diagonal_ssm",
+    "width": 120,
+    "parameters": 153650,
+    "target": 150000,
+    "deviation_pct": 2.433,
+    "smoke_loss": 0.04304
+  },
+  {
+    "name": "cfc",
+    "width": 108,
+    "parameters": 148334,
+    "target": 150000,
+    "deviation_pct": -1.111,
+    "smoke_loss": 0.07402
+  },
+  {
+    "name": "kan_mixer",
+    "width": 120,
+    "parameters": 152811,
+    "target": 150000,
+    "deviation_pct": 1.874,
+    "smoke_loss": 0.09221
+  },
+  {
+    "name": "regime_moe",
+    "width": 80,
+    "parameters": 154662,
+    "target": 150000,
+    "deviation_pct": 3.108,
+    "smoke_loss": 0.07343
+  },
+  {
+    "name": "dlinear_residual",
+    "width": 76,
+    "parameters": 149466,
+    "target": 150000,
+    "deviation_pct": -0.356,
+    "smoke_loss": 0.05236
+  }
+]

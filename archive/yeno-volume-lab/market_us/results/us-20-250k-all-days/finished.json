@@ -1,0 +1,8 @@
+{
+  "complete": true,
+  "days_used_in_final_fit": 44,
+  "models_compared": 20,
+  "models_eligible_for_further_validation": 5,
+  "models_fitted_on_all_days": 20,
+  "note": "All architectures are exploratory; final fits have no unbiased holdout. No P&L claims."
+}

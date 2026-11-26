@@ -1,0 +1,40 @@
+{
+  "version": "yeno-july17-dev-once-v1",
+  "precommitted_utc": "2026-10-25T21:11:19Z",
+  "date": "2026-07-17",
+  "group": "DEV",
+  "provider": "PMData original BTC UpDown 5m L2",
+  "split_plan_sha256": "404f713e8ab08a4a4085e014026f9c388eb582046a23e57ec31573bffe4c6ffe",
+  "frozen_train_report_sha256": "8c627e57edbcf787c64d358f6b7671590502208c93d4e24fedea5ee3d0fde1b3",
+  "frozen_model_sha256": {
+    "A1": "b4c926f3fd61db16a03fa8468967ef0425d060bc2967b94e6462d6765bf7888b",
+    "A2": "f4c7964545f4106793d9fe8d1efc8346d42e5bde8d17e667c4f860b9e22b7ed0"
+  },
+  "frozen_training_days": [
+    "2026-05-14",
+    "2026-05-25",
+    "2026-06-12",
+    "2026-06-24"
+  ],
+  "inputs": "30-second causal 17-feature book snapshots with 15-second full-L2 labels, original July17 PMData ZIP SHA-verified",
+  "predictive_metrics": [
+    "MSE",
+    "MAE",
+    "relative MSE gain vs TRAIN-only constant mean",
+    "market-cluster bootstrap 95% CI for relative MSE gain"
+  ],
+  "bootstrap": {
+    "unit": "market_slug",
+    "resamples": 1000,
+    "seed": 20261025,
+    "percentiles": [
+      2.5,
+      97.5
+    ]
+  },
+  "baseline": "TRAIN-only mean of signed 15s markout (A1) or abs 15s markout (A2)",
+  "score_policy": "ONE score file, refuse overwrite; no tuning, no repeated peeking, no SEALED data access; one July DEV day cannot prove regime generalization",
+  "trading_policy": "No B trading score from sparse snapshots. Full original incremental L2 and 5s decisions/250ms fills mandatory for any separate B replay.",
+  "source_caveat": "Local BTC spot candle references are proxies, not official Builderr parity.",
+  "authorization": "Use only available free PMData quota; no purchases, no credentials in logs."
+}

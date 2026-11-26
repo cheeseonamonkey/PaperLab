@@ -1,0 +1,38 @@
+{
+  "complete_models": 1,
+  "target_models": 40,
+  "rows": [
+    {
+      "kind": "gru",
+      "width": 152,
+      "params": 196586,
+      "target": 200000,
+      "deviation_pct": -1.707,
+      "dropout": 0.2,
+      "epoch_count": 1,
+      "train_loss": 0.46078168109978523,
+      "dev": {
+        "overall": {
+          "n": 2457,
+          "logloss": 0.46106991171836853,
+          "brier": 0.15474751591682434,
+          "accuracy": 0.7610907610907611
+        },
+        "15m": {
+          "n": 1218,
+          "logloss": 0.4908764958381653,
+          "brier": 0.16608817875385284,
+          "accuracy": 0.7348111658456487
+        },
+        "1h": {
+          "n": 1239,
+          "logloss": 0.43176841735839844,
+          "brier": 0.14359906315803528,
+          "accuracy": 0.7869249394673123
+        }
+      },
+      "seconds": 253.04,
+      "checkpoint": "gru.pt"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:262: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{name}__age_seconds"] = (anchors["decision_at"] - anchors["known_at"]).dt.total_seconds()
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:263: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{name}__missing"] = anchors[f"{name}__value"].isna().astype("int8")
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:262: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{name}__age_seconds"] = (anchors["decision_at"] - anchors["known_at"]).dt.total_seconds()
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:263: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{name}__missing"] = anchors[f"{name}__value"].isna().astype("int8")
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:266: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors["yield_curve_10y_minus_2y"] = anchors["yield_10y__value"] - anchors["yield_2y__value"]
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:271: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{asset}_vs_btc__ret_15m"] = anchors[col] - anchors["btc_spot__ret_15m"]
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:271: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{asset}_vs_btc__ret_15m"] = anchors[col] - anchors["btc_spot__ret_15m"]
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:271: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{asset}_vs_btc__ret_15m"] = anchors[col] - anchors["btc_spot__ret_15m"]
+2026-11-13 11:50:09,605 INFO FINISHED 1 kan_mixer
+2026-11-13 11:50:49,167 INFO FINISHED 1 lag_gated_mlp
+2026-11-13 11:52:20,216 INFO FINISHED 1 simple_rnn
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:262: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{name}__age_seconds"] = (anchors["decision_at"] - anchors["known_at"]).dt.total_seconds()
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:263: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{name}__missing"] = anchors[f"{name}__value"].isna().astype("int8")
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:262: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{name}__age_seconds"] = (anchors["decision_at"] - anchors["known_at"]).dt.total_seconds()
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:263: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{name}__missing"] = anchors[f"{name}__value"].isna().astype("int8")
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:266: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors["yield_curve_10y_minus_2y"] = anchors["yield_10y__value"] - anchors["yield_2y__value"]
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:271: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{asset}_vs_btc__ret_15m"] = anchors[col] - anchors["btc_spot__ret_15m"]
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:271: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{asset}_vs_btc__ret_15m"] = anchors[col] - anchors["btc_spot__ret_15m"]
+/root/Proj/YeNoVolumeLab/market_us/exogenous.py:271: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  anchors[f"{asset}_vs_btc__ret_15m"] = anchors[col] - anchors["btc_spot__ret_15m"]
+2026-11-13 12:04:53,592 INFO FINISHED 1 skip_gru_2
+2026-11-13 12:10:36,933 INFO FINISHED 1 lstm
+2026-11-13 12:10:37,022 INFO FINISHED 1 diagonal_ssm
+2026-11-13 12:10:57,976 INFO FINISHED 1 stacked_rnn
+2026-11-13 12:11:04,284 INFO FINISHED 1 lowrank_mlp
+2026-11-13 12:11:13,008 INFO FINISHED 1 random_fourier
+2026-11-13 12:11:21,782 INFO FINISHED 1 wavelet_mlp
+2026-11-13 12:11:34,298 INFO FINISHED 1 crossnet
+2026-11-13 12:12:39,635 INFO FINISHED 1 multidecay_ssm
+2026-11-13 12:14:32,891 INFO FINISHED 1 regime_moe
+2026-11-13 12:16:56,444 INFO FINISHED 1 multiscale_gru
+2026-11-13 12:25:13,420 INFO FINISHED 1 projected_gru
+2026-11-13 12:27:15,367 INFO FINISHED 1 tcn_gru
+2026-11-13 12:28:15,510 INFO FINISHED 1 spectral_gate
+2026-11-13 12:29:56,692 INFO FINISHED 1 conv_gru

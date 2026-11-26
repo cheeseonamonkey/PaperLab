@@ -1,0 +1,107 @@
+{
+  "stage": "fold1",
+  "finished": 20,
+  "target": 20,
+  "rows": [
+    {
+      "kind": "kan_mixer",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "simple_rnn",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "stacked_rnn",
+      "selected_epoch": 3,
+      "dev_market_equal_loss": 0.46797241355035835
+    },
+    {
+      "kind": "lag_gated_mlp",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "lstm",
+      "selected_epoch": 3,
+      "dev_market_equal_loss": 0.46871595606706684
+    },
+    {
+      "kind": "skip_gru_2",
+      "selected_epoch": 2,
+      "dev_market_equal_loss": 0.46821936196825364
+    },
+    {
+      "kind": "diagonal_ssm",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "lowrank_mlp",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "tcn_gru",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "random_fourier",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "wavelet_mlp",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "crossnet",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "multidecay_ssm",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "regime_moe",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    },
+    {
+      "kind": "multiscale_gru",
+      "selected_epoch": 2,
+      "dev_market_equal_loss": 0.46860926222615207
+    },
+    {
+      "kind": "projected_gru",
+      "selected_epoch": 2,
+      "dev_market_equal_loss": 0.46731822398198297
+    },
+    {
+      "kind": "conv_gru",
+      "selected_epoch": 1,
+      "dev_market_equal_loss": 0.46860924234138374
+    },
+    {
+      "kind": "depthwise_tcn",
+      "selected_epoch": 2,
+      "dev_market_equal_loss": 0.4678246331039287
+    },
+    {
+      "kind": "spectral_gate",
+      "selected_epoch": 3,
+      "dev_market_equal_loss": 0.46653286334296645
+    },
+    {
+      "kind": "tsmixer",
+      "selected_epoch": 0,
+      "dev_market_equal_loss": 0.46911518839651234
+    }
+  ]
+}

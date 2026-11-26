@@ -1,0 +1,18 @@
+{
+  "kind": "random_fourier",
+  "fold": 3,
+  "train_rows": 117713,
+  "dev_rows": 0,
+  "parameters": 254714,
+  "epochs": 1,
+  "chosen_epoch": 1,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.45875920561596617,
+      "dev_market_equal_loss": null
+    }
+  ],
+  "baseline": null,
+  "dev": null
+}

@@ -1,0 +1,53 @@
+{
+  "samples": 22531,
+  "date_rows": {
+    "2026-09-22": 875,
+    "2026-09-23": 2760,
+    "2026-09-24": 2489,
+    "2026-09-25": 2593,
+    "2026-09-26": 2760,
+    "2026-09-27": 2760,
+    "2026-09-28": 2760,
+    "2026-09-29": 2760,
+    "2026-09-30": 2760,
+    "2026-10-13": 14
+  },
+  "market_rows": 1082,
+  "display_rows": 25401,
+  "btc_candles": 31680,
+  "sample_cadence_seconds": 60,
+  "warning": "History display values, NOT executable past bid/ask.",
+  "splits": {
+    "train_dates": [
+      "2026-09-22",
+      "2026-09-23",
+      "2026-09-24",
+      "2026-09-25",
+      "2026-09-26",
+      "2026-09-27",
+      "2026-09-28"
+    ],
+    "dev_date": "2026-09-29",
+    "sealed_date": "2026-09-30",
+    "rows": {
+      "train": 16694,
+      "dev": 2457,
+      "sealed": 2760
+    },
+    "embargo_seconds": 7200
+  },
+  "source": "OFFICIAL Polymarket US",
+  "started": "2026-11-05T20:03:34.446613+00:00",
+  "goal": "out-of-sample probability screening, NOT claimed USD profit",
+  "configuration": {
+    "db": "/root/Proj/YeNoVolumeLab/data/research/polymarket_us/market.sqlite3",
+    "output": "/root/Proj/YeNoVolumeLab/experiments/results/us-20-150k-first",
+    "epochs": 5,
+    "batch_size": 64,
+    "lr": 0.001,
+    "seed": 42,
+    "threads": 2,
+    "max_hours": 2.8,
+    "dry_run": false
+  }
+}

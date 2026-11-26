@@ -1,0 +1,240 @@
+{
+  "generated_at": "2026-11-05T18:39:00.182376+00:00",
+  "venue_target": "Polymarket US (NOT Polymarket International)",
+  "purpose": "auxiliary features, not settlement or executable prices",
+  "revision_policy": "exclude revision-sensitive FRED by default",
+  "yahoo_caveat": "Unofficial research-only Yahoo chart endpoint; not a licensed production feed.",
+  "feeds": {
+    "yield_2y": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2",
+      "assumed_lag_days": 2,
+      "revision_sensitive": false,
+      "rows": 12603,
+      "first": "1976-06-01 00:00:00+00:00",
+      "last": "2026-11-03 00:00:00+00:00",
+      "sha256": "f4acfa5e9fc42b6a5e9a06ab9438cc9012c3b86b0fad336e1faf06d4249d27e3"
+    },
+    "yield_10y": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10",
+      "assumed_lag_days": 2,
+      "revision_sensitive": false,
+      "rows": 16195,
+      "first": "1962-01-02 00:00:00+00:00",
+      "last": "2026-11-03 00:00:00+00:00",
+      "sha256": "962bed3f1fce7c06311e5b1c674a44928542c79522f8536d73e0bf1160427ad5"
+    },
+    "fed_effective": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFF",
+      "assumed_lag_days": 2,
+      "revision_sensitive": false,
+      "rows": 26424,
+      "first": "1954-07-01 00:00:00+00:00",
+      "last": "2026-11-03 00:00:00+00:00",
+      "sha256": "1aa83f71cc62214c9898a69dbf6eb3196f651d48a7bdf7dbf518d41a8a57e1c9"
+    },
+    "fed_target_upper": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARU",
+      "assumed_lag_days": 2,
+      "revision_sensitive": false,
+      "rows": 6534,
+      "first": "2008-12-16 00:00:00+00:00",
+      "last": "2026-11-05 00:00:00+00:00",
+      "sha256": "cddc92cc5e5290e8d8cc4f81815d3145ea7644522eb6dad2b87c331c01c3c7b8"
+    },
+    "usd_trade_weighted": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTWEXBGS",
+      "assumed_lag_days": 3,
+      "revision_sensitive": false,
+      "rows": 5222,
+      "first": "2006-01-02 00:00:00+00:00",
+      "last": "2026-10-30 00:00:00+00:00",
+      "sha256": "290415003ac64f5d9ae5c473be1325386a2950829719c501adbe80748496a052"
+    },
+    "wti_oil": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILWTICO",
+      "assumed_lag_days": 2,
+      "revision_sensitive": false,
+      "rows": 9537,
+      "first": "1986-01-02 00:00:00+00:00",
+      "last": "2026-11-03 00:00:00+00:00",
+      "sha256": "2c38008c09a5abc5dbbd7d14c06e75bb2b79fa956a52ccdde73d1eeea5234ca1"
+    },
+    "cpi": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL",
+      "assumed_lag_days": 60,
+      "revision_sensitive": true,
+      "rows": 956,
+      "first": "1947-01-01 00:00:00+00:00",
+      "last": "2026-09-01 00:00:00+00:00",
+      "sha256": "95995118608eb216e32654253a2e5bbc3a70867b2aa9ce394e91207c88813169"
+    },
+    "payrolls": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=PAYEMS",
+      "assumed_lag_days": 60,
+      "revision_sensitive": true,
+      "rows": 1053,
+      "first": "1939-01-01 00:00:00+00:00",
+      "last": "2026-09-01 00:00:00+00:00",
+      "sha256": "ec1c4357b7660140405db7b1edd631f069d06d695f66f6ec60bfc8455706e62c"
+    },
+    "unemployment": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UNRATE",
+      "assumed_lag_days": 60,
+      "revision_sensitive": true,
+      "rows": 944,
+      "first": "1948-01-01 00:00:00+00:00",
+      "last": "2026-09-01 00:00:00+00:00",
+      "sha256": "1a33712ec5dbb95fb6523d5a4c52572afcd77b30c4e5c0fc283ba8a425947608"
+    },
+    "real_gdp": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDPC1",
+      "assumed_lag_days": 120,
+      "revision_sensitive": true,
+      "rows": 319,
+      "first": "1947-01-01 00:00:00+00:00",
+      "last": "2026-07-01 00:00:00+00:00",
+      "sha256": "342511b9d599f9a23a5718670a58b6a372d0ea10f6aefb30d07c4e6dbfb35ced"
+    },
+    "initial_claims": {
+      "status": "ok",
+      "source": "FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=ICSA",
+      "assumed_lag_days": 21,
+      "revision_sensitive": true,
+      "rows": 3122,
+      "first": "1967-01-07 00:00:00+00:00",
+      "last": "2026-10-31 00:00:00+00:00",
+      "sha256": "684a23e09e596e27f442621562cb225cad4c9c4d8af262ca323adf2d6d6a16f7"
+    },
+    "sp500_spy": {
+      "status": "ok",
+      "source": "Yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/",
+      "assumed_lag_days": 1,
+      "revision_sensitive": false,
+      "rows": 2513,
+      "first": "2016-11-07 00:00:00+00:00",
+      "last": "2026-11-05 00:00:00+00:00",
+      "sha256": "bb038708bd1040ff5589bc72a9ffb621fbde52c68169d530b848311904c159f6"
+    },
+    "nasdaq_qqq": {
+      "status": "ok",
+      "source": "Yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/",
+      "assumed_lag_days": 1,
+      "revision_sensitive": false,
+      "rows": 2513,
+      "first": "2016-11-07 00:00:00+00:00",
+      "last": "2026-11-05 00:00:00+00:00",
+      "sha256": "5d7406bc409379d1a2bd8a83e41b215285fbc8232c23f1be8e159847cb8e73a7"
+    },
+    "gold_gld": {
+      "status": "ok",
+      "source": "Yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/",
+      "assumed_lag_days": 1,
+      "revision_sensitive": false,
+      "rows": 2513,
+      "first": "2016-11-07 00:00:00+00:00",
+      "last": "2026-11-05 00:00:00+00:00",
+      "sha256": "b4dee8106f88d7a0f3af5167722799631f9c324c737a09417b2e5e2a4fa3b6be"
+    },
+    "oil_uso": {
+      "status": "ok",
+      "source": "Yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/",
+      "assumed_lag_days": 1,
+      "revision_sensitive": false,
+      "rows": 2513,
+      "first": "2016-11-07 00:00:00+00:00",
+      "last": "2026-11-05 00:00:00+00:00",
+      "sha256": "7d2e0edbd925dd9692b7c1c87e30301db686c336b36a462208f27ea4fcac407f"
+    },
+    "usd_uup": {
+      "status": "ok",
+      "source": "Yahoo",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/",
+      "assumed_lag_days": 1,
+      "revision_sensitive": false,
+      "rows": 2513,
+      "first": "2016-11-07 00:00:00+00:00",
+      "last": "2026-11-05 00:00:00+00:00",
+      "sha256": "8b3cc8007a359d908eaf45bd6512fa76d66092361c7d0f19cbe69a0d8af29996"
+    },
+    "vix": {
+      "status": "ok",
+      "source": "Cboe",
+      "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
+      "assumed_lag_days": 1,
+      "revision_sensitive": false,
+      "rows": 9309,
+      "first": "1990-01-02 00:00:00+00:00",
+      "last": "2026-11-04 00:00:00+00:00",
+      "sha256": "c51d57789d23d76a0920668676c43ec2b5567ea492f685500930120dcf1d41a9"
+    },
+    "btc_spot": {
+      "status": "ok",
+      "source": "Coinbase Exchange",
+      "url": "https://api.exchange.coinbase.com/products/BTC-USD/candles",
+      "assumed_lag_days": 0,
+      "revision_sensitive": false,
+      "rows": 2880,
+      "first": "2026-11-03 18:38:00+00:00",
+      "last": "2026-11-05 18:37:00+00:00",
+      "sha256": "aa48f84cf0c8155294d276c75952be9df6f383b85b0de92f715f514ba05a0f8b"
+    },
+    "eth_spot": {
+      "status": "ok",
+      "source": "Coinbase Exchange",
+      "url": "https://api.exchange.coinbase.com/products/ETH-USD/candles",
+      "assumed_lag_days": 0,
+      "revision_sensitive": false,
+      "rows": 2880,
+      "first": "2026-11-03 18:38:00+00:00",
+      "last": "2026-11-05 18:37:00+00:00",
+      "sha256": "975e032d0afaf1643a0d95e7ce218ac4e6bd23ac27d6203b1d9c1e6c665fb34f"
+    },
+    "sol_spot": {
+      "status": "ok",
+      "source": "Coinbase Exchange",
+      "url": "https://api.exchange.coinbase.com/products/SOL-USD/candles",
+      "assumed_lag_days": 0,
+      "revision_sensitive": false,
+      "rows": 2880,
+      "first": "2026-11-03 18:38:00+00:00",
+      "last": "2026-11-05 18:37:00+00:00",
+      "sha256": "5348a297c3e2943f906622b8c5ea60efdb90adc847974f66b6516e523ed8e448"
+    },
+    "xrp_spot": {
+      "status": "ok",
+      "source": "Coinbase Exchange",
+      "url": "https://api.exchange.coinbase.com/products/XRP-USD/candles",
+      "assumed_lag_days": 0,
+      "revision_sensitive": false,
+      "rows": 2881,
+      "first": "2026-11-03 18:38:00+00:00",
+      "last": "2026-11-05 18:38:00+00:00",
+      "sha256": "1f71fe7071655fc81257d72b720ff7c53a8d70c71e1455a55fd41a9af13b9f20"
+    }
+  }
+}
