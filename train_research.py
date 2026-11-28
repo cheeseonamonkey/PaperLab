@@ -4,10 +4,12 @@ from __future__ import annotations
 import gzip
 import json
 import math
+import os
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
+import backfill
 from backfill import write_json
 from feeds import value
 
@@ -16,15 +18,50 @@ OUTPUT = ROOT / "data" / "training"
 ASSETS = ("BTC", "ETH", "SOL", "XRP")
 
 
+def _clip(value, bound):
+    return 0.0 if value is None else max(-bound, min(bound, value))
+
+
 def features(probability, horizon, returns):
+    """Feature vector v2 (20 slots). Layout: market logit, horizon flag,
+    1-minute returns + missing flags, then the extended inputs (5-minute
+    returns, BTC 15-minute return and volatility, time left, strike
+    distance), and the SP500 pair last. One builder serves training and
+    forward prediction, so the two can never drift apart."""
     p = min(.999, max(.001, probability))
     vals = [returns.get(asset) for asset in ASSETS]
     return [math.log(p / (1-p)), float(horizon == "1h")] + [
         0.0 if v is None else max(-.1, min(.1, v)) for v in vals
     ] + [float(v is None) for v in vals] + [
+        _clip(returns.get(asset + "_R5"), .2) for asset in ASSETS
+    ] + [
+        _clip(returns.get("BTC_R15"), .2),
+        _clip(returns.get("BTC_VOL15"), .05),
+        0.0 if returns.get("TIME_LEFT") is None else max(0.0, min(1.0, returns["TIME_LEFT"])),
+        _clip(returns.get("STRIKE_DISTANCE"), .01),
         0.0 if returns.get("SP500") is None else max(-.1, min(.1, returns["SP500"])),
         float(returns.get("SP500") is None),
     ]
+
+
+FEATURE_NAMES = ["market_logit", "one_hour", "btc_r1", "eth_r1", "sol_r1", "xrp_r1",
+                 "btc_missing", "eth_missing", "sol_missing", "xrp_missing",
+                 "btc_r5", "eth_r5", "sol_r5", "xrp_r5", "btc_r15", "btc_vol15",
+                 "time_left", "strike_distance", "sp500_r1", "sp500_missing"]
+
+
+def feature_values(context, available_at, at):
+    """Pull every model input from an observation's causal feature map."""
+    values = {asset: known_value(context, available_at, asset.lower()+"_r1", at)
+              for asset in ASSETS}
+    for asset in ASSETS:
+        values[asset + "_R5"] = known_value(context, available_at, asset.lower()+"_r5", at)
+    values["BTC_R15"] = known_value(context, available_at, "btc_r15", at)
+    values["BTC_VOL15"] = known_value(context, available_at, "btc_vol15", at)
+    values["TIME_LEFT"] = known_value(context, available_at, "time_left", at)
+    values["STRIKE_DISTANCE"] = known_value(context, available_at, "strike_distance", at)
+    values["SP500"] = known_value(context, available_at, "sp500_r1", at, True)
+    return values
 
 
 def known_value(context, available_at, name, observed_at, require_timestamp=False):
@@ -73,7 +110,8 @@ def chronological_split(rows):
 
 
 def examples():
-    # Bootstrap and prospective observations share this directory; the separate archive is never scanned.
+    # Bootstrap and prospective observations share this directory; the backfill
+    # archive joins below as its own labeled source (see archive_examples).
     rows = {}
     labels = {}
     for label_path in sorted((ROOT / "data" / "bootstrap" / "labels").glob("*.json")):
@@ -101,13 +139,58 @@ def examples():
                     p = (float(quote["bid"])+float(quote["ask"]))/2
                 context = obs.get("features", {})
                 available_at = obs.get("feature_available_at", {})
-                returns = {asset: known_value(context, available_at, asset.lower()+"_r1", at)
-                           for asset in ASSETS}
-                returns["SP500"] = known_value(context, available_at, "sp500_r1", at, True)
+                returns = feature_values(context, available_at, at)
                 horizon = "1h" if "-1h-" in name else "15m"
                 if source != "bootstrap" or (name, at) not in rows:
                     rows[(name, at)] = (at, name, features(p, horizon, returns), int(outcome == "Up"), source)
+    rows.update(archive_examples(rows))
     return sorted(rows.values(), key=lambda x: (x[0], x[1]))
+
+
+DEEP = os.environ.get("PAPERLAB_DEEP") == "1"
+ARCHIVE_STRIDE = 2 if DEEP else 5  # every Nth display point per archived market
+
+
+def archive_examples(existing):
+    """Labeled rows from the downloaded backfill archive (owner-approved
+    2026-11-28: back-train on everything we have). Settlements embedded in
+    each archived contract are the labels; the archive stores no BRTI
+    reference series, so strike/vol inputs are missing for these rows and
+    the model treats them through the same missing-value path as live data.
+    Existing live/bootstrap rows win on (slug, timestamp) overlap."""
+    rows = {}
+    base = ROOT / "data" / "backfill" / "hours"
+    if not base.exists():
+        return rows
+    for path in sorted(base.glob("*/*.json.gz")):
+        try:
+            with gzip.open(path, "rt", encoding="utf-8") as stream:
+                hour = json.load(stream)
+        except (OSError, ValueError, EOFError):
+            continue  # A corrupt hour is skipped, never fatal to training.
+        labels = {}
+        for contract in hour.get("markets", []):
+            settled = (contract.get("settlement") or {}).get("settlement")
+            if settled in (0, 1):
+                labels[contract["slug"]] = "Up" if settled == 1 else "Down"
+        if not labels:
+            continue
+        per_market = {}
+        for obs in backfill.observations(hour, []):
+            per_market.setdefault(obs["slug"], []).append(obs)
+        for slug, group in per_market.items():
+            if slug not in labels:
+                continue
+            for obs in group[::ARCHIVE_STRIDE]:
+                at = int(obs["observed_at"])
+                if at >= market_window(slug)[1] or (slug, at) in existing or (slug, at) in rows:
+                    continue
+                returns = feature_values(obs.get("features", {}),
+                                         obs.get("feature_available_at", {}), at)
+                horizon = "1h" if "-1h-" in slug else "15m"
+                rows[(slug, at)] = (at, slug, features(float(obs["display_up"]), horizon, returns),
+                                    int(labels[slug] == "Up"), "archive")
+    return rows
 
 
 def sigmoid(x):
@@ -142,13 +225,22 @@ def transform(raw, kind):
     return result + expansion(result, kind)
 
 
-# Candidate zoo: (name, transform, regularization). The first entry is the
-# frozen baseline that research_linear refits; the rest are architecture
-# forks evaluated on the identical chronological split.
-CANDIDATES = (("linear","linear",.01),("market_only","market_only",.01),("regularized","linear",.10),
-              ("tanh_returns","tanh_returns",.01),("interactions","interactions",.01),
-              ("interactions_regularized","interactions",.10),("horizon_split","horizon_split",.01),
-              ("squares","squares",.01))
+# Candidate sweep: (name, transform, regularization, epochs). The first entry
+# is the frozen baseline that research_linear refits; the rest are a
+# systematic grid over feature architectures, regularization and fit length,
+# all evaluated on the identical chronological split. The weekly deep pass
+# (PAPERLAB_DEEP=1) fits longer.
+def build_candidates():
+    epochs = (75, 150) if DEEP else (25, 75)
+    grid = [("linear", "linear", .01, 25), ("market_only", "market_only", .01, 25)]
+    for kind in ("linear", "tanh_returns", "interactions", "horizon_split", "squares"):
+        for penalty in (.01, .10):
+            for length in epochs:
+                grid.append(("%s_p%d_e%d" % (kind, int(penalty*100), length), kind, penalty, length))
+    return tuple(grid)
+
+
+CANDIDATES = build_candidates()
 
 # Auto-fork policy (owner-approved 2026-11-28): a non-baseline candidate that
 # keeps winning chronologically earns its own isolated $100 paper account.
@@ -291,9 +383,7 @@ def predict(observation, model):
         return None
     context = observation.get("features", {})
     available_at = observation.get("feature_available_at", {})
-    returns = {asset: known_value(context, available_at, asset.lower()+"_r1", at)
-               for asset in ASSETS}
-    returns["SP500"] = known_value(context, available_at, "sp500_r1", at, True)
+    returns = feature_values(context, available_at, at)
     raw = features(probability, "1h" if "-1h-" in observation.get("slug", "") else "15m", returns)
     transformed = transform(raw, model.get("transform", "linear"))
     if len(transformed) != len(model.get("mean", [])) or len(transformed) != len(model.get("scale", [])):
@@ -321,13 +411,18 @@ def apply_fork(rows, experiments):
     forks = [e for e in roster["forks"] if e.get("status", "active") == "active"]
     state_path = OUTPUT / "fork_state.json"
     fork_state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    # A retired fork's candidate may earn a fork again: the already-forked
+    # list tracks only candidates with a currently active fork.
+    active_candidates = {e["candidate"] for e in forks}
+    fork_state["forked"] = [c for c in fork_state.get("forked", []) if c in active_candidates]
     fork_state, winner = evaluate_fork(experiments, fork_state, len(forks))
     write_json(state_path, fork_state)
     if winner is None:
         return {"status": "no_fork", "streak_candidate": fork_state.get("candidate"),
                 "streak": fork_state.get("streak", 0), "forks": len(forks)}
     name = "fork_%s_%02d" % (winner["name"], len(forks) + 1)
-    model = fit(rows, regularization=winner["regularization"], kind=winner["transform"])
+    model = fit(rows, epochs=winner.get("epochs", 25),
+                regularization=winner["regularization"], kind=winner["transform"])
     model.update(trained_through=max(market_window(r[1])[1] for r in rows),
                  training_markets=len({r[1] for r in rows}),
                  trained_at=datetime.now(timezone.utc).isoformat(),
@@ -346,28 +441,71 @@ def apply_fork(rows, experiments):
 def grouped_scores(rows, model):
     groups = {}
     for horizon in ("15m", "1h"):
-        for source in ("bootstrap", "live", "historical_price_proxy"):
+        for source in ("bootstrap", "live", "historical_price_proxy", "archive"):
             subset = [r for r in rows if ("-1h-" in r[1]) == (horizon == "1h") and r[4] == source]
             if subset:
                 groups[horizon + ":" + source] = score(subset, model)
     return groups
 
 
+WINDOW_DAYS = 45  # Rolling training window: stale-regime rows age out (periodic reset).
+
+
+def retire_losing_forks():
+    """Periodic reset for fork accounts: an old, well-sampled, losing fork is
+    retired to hold-only. Its history stays in state and in the roster; only
+    its trading stops, and its roster slot frees up for a future fork."""
+    roster = load_roster()
+    state_path = ROOT / "data" / "state.json"
+    if not state_path.exists():
+        return []
+    accounts = json.loads(state_path.read_text()).get("accounts", {})
+    now = datetime.now(timezone.utc)
+    retired = []
+    for entry in roster["forks"]:
+        if entry.get("status", "active") != "active":
+            continue
+        account = accounts.get(entry["name"])
+        if not account or not entry.get("created_at"):
+            continue
+        try:
+            age_days = (now - datetime.fromisoformat(entry["created_at"])).days
+        except ValueError:
+            continue
+        settled = [t for t in account.get("trades", []) if t.get("status") == "settled"]
+        pnl = sum(t.get("pnl", 0) for t in settled)
+        if age_days >= 21 and len(settled) >= 20 and pnl <= -15.0:
+            entry.update(status="retired", retired_at=now.isoformat(),
+                         retire_reason="age %dd, %d settled, realized P&L $%.2f" % (age_days, len(settled), pnl))
+            retired.append(entry["name"])
+    if retired:
+        write_json(roster_path(), roster)
+    return retired
+
+
 def main():
-    rows = examples()
+    retired = retire_losing_forks()
+    all_rows = examples()
+    rows = all_rows
+    if all_rows:
+        window_start = max(r[0] for r in all_rows) - WINDOW_DAYS * 86400
+        windowed = [r for r in all_rows if r[0] >= window_start]
+        if len(windowed) >= 50:
+            rows = windowed
     days = sorted({datetime.fromtimestamp(r[0],timezone.utc).strftime("%Y-%m-%d") for r in rows})
-    manifest = {"status":"waiting", "rows":len(rows), "markets":len({r[1] for r in rows}),
+    manifest = {"status":"waiting", "rows":len(rows), "rows_before_window":len(all_rows),
+                "window_days":WINDOW_DAYS, "deep":DEEP, "retired_forks":retired,
+                "markets":len({r[1] for r in rows}),
                 "days":days, "updated_at":datetime.now(timezone.utc).isoformat(),
                 "sources":dict(Counter(r[4] for r in rows)),
-                "features":["market_logit","one_hour","btc_r1","eth_r1","sol_r1","xrp_r1",
-                            "btc_missing","eth_missing","sol_missing","xrp_missing","sp500_r1","sp500_missing"]}
+                "features":FEATURE_NAMES}
     if len(rows) >= 50:
         train, validation, cutoff, label = chronological_split(rows)
         if train and validation:
             experiments=[]
-            for name,kind,penalty in CANDIDATES:
-                trial=fit(train,regularization=penalty,kind=kind)
-                experiments.append({"name":name,"transform":kind,"regularization":penalty,
+            for name,kind,penalty,length in CANDIDATES:
+                trial=fit(train,epochs=length,regularization=penalty,kind=kind)
+                experiments.append({"name":name,"transform":kind,"regularization":penalty,"epochs":length,
                                     "validation":score(validation,trial),
                                     "validation_groups":grouped_scores(validation,trial)})
             manifest.update(status="trained", validation_window=label, validation_cutoff_utc=cutoff,
@@ -384,13 +522,14 @@ def main():
     if manifest["status"] != "trained":
         (OUTPUT / "model.json").unlink(missing_ok=True)
     write_json(OUTPUT / "status.json", manifest)
-    run_id = __import__("os").environ.get("GITHUB_RUN_ID") or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_id = os.environ.get("GITHUB_RUN_ID") or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     write_json(OUTPUT / "runs" / (run_id + ".json"), manifest)
     page = ROOT / "docs" / "research" / "latest.md"
     page.parent.mkdir(parents=True, exist_ok=True)
     lines = ["# Research experiments", "", "Status: **%s**. Markets: %d. Rows: %d." %
              (manifest["status"],manifest["markets"],manifest["rows"]), "",
-             "Archive backfill is excluded. Bootstrap and live sources: %s." % manifest["sources"], "",
+             "Training sources (archive backfill included as its own labeled source, "
+             "45-day rolling window): %s." % manifest["sources"], "",
              "Candidates are evaluated chronologically. The baseline is never auto-promoted; a non-baseline "
              "candidate that clears the predeclared fork policy (margin, sample, 3-run streak, roster caps) "
              "spawns a frozen fork paper account — see the fork status in data/training/status.json.", ""]
