@@ -2,7 +2,7 @@
 
 ## Current loop
 
-Each scheduled run evaluates small, deterministic feature and regularization variants against a market-implied baseline. It records chronological validation results; no candidate is automatically promoted. Inputs include completed-minute BTC, ETH, SOL, and XRP returns where available. The one-time two-day bootstrap shares the observation path; officially settled historical-hour and earlier live observations are added over time. The separate backward archive is excluded from training.
+Each scheduled run evaluates deterministic feature-architecture and regularization variants (the candidate zoo in `train_research.CANDIDATES`) against a market-implied baseline. It records chronological validation results; the baseline is not automatically promoted, and a non-baseline candidate may only spawn a separate frozen fork account under the fork policy below — it never replaces an existing account. Inputs include completed-minute BTC, ETH, SOL, and XRP returns where available. The one-time two-day bootstrap shares the observation path; officially settled historical-hour and earlier live observations are added over time. The separate backward archive is excluded from training.
 
 The current research model is not connected to paper execution. The optional OpenRouter/Pi process can propose bounded experiments for review; it does not edit or deploy strategy code. Keep model use optional and cost-bounded. Free-model availability is not guaranteed.
 
@@ -46,7 +46,7 @@ Fee schedules are venue- and date-specific. The current repo uses the documented
 
 ## Strategy descendants and forks
 
-Creating a strategy fork (a new child variant or paper account) is currently **disabled**. The paper roster is fixed; the workflow does not spawn, train, or promote account descendants automatically. Keep candidate ideas in the review-only proposal path and compare them offline first. If a future fork is approved, give it a documented parent hypothesis, a distinct name, an isolated bankroll, identical risk controls, and a predeclared evaluation split. Related variants must remain labeled as dependent evidence; changing a name does not create an independent experiment.
+Creating a strategy fork is **enabled** under the predeclared policy in `train_research.evaluate_fork` (owner-approved 2026-11-28). A non-baseline candidate earns a fork only when, on the chronological validation split, it beats the market Brier by at least 0.003, beats the linear baseline, covers at least 5 validation markets, and does so on 3 consecutive trained runs. The fork is a frozen refit of that candidate with a documented parent (`research_linear`), a distinct name (`fork_<candidate>_<nn>` in `strategies/roster.json`), an isolated $100 bankroll, and identical risk controls. Caps are a hard stop, not a rotation: at most 40 fork accounts and 50 accounts total, and fork history is never deleted. The baseline itself is never auto-promoted, and the Pi proposal path remains review-only. Related variants remain labeled as dependent evidence; changing a name does not create an independent experiment.
 
 See the [strategy index](bots/README.md) for current signal relationships and the [execution policy](EXECUTION.md) for account-level constraints.
 
