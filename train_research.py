@@ -114,6 +114,24 @@ def sigmoid(x):
     return 1 / (1 + math.exp(-max(-30, min(30, x))))
 
 
+RETURN_SLOTS = (2, 3, 4, 5)  # btc/eth/sol/xrp 1-minute returns in features()
+
+
+def expansion(raw, kind):
+    """Extra feature-architecture terms appended by candidate transforms.
+
+    Every expansion is a deterministic function of the causal raw features,
+    so the same code path serves fit, score and forward predict.
+    """
+    if kind == "interactions":
+        return [raw[0]*raw[j] for j in RETURN_SLOTS] + [raw[1]*raw[j] for j in RETURN_SLOTS]
+    if kind == "horizon_split":
+        return [raw[j]*raw[1] for j in RETURN_SLOTS] + [raw[j]*(1-raw[1]) for j in RETURN_SLOTS]
+    if kind == "squares":
+        return [raw[j]*raw[j]*100 for j in RETURN_SLOTS]
+    return []
+
+
 def transform(raw, kind):
     result=list(raw)
     if kind=="market_only":
@@ -121,7 +139,87 @@ def transform(raw, kind):
     if kind=="tanh_returns":
         for j in (*range(2,6), 10):
             result[j]=math.tanh(result[j]*1000)
-    return result
+    return result + expansion(result, kind)
+
+
+# Candidate zoo: (name, transform, regularization). The first entry is the
+# frozen baseline that research_linear refits; the rest are architecture
+# forks evaluated on the identical chronological split.
+CANDIDATES = (("linear","linear",.01),("market_only","market_only",.01),("regularized","linear",.10),
+              ("tanh_returns","tanh_returns",.01),("interactions","interactions",.01),
+              ("interactions_regularized","interactions",.10),("horizon_split","horizon_split",.01),
+              ("squares","squares",.01))
+
+# Auto-fork policy (owner-approved 2026-11-28): a non-baseline candidate that
+# keeps winning chronologically earns its own isolated $100 paper account.
+# Predeclared bars, so a fork is never one lucky validation window.
+FORK_BASE_ACCOUNTS = 13
+FORK_MAX_FORKS = 40
+FORK_MAX_ACCOUNTS = 50
+FORK_MIN_VALIDATION_MARKETS = 5
+FORK_MARGIN = 0.003        # Brier improvement required over the market itself
+FORK_STREAK = 3            # consecutive trained runs the same candidate must win
+FORK_ELIGIBLE_EXCLUDES = ("linear", "market_only")
+
+
+def evaluate_fork(experiments, fork_state, fork_count):
+    """Pure fork decision. Returns (new_fork_state, winning_experiment_or_None).
+
+    A candidate qualifies when, on the chronological validation split, it
+    beats the market Brier by FORK_MARGIN, beats the linear baseline, and
+    covers at least FORK_MIN_VALIDATION_MARKETS markets. The same candidate
+    must qualify FORK_STREAK runs in a row, must not already have a fork,
+    and the roster caps (FORK_MAX_FORKS / FORK_MAX_ACCOUNTS) must allow it.
+    """
+    state = {"candidate": fork_state.get("candidate"), "streak": int(fork_state.get("streak", 0)),
+             "forked": list(fork_state.get("forked", []))}
+    if not experiments:
+        return state, None
+    baseline = experiments[0]["validation"]["brier"]
+    qualifying = [e for e in experiments
+                  if e["name"] not in FORK_ELIGIBLE_EXCLUDES
+                  and e["validation"]["markets"] >= FORK_MIN_VALIDATION_MARKETS
+                  and e["validation"]["brier"] <= e["validation"]["market_brier"] - FORK_MARGIN
+                  and e["validation"]["brier"] < baseline]
+    if not qualifying:
+        state.update(candidate=None, streak=0)
+        return state, None
+    best = min(qualifying, key=lambda e: e["validation"]["brier"])
+    if state["candidate"] == best["name"]:
+        state["streak"] += 1
+    else:
+        state.update(candidate=best["name"], streak=1)
+    if state["streak"] < FORK_STREAK or best["name"] in state["forked"]:
+        return state, None
+    if fork_count >= FORK_MAX_FORKS or FORK_BASE_ACCOUNTS + fork_count >= FORK_MAX_ACCOUNTS:
+        return state, None
+    state["forked"].append(best["name"])
+    state.update(candidate=None, streak=0)
+    return state, best
+
+
+def roster_path():
+    return ROOT / "strategies" / "roster.json"
+
+
+def load_roster():
+    path = roster_path()
+    if not path.exists():
+        return {"forks": []}
+    data = json.loads(path.read_text())
+    return {"forks": [e for e in data.get("forks", []) if isinstance(e, dict) and e.get("name")]}
+
+
+def load_fork_models():
+    """Frozen per-fork models, keyed by paper account name."""
+    models = {}
+    for entry in load_roster()["forks"]:
+        if entry.get("status", "active") != "active":
+            continue
+        model = load_model(ROOT / entry.get("model", ""))
+        if model is not None:
+            models[entry["name"]] = model
+    return models
 
 
 def fit(rows, epochs=25, rate=.08, regularization=.01, kind="linear"):
@@ -211,6 +309,40 @@ def load_model(path=None):
     return json.loads(path.read_text()) if path.exists() else None
 
 
+def apply_fork(rows, experiments):
+    """Run one fork-policy step; on a win, freeze the candidate as a new account.
+
+    The fork gets a frozen refit on all settled rows, a roster entry, and —
+    from the next scheduled run — its own isolated $100 paper account with
+    identical risk controls (paper.load initializes missing roster accounts).
+    Fork history is never deleted; the caps are a hard stop, not a rotation.
+    """
+    roster = load_roster()
+    forks = [e for e in roster["forks"] if e.get("status", "active") == "active"]
+    state_path = OUTPUT / "fork_state.json"
+    fork_state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    fork_state, winner = evaluate_fork(experiments, fork_state, len(forks))
+    write_json(state_path, fork_state)
+    if winner is None:
+        return {"status": "no_fork", "streak_candidate": fork_state.get("candidate"),
+                "streak": fork_state.get("streak", 0), "forks": len(forks)}
+    name = "fork_%s_%02d" % (winner["name"], len(forks) + 1)
+    model = fit(rows, regularization=winner["regularization"], kind=winner["transform"])
+    model.update(trained_through=max(market_window(r[1])[1] for r in rows),
+                 training_markets=len({r[1] for r in rows}),
+                 trained_at=datetime.now(timezone.utc).isoformat(),
+                 fork_candidate=winner["name"], fork_validation=winner["validation"])
+    relative = "data/training/forks/%s.json" % name
+    write_json(ROOT / relative, model)
+    roster["forks"].append({"name": name, "candidate": winner["name"],
+                            "transform": winner["transform"], "regularization": winner["regularization"],
+                            "parent": "research_linear", "model": relative, "status": "active",
+                            "created_at": datetime.now(timezone.utc).isoformat()})
+    write_json(roster_path(), roster)
+    return {"status": "forked", "account": name, "candidate": winner["name"],
+            "validation": winner["validation"], "forks": len(roster["forks"])}
+
+
 def grouped_scores(rows, model):
     groups = {}
     for horizon in ("15m", "1h"):
@@ -233,8 +365,7 @@ def main():
         train, validation, cutoff, label = chronological_split(rows)
         if train and validation:
             experiments=[]
-            for name,kind,penalty in (("linear","linear",.01),("market_only","market_only",.01),("regularized","linear",.10),
-                                      ("tanh_returns","tanh_returns",.01)):
+            for name,kind,penalty in CANDIDATES:
                 trial=fit(train,regularization=penalty,kind=kind)
                 experiments.append({"name":name,"transform":kind,"regularization":penalty,
                                     "validation":score(validation,trial),
@@ -242,12 +373,14 @@ def main():
             manifest.update(status="trained", validation_window=label, validation_cutoff_utc=cutoff,
                             training_markets=len({r[1] for r in train}), validation=experiments[0]["validation"],
                             experiments=experiments,
-                            final_fit="baseline refit on all available settled rows after validation; no automatic promotion")
+                            final_fit="baseline refit on all available settled rows after validation; "
+                                      "non-baseline candidates may auto-fork under the predeclared fork policy")
             final_model = fit(rows)
             final_model.update(trained_through=max(market_window(r[1])[1] for r in rows),
                                training_markets=len({r[1] for r in rows}),
                                trained_at=datetime.now(timezone.utc).isoformat())
             write_json(OUTPUT / "model.json", final_model)
+            manifest["fork"] = apply_fork(rows, experiments)
     if manifest["status"] != "trained":
         (OUTPUT / "model.json").unlink(missing_ok=True)
     write_json(OUTPUT / "status.json", manifest)
@@ -258,7 +391,9 @@ def main():
     lines = ["# Research experiments", "", "Status: **%s**. Markets: %d. Rows: %d." %
              (manifest["status"],manifest["markets"],manifest["rows"]), "",
              "Archive backfill is excluded. Bootstrap and live sources: %s." % manifest["sources"], "",
-             "Candidates are evaluated chronologically and are not automatically promoted.", ""]
+             "Candidates are evaluated chronologically. The baseline is never auto-promoted; a non-baseline "
+             "candidate that clears the predeclared fork policy (margin, sample, 3-run streak, roster caps) "
+             "spawns a frozen fork paper account — see the fork status in data/training/status.json.", ""]
     if manifest.get("experiments"):
         lines += ["| Candidate | Brier | Market Brier | Validation markets |",
                   "|---|---:|---:|---:|"]
