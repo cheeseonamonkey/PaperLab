@@ -10,5 +10,6 @@
 - Settlement is ONLY from /v1/markets/{slug}/settlement returning 0 or 1; no third-party BTC price proxy.
 - New strategies get isolated paper portfolios; no shared capital or state leaks. Keep identical risk controls.
 - The Pi research workflow may write review-only hypotheses to research/proposals, never mutate execution, account balances, model checkpoints, or production strategy selection.
+- Auto-research (owner-approved 2026-11-28, supersedes the fixed-roster rule): the scheduled hourly run is the research loop (collect → replay → train/evaluate). Non-baseline candidates in train_research.CANDIDATES that clear the predeclared fork policy (train_research.evaluate_fork: Brier margin, minimum validation markets, 3-run streak, caps of 40 forks / 50 total accounts) spawn frozen fork paper accounts via strategies/roster.json — isolated $100 bankrolls, identical risk controls, paper-only like every other account. The baseline is never auto-promoted and fork history is never deleted.
 - State and market observations are versioned in the repo, with compressed per-day observations. Preserve and test backward compatibility before schema changes.
 - Run python -m unittest discover -s tests -v and python -m py_compile on affected files.
