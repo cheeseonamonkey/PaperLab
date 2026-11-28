@@ -10,14 +10,25 @@ from pathlib import Path
 import backfill
 import paper
 from feeds import get, settlement
-from train_research import load_model, predict
+from train_research import load_fork_models, load_model, predict
 
 BATCH = Path("batch")
-SHARDS = (
-    ("stacked_rnn", "skip_gru_2"), ("depthwise_tcn", "lstm"),
-    ("conv_gru", "market_implied"), ("brti_distance", "brti_distance_limit"),
-    ("btc_momentum", "btc_reversion"), ("cross_asset_momentum", "book_imbalance", "research_linear"),
-)
+SHARD_COUNT = 6
+
+
+def build_shards(names, count=SHARD_COUNT):
+    """Distribute the roster round-robin over a fixed number of shard jobs.
+
+    The roster grows when a research candidate auto-forks; the shard layout
+    is derived from paper.POLICIES so a new account never needs a code edit.
+    """
+    groups = [[] for _ in range(count)]
+    for index, name in enumerate(names):
+        groups[index % count].append(name)
+    return tuple(tuple(group) for group in groups)
+
+
+SHARDS = build_shards(list(paper.POLICIES))
 
 
 def write(path, item):
@@ -101,7 +112,7 @@ def collect():
           "already processed", already_processed, flush=True)
 
 
-def replay_events(state, events, names, candidate):
+def replay_events(state, events, names, models):
     """Replay the canonical ordered event stream for the selected accounts."""
     for event in events:
         if event["kind"] == "reconcile":
@@ -113,7 +124,8 @@ def replay_events(state, events, names, candidate):
                 paper.settlement = original
         elif event["kind"] == "observation":
             obs = event["observation"]
-            probabilities = {"research_linear":predict(obs, candidate)} if candidate else {}
+            probabilities = {name: predict(obs, model) for name, model in (models or {}).items()
+                             if names is None or name in names}
             paper.process_snapshot(state, obs, probabilities, names=names)
         else:
             raise ValueError("Unknown event")
@@ -123,12 +135,16 @@ def shard(index):
     if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(SHARDS):
         raise ValueError("Invalid shard")
     state = read(BATCH / "base.json")
+    models = {}
     candidate = load_model()
+    if candidate:
+        models["research_linear"] = candidate
+    models.update(load_fork_models())
     manifest = read(BATCH / "collection.json")
     if manifest["base_hash"] != digest(BATCH / "base.json") or manifest["events_hash"] != digest(BATCH / "events.jsonl.gz"):
         raise ValueError("Batch checksum mismatch")
     with gzip.open(BATCH / "events.jsonl.gz", "rt") as stream:
-        replay_events(state, (json.loads(line) for line in stream), SHARDS[index], candidate)
+        replay_events(state, (json.loads(line) for line in stream), SHARDS[index], models)
     write(Path("shard-results") / (str(index) + ".json"),
           {"index":index,"names":list(SHARDS[index]),"manifest":manifest,"state":state})
 
