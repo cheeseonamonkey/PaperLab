@@ -122,6 +122,48 @@ class ResearchChecks(unittest.TestCase):
             self.assertEqual(len(examples), 1)
             self.assertEqual(examples[0][2][-2:], [0.0, 1.0])
 
+    def test_candidate_expansions_append_causal_terms(self):
+        f = train_research.features(.6, "1h", {"BTC": .001, "ETH": -.002})
+        self.assertEqual(len(train_research.transform(f, "linear")), len(f))
+        self.assertEqual(len(train_research.transform(f, "interactions")), len(f)+8)
+        self.assertEqual(len(train_research.transform(f, "horizon_split")), len(f)+8)
+        self.assertEqual(len(train_research.transform(f, "squares")), len(f)+4)
+        self.assertEqual(len(train_research.transform(f, "market_only")), len(f))
+        model = train_research.fit([(ts("2026-11-14 10:05"), "m", f, 1, "live")],
+                                   epochs=0, kind="interactions")
+        self.assertEqual(len(model["mean"]), len(f)+8)
+
+    def test_fork_requires_streak_margin_and_respects_caps(self):
+        def exp(name, brier, market=.110, markets=10):
+            return {"name": name, "validation": {"brier": brier, "market_brier": market,
+                                                 "markets": markets}}
+        experiments = [exp("linear", .100), exp("interactions", .090)]
+        state, winner = train_research.evaluate_fork(experiments, {}, 0)
+        self.assertIsNone(winner)
+        self.assertEqual(state["streak"], 1)
+        state, winner = train_research.evaluate_fork(experiments, state, 0)
+        self.assertIsNone(winner)
+        state, winner = train_research.evaluate_fork(experiments, state, 0)
+        self.assertEqual(winner["name"], "interactions")
+        self.assertEqual(state["forked"], ["interactions"])
+        # Already forked, at cap, thin sample, and sub-margin wins never fork.
+        state, winner = train_research.evaluate_fork(
+            experiments, {"candidate": "interactions", "streak": 9, "forked": ["interactions"]}, 0)
+        self.assertIsNone(winner)
+        state, winner = train_research.evaluate_fork(
+            [exp("linear", .100), exp("squares", .090)],
+            {"candidate": "squares", "streak": 9, "forked": []}, train_research.FORK_MAX_FORKS)
+        self.assertIsNone(winner)
+        state, winner = train_research.evaluate_fork(
+            [exp("linear", .100), exp("squares", .090, markets=2)],
+            {"candidate": "squares", "streak": 9, "forked": []}, 0)
+        self.assertIsNone(winner)
+        self.assertEqual(state["streak"], 0)
+        state, winner = train_research.evaluate_fork(
+            [exp("linear", .100), exp("squares", .109)],
+            {"candidate": "squares", "streak": 9, "forked": []}, 0)
+        self.assertIsNone(winner)
+
     def test_forward_predict_requires_prior_settlement_and_causal_features(self):
         slug = "cpc-btc-updown-15m-2026-11-14-1000z"
         start = ts("2026-11-14 10:00")
