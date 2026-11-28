@@ -64,6 +64,19 @@ class PaperTests(unittest.TestCase):
         self.assertEqual(migrated["accounts"]["research_linear"]["cash"],paper.START)
         self.assertIn("research_linear",migrated["forecast_metrics"])
 
+    def test_retired_fork_maps_to_hold_active_to_limit(self):
+        roster = {"forks": [
+            {"name": "fork_a_01", "status": "active"},
+            {"name": "fork_b_02", "status": "retired"},
+            {"name": "fork_c_03"}]}
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+            json.dump(roster, handle)
+            path = Path(handle.name)
+        with patch.object(paper, "ROSTER", path):
+            policies = paper.fork_policies()
+        self.assertEqual(policies, {"fork_a_01": "limit", "fork_b_02": "hold",
+                                    "fork_c_03": "limit"})
+
     def test_v3_state_missing_roster_account_is_initialized_fresh(self):
         state=paper.initial()
         state["accounts"].pop("btc_momentum")
