@@ -138,8 +138,10 @@ jobs:
         run: python parallel.py merge
       - name: Train research candidates
         if: always() && steps.merge.outcome == 'success'
-        timeout-minutes: 6
-        run: python train_research.py
+        timeout-minutes: 25
+        # Weekly deep pass on Sundays (UTC): longer fits, denser archive stride.
+        run: |
+          if [ "$(date -u +%u)" = "7" ]; then PAPERLAB_DEEP=1 python train_research.py; else python train_research.py; fi
       - name: Gate daily review-only research
         id: research_gate
         if: always() && steps.merge.outcome == 'success'
