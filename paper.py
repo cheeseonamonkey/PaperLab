@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from feeds import USFeed, settlement
 from predictors import MODELS, Predictions
-from train_research import load_model as load_research_model, predict as predict_research
+from train_research import load_fork_models, load_model as load_research_model, predict as predict_research
 
 ROOT = Path(__file__).resolve().parent
 STATE = ROOT/"data/state.json"
@@ -34,7 +34,7 @@ STRATEGY_MIN_EDGE = {}  # Optional per-account overrides.
 CALIBRATION_WARMUP = 20
 CALIBRATION_RATE = .05
 CALIBRATION_MAX_LOGIT = .15
-POLICIES = {
+BASE_POLICIES = {
     "stacked_rnn": "limit",
     "skip_gru_2": "limit",
     "depthwise_tcn": "limit",
@@ -49,6 +49,21 @@ POLICIES = {
     "book_imbalance": "limit",
     "research_linear": "limit",
 }
+ROSTER = ROOT/"strategies/roster.json"
+
+def fork_policies():
+    """Active auto-fork accounts from the checked-in roster (train_research owns it)."""
+    try:
+        entries = json.loads(ROSTER.read_text()).get("forks", [])
+    except (OSError, ValueError):
+        return {}
+    return {entry["name"]: "limit" for entry in entries
+            if isinstance(entry, dict) and isinstance(entry.get("name"), str)
+            and entry.get("status", "active") == "active"}
+
+POLICIES = {**BASE_POLICIES, **fork_policies()}
+# Accounts whose probability comes from a fitted model file rather than a rule.
+MODEL_ACCOUNTS = {"research_linear"} | set(fork_policies())
 
 def stamp(ts=None):
     return datetime.fromtimestamp(time.time() if ts is None else ts, timezone.utc).isoformat(timespec="seconds")
@@ -71,12 +86,17 @@ def load():
     data=json.loads(STATE.read_text())
     if (data.get("mode"),data.get("venue"),data.get("cash_per_strategy")) != ("paper","polymarket_us",START):
         raise ValueError("Non-US or non-paper account state rejected")
-    legacy_names = set(POLICIES) - {"research_linear"}
+    legacy_names = set(BASE_POLICIES) - {"research_linear"}
     if data.get("version") == 2 and set(data.get("accounts",{})) == legacy_names:
         data["accounts"]["research_linear"] = {"cash":START,"orders":[],"trades":[],"signals":0}
         data["version"] = STATE_VERSION
-    elif data.get("version") != STATE_VERSION or set(data.get("accounts",{})) != set(POLICIES):
+    elif data.get("version") != STATE_VERSION or not set(data.get("accounts",{})) <= set(POLICIES):
         raise ValueError("Strategy account set mismatch")
+    # Roster accounts (research_linear, auto-forks) join with a fresh isolated
+    # $100 account the first time a state predating them is loaded; existing
+    # accounts and their history are never touched by this migration.
+    for name in POLICIES:
+        data["accounts"].setdefault(name, {"cash":START,"orders":[],"trades":[],"signals":0})
     data.setdefault("last_processed_hour_end", 0)
     data.setdefault("last_batch", None)
     data.setdefault("forecast_metrics",{})
@@ -120,7 +140,7 @@ def implied_probability(obs):
 
 
 def fair_probability(strategy,obs,models):
-    if strategy in MODELS or strategy=="research_linear":
+    if strategy in MODELS or strategy in MODEL_ACCOUNTS:
         return models.get(strategy)
     f=obs["features"]
     implied=implied_probability(obs)
@@ -509,6 +529,8 @@ def cycle(state,feed,models,now=None):
     # Legacy checkpoints abstain; the causal research candidate runs separately.
     candidate=load_research_model()
     probabilities={"research_linear":predict_research(observation,candidate)} if candidate else {}
+    for fork_name,fork_model in load_fork_models().items():
+        probabilities[fork_name]=predict_research(observation,fork_model)
     # The source quote must still be recent when the decision is made.
     if time.time()-observation["observed_at"] > 12:
         raise ValueError("Stale quote after model inference; no paper orders")
