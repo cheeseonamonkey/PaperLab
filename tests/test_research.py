@@ -205,12 +205,14 @@ class PhaseTwoTests(unittest.TestCase):
         start = 1763164800  # 2025-11-15T08:00:00Z
         slug = "btc-up-or-down-15m-1763164800"
         candles = [[start - 1200 + 60 * i, 100, 100, 100, 100 + (i % 3), 2.0] for i in range(40)]
-        hour = {"hour_start": start,
-                "markets": [{"slug": slug, "start": start,
-                             "display": [[start + 30, .6, .4], [start + 90, .61, .39],
-                                         [start + 150, .59, .41], [start + 210, .62, .38],
-                                         [start + 270, .6, .4], [start + 330, .6, .4]],
-                             "settlement": {"settlement": 1}}],
+        history = [{"timestamp": start + 30 + 60 * i, "longPrice": .6, "shortPrice": .4}
+                   for i in range(6)]
+        hour = {"start": start, "end": start + 3600,
+                "markets": [{"slug": slug, "horizon": "15m", "start": start, "ends": start + 900,
+                             "status": "collected",
+                             "metadata": {"market": {"assetPriceTerms": {"priceToBeat": 100.0}}},
+                             "display_history": {"history": history},
+                             "settlement": {"slug": slug, "settlement": 1}}],
                 "exogenous_coinbase_1m": {"BTC": candles, "ETH": candles,
                                           "SOL": candles, "XRP": candles}}
         with tempfile.TemporaryDirectory() as directory:
