@@ -12,6 +12,12 @@ import test_paper
 
 
 class ParallelTests(unittest.TestCase):
+    def test_shards_cover_roster_exactly_once(self):
+        names = [name for group in parallel.SHARDS for name in group]
+        self.assertEqual(len(parallel.SHARDS), 6)
+        self.assertEqual(sorted(names), sorted(paper.POLICIES))
+        self.assertEqual(len(names), len(set(names)))
+
     def test_shard_rejects_missing_or_non_integer_index(self):
         for index in (None, "0", True, -1, len(parallel.SHARDS)):
             with self.subTest(index=index), self.assertRaisesRegex(ValueError, "Invalid shard"):
