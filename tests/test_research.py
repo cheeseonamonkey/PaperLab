@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 import train_research
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from train_research import candle_returns, chronological_split, market_window
 
@@ -15,7 +15,7 @@ def ts(value):
 
 
 class ResearchChecks(unittest.TestCase):
-    def test_archived_backfill_is_never_a_training_input(self):
+    def test_corrupt_archive_hour_is_skipped_not_fatal(self):
         with tempfile.TemporaryDirectory() as root:
             archive=Path(root)/"data"/"backfill"/"hours"/"2026-11-14"
             archive.mkdir(parents=True)
@@ -180,6 +180,73 @@ class ResearchChecks(unittest.TestCase):
         self.assertLess(probability, 1)
         model["trained_through"] = start+1
         self.assertIsNone(train_research.predict(obs, model))
+
+
+class PhaseTwoTests(unittest.TestCase):
+    def test_feature_vector_v2_layout(self):
+        f = train_research.features(.6, "15m", {"BTC": .001, "BTC_R5": .002,
+                                                "TIME_LEFT": .5, "STRIKE_DISTANCE": .0004})
+        self.assertEqual(len(f), 20)
+        self.assertEqual(len(f), len(train_research.FEATURE_NAMES))
+        self.assertAlmostEqual(f[10], .002)          # btc_r5 slot
+        self.assertAlmostEqual(f[16], .5)            # time_left slot
+        self.assertAlmostEqual(f[17], .0004)         # strike_distance slot
+        self.assertEqual(f[-2:], [0.0, 1.0])         # SP500 pair stays last
+
+    def test_candidate_sweep_grid(self):
+        names = [c[0] for c in train_research.CANDIDATES]
+        self.assertEqual(names[0], "linear")
+        self.assertEqual(names[1], "market_only")
+        self.assertEqual(len(names), len(set(names)))
+        self.assertGreaterEqual(len(names), 20)
+        self.assertTrue(all(len(c) == 4 for c in train_research.CANDIDATES))
+
+    def test_archive_hour_becomes_labeled_examples(self):
+        start = 1763164800  # 2025-11-15T08:00:00Z
+        slug = "btc-up-or-down-15m-1763164800"
+        candles = [[start - 1200 + 60 * i, 100, 100, 100, 100 + (i % 3), 2.0] for i in range(40)]
+        hour = {"hour_start": start,
+                "markets": [{"slug": slug, "start": start,
+                             "display": [[start + 30, .6, .4], [start + 90, .61, .39],
+                                         [start + 150, .59, .41], [start + 210, .62, .38],
+                                         [start + 270, .6, .4], [start + 330, .6, .4]],
+                             "settlement": {"settlement": 1}}],
+                "exogenous_coinbase_1m": {"BTC": candles, "ETH": candles,
+                                          "SOL": candles, "XRP": candles}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "data" / "backfill" / "hours" / "2025-11-15"
+            target.mkdir(parents=True)
+            with gzip.open(target / "08.json.gz", "wt", encoding="utf-8") as stream:
+                json.dump(hour, stream)
+            (root / "data" / "state.json").write_text(json.dumps({"markets": {}}))
+            with patch.object(train_research, "ROOT", root):
+                rows = train_research.examples()
+        archive = [r for r in rows if r[4] == "archive"]
+        self.assertTrue(archive)
+        self.assertTrue(all(r[1] == slug and r[3] == 1 for r in archive))
+        self.assertEqual(len(archive[0][2]), 20)
+
+    def test_retire_losing_forks(self):
+        created = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        trades = [{"status": "settled", "pnl": -1.0} for _ in range(25)]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "strategies").mkdir(parents=True)
+            (root / "strategies" / "roster.json").write_text(json.dumps({"forks": [
+                {"name": "fork_x_01", "candidate": "x", "status": "active", "created_at": created},
+                {"name": "fork_y_02", "candidate": "y", "status": "active", "created_at": created}]}))
+            (root / "data").mkdir()
+            (root / "data" / "state.json").write_text(json.dumps({"accounts": {
+                "fork_x_01": {"trades": trades},
+                "fork_y_02": {"trades": [{"status": "settled", "pnl": 1.0}] * 25}}}))
+            with patch.object(train_research, "ROOT", root):
+                retired = train_research.retire_losing_forks()
+                roster = json.loads((root / "strategies" / "roster.json").read_text())
+        self.assertEqual(retired, ["fork_x_01"])
+        by_name = {e["name"]: e for e in roster["forks"]}
+        self.assertEqual(by_name["fork_x_01"]["status"], "retired")
+        self.assertEqual(by_name["fork_y_02"].get("status", "active"), "active")
 
 
 if __name__ == "__main__":
