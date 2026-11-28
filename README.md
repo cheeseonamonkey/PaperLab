@@ -3,7 +3,7 @@
 **13 simultaneous paper strategies, $100 independently simulated cash each**, using **Polymarket US** BTC 15-minute and 1-hour Up/Down (BRTI) markets. No accounts, wallet, exchange keys, real order placement or leverage.
 
 - [Current results](REPORT.md) · [Persistent state](data/state.json) · [Raw, compressed observations](data/observations/) · [Workflows](../../actions) · [Documentation index](docs/README.md) · [Strategy pages](docs/bots/README.md)
-- **Archive mode:** the existing hourly Actions workflow is temporarily filling the full Polymarket US BTC archive (September 22 onward) in bounded, resumable batches. It stops when the target period is covered; no live polling.
+- **Archive complete:** the full Polymarket US BTC archive (September 22 onward) is downloaded (`data/backfill/state.json`: `done`). The hourly Actions workflow now runs the paper replay and research loop below; archive backfill remains available by manual dispatch only.
 - Historical batches simulate **delayed price-based entries and exits**, including modeled taker fees and slippage. These are paper proxies, not executable quotes. Settles using the **official US 0/1 settlement endpoint**.
 - Strategies share historical US price displays, the market's price-to-beat, timestamp-available BRTI candles, and BTC/ETH/SOL/XRP context. Historical book depth is unavailable; book-dependent strategies abstain. Coinbase context never substitutes for official settlement.
 
@@ -90,9 +90,9 @@ Each short-lived hourly run commits its batch and state once. Failed publication
 
 ## GitHub Actions
 
-The existing `paper.yml` schedule now runs `python backfill.py` to archive the complete Polymarket US BTC period from September 22, 2026 through the archived cutoff. Each run saves up to 120 UTC hours, reuses stored hours, and resumes from `data/backfill/state.json`. No new workflows or real-time polling. Manual dispatch with `archive_only=false` retains the previous-hour paper replay for comparison.
+The existing `paper.yml` schedule runs the long-running research loop every hour: collect the previous closed hour, replay every paper account in parallel shards, merge, then train and evaluate the research candidate zoo. No new workflows or real-time polling. Manual dispatch with `archive_only=true` runs the (completed) archive backfill instead.
 
-Research continues using the fixed bootstrap and timestamp-valid settled observations; the separate backward archive is not scanned by the trainer. Candidates are evaluated chronologically and never automatically promoted.
+Research continues using the fixed bootstrap and timestamp-valid settled observations; the separate backward archive is not scanned by the trainer. Candidates are evaluated chronologically on an identical split. The baseline is never automatically promoted, but a non-baseline candidate that clears the predeclared fork policy in `train_research.py` — beat the market Brier by ≥0.003, beat the linear baseline, ≥5 validation markets, 3 consecutive winning runs — spawns a **frozen fork**: its own isolated $100 paper account (see `strategies/roster.json`), identical risk controls, parent and validation recorded in `data/training/forks/`. Caps: at most 40 fork accounts and 50 accounts total; fork history is never deleted.
 
 A separate **optional daily** Pi/OpenRouter research workflow needs only the Actions secret `OPENROUTER_API_KEY`:
 
