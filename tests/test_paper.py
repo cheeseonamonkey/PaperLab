@@ -64,6 +64,20 @@ class PaperTests(unittest.TestCase):
         self.assertEqual(migrated["accounts"]["research_linear"]["cash"],paper.START)
         self.assertIn("research_linear",migrated["forecast_metrics"])
 
+    def test_v3_state_missing_roster_account_is_initialized_fresh(self):
+        state=paper.initial()
+        state["accounts"].pop("btc_momentum")
+        state["accounts"]["lstm"]["cash"]=55
+        paper.STATE.write_text(json.dumps(state))
+        loaded=paper.load()
+        self.assertEqual(loaded["accounts"]["btc_momentum"]["cash"],paper.START)
+        self.assertEqual(loaded["accounts"]["btc_momentum"]["trades"],[])
+        self.assertEqual(loaded["accounts"]["lstm"]["cash"],55)
+        state["accounts"]["rogue"]={"cash":1,"orders":[],"trades":[],"signals":0}
+        paper.STATE.write_text(json.dumps(state))
+        with self.assertRaises(ValueError):
+            paper.load()
+
     def test_yes_and_no_us_book_complements(self):
         out=feeds.quotes({"bids":[{"px":{"value":".47"},"qty":"90"}],
                 "offers":[{"px":{"value":".49"},"qty":"80"}]})
