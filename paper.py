@@ -52,14 +52,16 @@ BASE_POLICIES = {
 ROSTER = ROOT/"strategies/roster.json"
 
 def fork_policies():
-    """Active auto-fork accounts from the checked-in roster (train_research owns it)."""
+    """Fork accounts from the checked-in roster (train_research owns it):
+    active forks trade with the limit policy; retired forks (periodic reset)
+    stay on the books in hold mode — history preserved, no new trades."""
     try:
         entries = json.loads(ROSTER.read_text()).get("forks", [])
     except (OSError, ValueError):
         return {}
-    return {entry["name"]: "limit" for entry in entries
-            if isinstance(entry, dict) and isinstance(entry.get("name"), str)
-            and entry.get("status", "active") == "active"}
+    return {entry["name"]: ("hold" if entry.get("status") == "retired" else "limit")
+            for entry in entries
+            if isinstance(entry, dict) and isinstance(entry.get("name"), str)}
 
 POLICIES = {**BASE_POLICIES, **fork_policies()}
 # Accounts whose probability comes from a fitted model file rather than a rule.
